@@ -5,12 +5,33 @@ use std::io::{stdout, Write};
 
 pub struct Input {
 	message: Option<String>,
+	default_value: Option<String>,
 }
 
 impl Input {
+	pub fn new() -> Input {
+		Input {
+			message: None,
+			default_value: None,
+		}
+	}
+
 	pub fn message<S: Into<String>>(mut self, msg: S) -> Self {
 		self.message = Some(msg.into());
 		self
+	}
+
+	pub fn default_value<S: Into<String>>(mut self, def: S) -> Self {
+		self.default_value = Some(def.into());
+		self
+	}
+
+	pub fn placeholder(&self) {
+		todo!()
+	}
+
+	pub fn initial_value(&self) {
+		todo!()
 	}
 
 	// todo: Result
@@ -18,21 +39,30 @@ impl Input {
 		self.init();
 
 		let term = Term::stdout();
-		let value = term.read_line();
+		let read_line = term.read_line();
 
-		let value = value.ok()?;
-
-		self.out(&value);
-		if value.len() > 0 {
-			Some(value)
+		if let Ok(value) = read_line {
+			if value.len() > 0 {
+				self.out(&value);
+				Some(value)
+			} else {
+				if let Some(default_value) = self.default_value.clone() {
+					self.out(&default_value);
+					Some(default_value)
+				} else {
+					self.out(&"".into());
+					None
+				}
+			}
 		} else {
-			None
+			// todo error
+			self.out(&"".into());
+			return None;
 		}
 	}
 }
 
 impl Prompt<String> for Input {
-
 	fn init(&self) {
 		let mut stdout = stdout();
 		let msg = self.message.as_ref().unwrap();
@@ -59,20 +89,6 @@ impl Prompt<String> for Input {
 
 		println!("{}  {}", style("◇").green(), msg);
 		println!("{}  {}", "│", style(value).dim());
-	}
-}
-
-impl Input {
-	pub fn new() -> Input {
-		Input { message: None }
-	}
-
-	pub fn placeholder(&self) {
-		todo!()
-	}
-
-	pub fn initial_value(&self) {
-		todo!()
 	}
 }
 

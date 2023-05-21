@@ -1,1 +1,3 @@
-pub mod prompt;
+mod prompt;
+
+pub use prompt::*;

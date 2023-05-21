@@ -1,7 +1,7 @@
-use console::{Key,Term,style};
-use std::io::{stdout,Write};
-use crossterm::{cursor, QueueableCommand};
 use super::prompt::Prompt;
+use console::{style, Key, Term};
+use crossterm::{cursor, QueueableCommand};
+use std::io::{stdout, Write};
 
 pub struct Confirm {
 	message: Option<String>,
@@ -14,13 +14,13 @@ impl Confirm {
 		self
 	}
 
-	pub fn initial_value ( mut self, b: bool ) -> Self {
+	pub fn initial_value(mut self, b: bool) -> Self {
 		self.initial_value = b;
 		self
 	}
 
 	// todo: Result
-	pub fn interact (self) -> Option<bool> {
+	pub fn interact(self) -> Option<bool> {
 		self.init();
 
 		let term = Term::stdout();
@@ -32,7 +32,7 @@ impl Confirm {
 				Key::ArrowUp | Key::ArrowDown | Key::ArrowLeft | Key::ArrowRight => {
 					a = !a;
 					self.draw(&a);
-				},
+				}
 				Key::Enter => {
 					let _ = term.show_cursor();
 					println!();
@@ -41,7 +41,7 @@ impl Confirm {
 				}
 				_ => {}
 			}
-		};
+		}
 	}
 }
 
@@ -73,16 +73,24 @@ impl Prompt<bool> for Confirm {
 		let answ = if *value { "Yes" } else { "No" };
 
 		println!("{}  {}", style("◇").green(), msg);
-		println!("{}  {}{}", "│", style(answ).dim(), " ".repeat(12 - answ.len()));
+		println!(
+			"{}  {}{}",
+			"│",
+			style(answ).dim(),
+			" ".repeat(12 - answ.len())
+		);
 	}
 }
 
 impl Confirm {
 	pub fn new() -> Confirm {
-		Confirm { message: None, initial_value: false }
+		Confirm {
+			message: None,
+			initial_value: false,
+		}
 	}
 
-	fn radio_pnt ( &self, b: &bool, w: &str ) -> String {
+	fn radio_pnt(&self, b: &bool, w: &str) -> String {
 		if *b {
 			format!("{} {w}", style("●").green())
 		} else {
@@ -90,7 +98,7 @@ impl Confirm {
 		}
 	}
 
-	fn radio (&self, b: &bool) -> String {
+	fn radio(&self, b: &bool) -> String {
 		let yes = self.radio_pnt(b, "Yes");
 		let no = self.radio_pnt(&!*b, "No");
 
@@ -98,7 +106,7 @@ impl Confirm {
 		a
 	}
 
-	fn draw ( &self, a: &bool ) {
+	fn draw(&self, a: &bool) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToColumn(0));
 		let _ = stdout.flush();
