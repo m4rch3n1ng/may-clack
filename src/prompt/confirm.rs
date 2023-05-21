@@ -6,9 +6,18 @@ use std::io::{stdout, Write};
 pub struct Confirm {
 	message: Option<String>,
 	initial_value: bool,
+	prompts: (String, String),
 }
 
 impl Confirm {
+	pub fn new() -> Confirm {
+		Confirm {
+			message: None,
+			initial_value: false,
+			prompts: ("Yes".into(), "No".into()),
+		}
+	}
+
 	pub fn message<S: Into<String>>(mut self, msg: S) -> Self {
 		self.message = Some(msg.into());
 		self
@@ -16,6 +25,11 @@ impl Confirm {
 
 	pub fn initial_value(mut self, b: bool) -> Self {
 		self.initial_value = b;
+		self
+	}
+
+	pub fn prompts<S: Into<String>>(mut self, yes: S, no: S) -> Self {
+		self.prompts = (yes.into(), no.into());
 		self
 	}
 
@@ -45,6 +59,33 @@ impl Confirm {
 	}
 }
 
+impl Confirm {
+	fn radio_pnt(&self, b: &bool, w: &str) -> String {
+		if *b {
+			format!("{} {w}", style("●").green())
+		} else {
+			style(format!("○ {w}")).dim().to_string()
+		}
+	}
+
+	fn radio(&self, b: &bool) -> String {
+		let yes = self.radio_pnt(b, &self.prompts.0);
+		let no = self.radio_pnt(&!*b, &self.prompts.1);
+
+		format!("{} / {}", yes, no)
+	}
+
+	fn draw(&self, a: &bool) {
+		let mut stdout = stdout();
+		let _ = stdout.queue(cursor::MoveToColumn(0));
+		let _ = stdout.flush();
+
+		let r = self.radio(a);
+		print!("{}  {}", style("│").cyan(), r);
+		let _ = stdout.flush();
+	}
+}
+
 impl Prompt<bool> for Confirm {
 	fn init(&self) {
 		let mut stdout = stdout();
@@ -70,50 +111,21 @@ impl Prompt<bool> for Confirm {
 		let _ = stdout.flush();
 
 		let msg = self.message.as_ref().unwrap();
-		let answ = if *value { "Yes" } else { "No" };
+		let answ = if *value {
+			&self.prompts.0
+		} else {
+			&self.prompts.1
+		};
+
+		let len = 2 + self.prompts.0.chars().count() + 3 + 2 + self.prompts.1.chars().count();
 
 		println!("{}  {}", style("◇").green(), msg);
 		println!(
 			"{}  {}{}",
 			"│",
 			style(answ).dim(),
-			" ".repeat(12 - answ.len())
+			" ".repeat(len - answ.len())
 		);
-	}
-}
-
-impl Confirm {
-	pub fn new() -> Confirm {
-		Confirm {
-			message: None,
-			initial_value: false,
-		}
-	}
-
-	fn radio_pnt(&self, b: &bool, w: &str) -> String {
-		if *b {
-			format!("{} {w}", style("●").green())
-		} else {
-			style(format!("○ {w}")).dim().to_string()
-		}
-	}
-
-	fn radio(&self, b: &bool) -> String {
-		let yes = self.radio_pnt(b, "Yes");
-		let no = self.radio_pnt(&!*b, "No");
-
-		let a = format!("{} / {}", yes, no);
-		a
-	}
-
-	fn draw(&self, a: &bool) {
-		let mut stdout = stdout();
-		let _ = stdout.queue(cursor::MoveToColumn(0));
-		let _ = stdout.flush();
-
-		let r = self.radio(a);
-		print!("{}  {}", style("│").cyan(), r);
-		let _ = stdout.flush();
 	}
 }
 

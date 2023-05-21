@@ -8,7 +8,10 @@ fn main() {
 	intro(&style(" test ").reverse().to_string());
 
 	let a = input().message("input").default_value("default").interact();
-	let b = confirm().message("confirm").interact();
+	let b = confirm()
+		.message("confirm")
+		.prompts("true", "false")
+		.interact();
 
 	outro("");
 
