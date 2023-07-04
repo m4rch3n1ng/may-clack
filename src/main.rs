@@ -15,7 +15,6 @@ fn main() {
 
 	outro("");
 
-	println!();
 	println!("a {:?}", a);
 	println!("b {:?}", b);
 }

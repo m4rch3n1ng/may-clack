@@ -1,4 +1,6 @@
-use super::prompt::Prompt;
+use crate::style::chars;
+
+use super::traits::Prompt;
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
@@ -7,6 +9,12 @@ pub struct Confirm {
 	message: Option<String>,
 	initial_value: bool,
 	prompts: (String, String),
+}
+
+impl Default for Confirm {
+	fn default() -> Self {
+		Self::new()
+	}
 }
 
 impl Confirm {
@@ -62,9 +70,11 @@ impl Confirm {
 impl Confirm {
 	fn radio_pnt(&self, b: &bool, w: &str) -> String {
 		if *b {
-			format!("{} {w}", style("●").green())
+			format!("{} {w}", style(chars::RADIO_ACTIVE).green())
 		} else {
-			style(format!("○ {w}")).dim().to_string()
+			style(format!("{} {}", chars::RADIO_INACTIVE, w))
+				.dim()
+				.to_string()
 		}
 	}
 
@@ -91,10 +101,10 @@ impl Prompt<bool> for Confirm {
 		let mut stdout = stdout();
 		let msg = self.message.as_ref().unwrap();
 
-		println!("│");
-		println!("{}  {}", style("◆").cyan(), msg);
-		println!("{}", style("│").cyan());
-		print!("{}", style("└").cyan());
+		println!("{}", chars::BAR);
+		println!("{}  {}", style(chars::STEP_ACTIVE).cyan(), msg);
+		println!("{}", style(chars::BAR).cyan());
+		print!("{}", style(chars::BAR_END).cyan());
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
@@ -119,10 +129,10 @@ impl Prompt<bool> for Confirm {
 
 		let len = 2 + self.prompts.0.chars().count() + 3 + 2 + self.prompts.1.chars().count();
 
-		println!("{}  {}", style("◇").green(), msg);
+		println!("{}  {}", style(chars::STEP_SUBMIT).green(), msg);
 		println!(
 			"{}  {}{}",
-			"│",
+			chars::BAR,
 			style(answ).dim(),
 			" ".repeat(len - answ.len())
 		);

@@ -1,4 +1,5 @@
-use crate::prompt::prompt::Prompt;
+use super::traits::Prompt;
+use crate::style::chars;
 use console::{style, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
@@ -6,6 +7,12 @@ use std::io::{stdout, Write};
 pub struct Input {
 	message: Option<String>,
 	default_value: Option<String>,
+}
+
+impl Default for Input {
+	fn default() -> Self {
+		Self::new()
+	}
 }
 
 impl Input {
@@ -42,22 +49,20 @@ impl Input {
 		let read_line = term.read_line();
 
 		if let Ok(value) = read_line {
-			if value.len() > 0 {
+			if !value.is_empty() {
 				self.out(&value);
 				Some(value)
+			} else if let Some(default_value) = self.default_value.clone() {
+				self.out(&default_value);
+				Some(default_value)
 			} else {
-				if let Some(default_value) = self.default_value.clone() {
-					self.out(&default_value);
-					Some(default_value)
-				} else {
-					self.out(&"".into());
-					None
-				}
+				self.out(&"".into());
+				None
 			}
 		} else {
 			// todo error
 			self.out(&"".into());
-			return None;
+			None
 		}
 	}
 }
@@ -67,15 +72,15 @@ impl Prompt<String> for Input {
 		let mut stdout = stdout();
 		let msg = self.message.as_ref().unwrap();
 
-		println!("│");
-		println!("{}  {}", style("◆").cyan(), msg);
-		println!("{}", style("│").cyan());
-		print!("{}", style("└").cyan());
+		println!("{}", chars::BAR);
+		println!("{}  {}", style(chars::STEP_ACTIVE).cyan(), msg);
+		println!("{}", style(chars::BAR).cyan());
+		print!("{}", style(chars::BAR_END).cyan());
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
 
-		print!("{}  ", style("│").cyan());
+		print!("{}  ", style(chars::BAR).cyan());
 		let _ = stdout.flush();
 	}
 
@@ -87,8 +92,8 @@ impl Prompt<String> for Input {
 
 		let msg = self.message.as_ref().unwrap();
 
-		println!("{}  {}", style("◇").green(), msg);
-		println!("{}  {}", "│", style(value).dim());
+		println!("{}  {}", style(chars::STEP_SUBMIT).green(), msg);
+		println!("{}  {}", chars::BAR, style(value).dim());
 	}
 }
 
