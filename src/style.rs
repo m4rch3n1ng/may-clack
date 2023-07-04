@@ -1,17 +1,34 @@
+use is_unicode_supported::is_unicode_supported;
+use lazy_static::lazy_static;
+
+lazy_static! {
+	static ref IS_UNICODE: bool = is_unicode_supported();
+}
+
+fn is_unicode(unicode: &'static str, non_unicode: &'static str) -> &'static str {
+	if *IS_UNICODE {
+		unicode
+	} else {
+		non_unicode
+	}
+}
+
 pub mod chars {
-	pub static BAR: &str = "│"; // "|"
-	pub static BAR_START: &str = "┌"; // "T"
-	pub static BAR_END: &str = "└"; // "—"
+	use super::is_unicode;
+	use lazy_static::lazy_static;
 
-	pub static STEP_ACTIVE: &str = "◆"; // "*"
-	pub static STEP_CANCEL: &str = "■"; // "x"
-	pub static STEP_ERROR: &str = "▲"; // "x"
-	pub static STEP_SUBMIT: &str = "◇"; // "o"
-
-	pub static RADIO_ACTIVE: &str = "●"; // ">"
-	pub static RADIO_INACTIVE: &str = "○"; // " "
-
-	pub static CHECKBOX_ACTIVE: &str = "◻"; // "[.]"
-	pub static CHECKBOX_SELECTED: &str = "◼"; // "[+]"
-	pub static CHECKBOX_INACTIVE: &str = "◻"; // "[ ]"
+	lazy_static! {
+		pub static ref BAR: &'static str = is_unicode("│", "|");
+		pub static ref BAR_START: &'static str = is_unicode("┌", "T");
+		pub static ref BAR_END: &'static str = is_unicode("└", "—");
+		pub static ref STEP_ACTIVE: &'static str = is_unicode("◆", "*");
+		pub static ref STEP_CANCEL: &'static str = is_unicode("■", "x");
+		pub static ref STEP_ERROR: &'static str = is_unicode("▲", "x");
+		pub static ref STEP_SUBMIT: &'static str = is_unicode("◇", "o");
+		pub static ref RADIO_ACTIVE: &'static str = is_unicode("●", ">");
+		pub static ref RADIO_INACTIVE: &'static str = is_unicode("○", " ");
+		pub static ref CHECKBOX_ACTIVE: &'static str = is_unicode("◻", "[.]");
+		pub static ref CHECKBOX_SELECTED: &'static str = is_unicode("◼", "[+]");
+		pub static ref CHECKBOX_INACTIVE: &'static str = is_unicode("◻", "[ ]");
+	}
 }

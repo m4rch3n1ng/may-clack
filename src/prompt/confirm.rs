@@ -70,9 +70,9 @@ impl Confirm {
 impl Confirm {
 	fn radio_pnt(&self, b: &bool, w: &str) -> String {
 		if *b {
-			format!("{} {w}", style(chars::RADIO_ACTIVE).green())
+			format!("{} {w}", style(*chars::RADIO_ACTIVE).green())
 		} else {
-			style(format!("{} {}", chars::RADIO_INACTIVE, w))
+			style(format!("{} {}", *chars::RADIO_INACTIVE, w))
 				.dim()
 				.to_string()
 		}
@@ -101,10 +101,10 @@ impl Prompt<bool> for Confirm {
 		let mut stdout = stdout();
 		let msg = self.message.as_ref().unwrap();
 
-		println!("{}", chars::BAR);
-		println!("{}  {}", style(chars::STEP_ACTIVE).cyan(), msg);
-		println!("{}", style(chars::BAR).cyan());
-		print!("{}", style(chars::BAR_END).cyan());
+		println!("{}", *chars::BAR);
+		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), msg);
+		println!("{}", style(*chars::BAR).cyan());
+		print!("{}", style(*chars::BAR_END).cyan());
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
@@ -129,10 +129,10 @@ impl Prompt<bool> for Confirm {
 
 		let len = 2 + self.prompts.0.chars().count() + 3 + 2 + self.prompts.1.chars().count();
 
-		println!("{}  {}", style(chars::STEP_SUBMIT).green(), msg);
+		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), msg);
 		println!(
 			"{}  {}{}",
-			chars::BAR,
+			*chars::BAR,
 			style(answ).dim(),
 			" ".repeat(len - answ.len())
 		);

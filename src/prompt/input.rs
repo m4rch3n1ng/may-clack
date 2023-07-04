@@ -72,15 +72,15 @@ impl Prompt<String> for Input {
 		let mut stdout = stdout();
 		let msg = self.message.as_ref().unwrap();
 
-		println!("{}", chars::BAR);
-		println!("{}  {}", style(chars::STEP_ACTIVE).cyan(), msg);
-		println!("{}", style(chars::BAR).cyan());
-		print!("{}", style(chars::BAR_END).cyan());
+		println!("{}", *chars::BAR);
+		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), msg);
+		println!("{}", style(*chars::BAR).cyan());
+		print!("{}", style(*chars::BAR_END).cyan());
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
 
-		print!("{}  ", style(chars::BAR).cyan());
+		print!("{}  ", style(*chars::BAR).cyan());
 		let _ = stdout.flush();
 	}
 
@@ -92,8 +92,8 @@ impl Prompt<String> for Input {
 
 		let msg = self.message.as_ref().unwrap();
 
-		println!("{}  {}", style(chars::STEP_SUBMIT).green(), msg);
-		println!("{}  {}", chars::BAR, style(value).dim());
+		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), msg);
+		println!("{}  {}", *chars::BAR, style(value).dim());
 	}
 }
 
