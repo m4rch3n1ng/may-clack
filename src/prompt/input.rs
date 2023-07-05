@@ -16,6 +16,7 @@ impl Default for Input {
 }
 
 impl Input {
+	#[must_use]
 	pub fn new() -> Input {
 		Input {
 			message: None,
@@ -23,11 +24,13 @@ impl Input {
 		}
 	}
 
+	#[must_use]
 	pub fn message<S: Into<String>>(mut self, msg: S) -> Self {
 		self.message = Some(msg.into());
 		self
 	}
 
+	#[must_use]
 	pub fn default_value<S: Into<String>>(mut self, def: S) -> Self {
 		self.default_value = Some(def.into());
 		self
@@ -42,6 +45,7 @@ impl Input {
 	}
 
 	// todo: Result
+	#[must_use]
 	pub fn interact(self) -> Option<String> {
 		self.init();
 

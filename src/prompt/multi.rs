@@ -70,6 +70,7 @@ impl Default for MultiSelect {
 }
 
 impl MultiSelect {
+	#[must_use]
 	pub fn new() -> Self {
 		MultiSelect {
 			message: None,
@@ -77,11 +78,13 @@ impl MultiSelect {
 		}
 	}
 
+	#[must_use]
 	pub fn message<S: Into<String>>(mut self, msg: S) -> Self {
 		self.message = Some(msg.into());
 		self
 	}
 
+	#[must_use]
 	pub fn option<S: Into<String>>(mut self, val: S, label: S) -> Self {
 		// todo duplicate
 		let opt = Opt::new(val, label);
@@ -90,6 +93,7 @@ impl MultiSelect {
 	}
 
 	// todo error
+	#[must_use]
 	pub fn interact(mut self) -> Option<Vec<String>> {
 		if self.options.is_empty() {
 			return None;
