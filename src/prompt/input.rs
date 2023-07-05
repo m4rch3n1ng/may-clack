@@ -1,4 +1,3 @@
-use super::traits::Prompt;
 use crate::style::chars;
 use console::{style, Term};
 use crossterm::{cursor, QueueableCommand};
@@ -71,7 +70,7 @@ impl Input {
 	}
 }
 
-impl Prompt<&str> for Input {
+impl Input {
 	fn init(&self) {
 		let mut stdout = stdout();
 		let msg = self.message.as_ref().unwrap();

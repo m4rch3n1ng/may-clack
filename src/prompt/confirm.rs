@@ -1,6 +1,4 @@
 use crate::style::chars;
-
-use super::traits::Prompt;
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
@@ -101,7 +99,7 @@ impl Confirm {
 	}
 }
 
-impl Prompt<bool> for Confirm {
+impl Confirm {
 	fn init(&self) {
 		let mut stdout = stdout();
 		let msg = self.message.as_ref().unwrap();

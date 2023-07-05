@@ -3,7 +3,6 @@ mod input;
 mod multi;
 
 mod misc;
-mod traits;
 
 pub use confirm::prompt as confirm;
 pub use confirm::Confirm;

@@ -1,4 +1,3 @@
-use super::traits::Prompt;
 use crate::style::chars;
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
@@ -135,8 +134,13 @@ impl MultiSelect {
 					self.draw_new(idx);
 				}
 				Key::Enter => {
-					let indices = self.options.iter().filter(|opt| opt.select).collect();
-					self.out((idx, indices));
+					let indices = self
+						.options
+						.iter()
+						.filter(|opt| opt.select)
+						.collect::<Vec<_>>();
+
+					self.out(idx, &indices);
 
 					let all = self
 						.options
@@ -176,7 +180,7 @@ impl MultiSelect {
 	}
 }
 
-impl Prompt<(usize, Vec<&Opt>)> for MultiSelect {
+impl MultiSelect {
 	fn init(&self) {
 		let mut stdout = stdout();
 		let msg = self.message.as_ref().unwrap();
@@ -196,7 +200,7 @@ impl Prompt<(usize, Vec<&Opt>)> for MultiSelect {
 		let _ = stdout.flush();
 	}
 
-	fn out(&self, (idx, values): (usize, Vec<&Opt>)) {
+	fn out(&self, idx: usize, values: &[&Opt]) {
 		let mut stdout = stdout();
 
 		let _ = stdout.queue(cursor::MoveToColumn(0));
