@@ -53,7 +53,7 @@ impl Confirm {
 			match term.read_key().ok()? {
 				Key::ArrowUp | Key::ArrowDown | Key::ArrowLeft | Key::ArrowRight => {
 					a = !a;
-					self.draw(&a);
+					self.draw(a);
 				}
 				Key::Enter => {
 					let _ = term.show_cursor();
@@ -68,9 +68,9 @@ impl Confirm {
 }
 
 impl Confirm {
-	fn radio_pnt(&self, b: &bool, w: &str) -> String {
-		if *b {
-			format!("{} {w}", style(*chars::RADIO_ACTIVE).green())
+	fn radio_pnt(b: bool, w: &str) -> String {
+		if b {
+			format!("{} {}", style(*chars::RADIO_ACTIVE).green(), w)
 		} else {
 			style(format!("{} {}", *chars::RADIO_INACTIVE, w))
 				.dim()
@@ -78,14 +78,14 @@ impl Confirm {
 		}
 	}
 
-	fn radio(&self, b: &bool) -> String {
-		let yes = self.radio_pnt(b, &self.prompts.0);
-		let no = self.radio_pnt(&!*b, &self.prompts.1);
+	fn radio(&self, b: bool) -> String {
+		let yes = Confirm::radio_pnt(b, &self.prompts.0);
+		let no = Confirm::radio_pnt(!b, &self.prompts.1);
 
 		format!("{} / {}", yes, no)
 	}
 
-	fn draw(&self, a: &bool) {
+	fn draw(&self, a: bool) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToColumn(0));
 		let _ = stdout.flush();
@@ -109,7 +109,7 @@ impl Prompt<bool> for Confirm {
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
 
-		self.draw(&self.initial_value);
+		self.draw(self.initial_value);
 
 		let _ = stdout.flush();
 	}
@@ -139,6 +139,7 @@ impl Prompt<bool> for Confirm {
 	}
 }
 
-pub fn main() -> Confirm {
+#[must_use]
+pub fn prompt() -> Confirm {
 	Confirm::new()
 }

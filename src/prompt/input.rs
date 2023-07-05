@@ -56,12 +56,12 @@ impl Input {
 				self.out(&default_value);
 				Some(default_value)
 			} else {
-				self.out(&"".into());
+				self.out(&String::new());
 				None
 			}
 		} else {
 			// todo error
-			self.out(&"".into());
+			self.out(&String::new());
 			None
 		}
 	}
@@ -97,6 +97,7 @@ impl Prompt<String> for Input {
 	}
 }
 
-pub fn main() -> Input {
+#[must_use]
+pub fn prompt() -> Input {
 	Input::new()
 }
