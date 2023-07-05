@@ -1,5 +1,5 @@
 use crossterm::style::{style, Stylize};
-use may_prompt::{confirm, input, intro, outro};
+use may_prompt::{confirm, input, intro, multi, outro};
 
 // todo testing please ignore
 
@@ -12,9 +12,15 @@ fn main() {
 		.message("confirm")
 		.prompts("true", "false")
 		.interact();
+	let c = multi()
+		.message("multi")
+		.option("opt1", "option 1")
+		.option("opt2", "option 2")
+		.interact();
 
 	outro("");
 
 	println!("a {:?}", a);
 	println!("b {:?}", b);
+	println!("c {:?}", c);
 }

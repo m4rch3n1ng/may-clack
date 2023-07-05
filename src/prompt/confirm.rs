@@ -58,7 +58,7 @@ impl Confirm {
 				Key::Enter => {
 					let _ = term.show_cursor();
 					println!();
-					self.out(&a);
+					self.out(a);
 					return Some(a);
 				}
 				_ => {}
@@ -114,14 +114,14 @@ impl Prompt<bool> for Confirm {
 		let _ = stdout.flush();
 	}
 
-	fn out(&self, value: &bool) {
+	fn out(&self, value: bool) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
 		let _ = stdout.queue(cursor::MoveToColumn(0));
 		let _ = stdout.flush();
 
 		let msg = self.message.as_ref().unwrap();
-		let answ = if *value {
+		let answ = if value {
 			&self.prompts.0
 		} else {
 			&self.prompts.1

@@ -56,18 +56,18 @@ impl Input {
 				self.out(&default_value);
 				Some(default_value)
 			} else {
-				self.out(&String::new());
+				self.out("");
 				None
 			}
 		} else {
 			// todo error
-			self.out(&String::new());
+			self.out("");
 			None
 		}
 	}
 }
 
-impl Prompt<String> for Input {
+impl Prompt<&str> for Input {
 	fn init(&self) {
 		let mut stdout = stdout();
 		let msg = self.message.as_ref().unwrap();
@@ -84,7 +84,7 @@ impl Prompt<String> for Input {
 		let _ = stdout.flush();
 	}
 
-	fn out(&self, value: &String) {
+	fn out(&self, value: &str) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
 		let _ = stdout.queue(cursor::MoveToColumn(0));
