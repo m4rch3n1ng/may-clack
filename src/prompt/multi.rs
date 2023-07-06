@@ -6,14 +6,16 @@ use std::io::{stdout, Write};
 struct Opt {
 	pub value: String,
 	pub label: String,
+	pub hint: Option<String>,
 	pub select: bool,
 }
 
 impl Opt {
-	pub fn new<S: Into<String>>(val: S, label: S) -> Self {
+	pub fn new<S: Into<String>>(value: S, label: S, hint: Option<S>) -> Self {
 		Opt {
-			value: val.into(),
+			value: value.into(),
 			label: label.into(),
+			hint: hint.map(|st| st.into()),
 			select: false,
 		}
 	}
@@ -23,13 +25,15 @@ impl Opt {
 	}
 
 	pub fn len(&self) -> usize {
-		let len1 = self.label.len();
-		let len2 = chars::CHECKBOX_INACTIVE.len();
-		len1 + 1 + len2
+		let label_len = self.label.len();
+		let check_len = chars::CHECKBOX_INACTIVE.len();
+		let hint_len = self.hint.as_ref().map_or(0, |hint| hint.len() + 2 + 1);
+
+		label_len + 1 + check_len + hint_len
 	}
 
 	fn select(&self) -> String {
-		if self.select {
+		let fmt = if self.select {
 			format!(
 				"{} {}",
 				style(*chars::CHECKBOX_SELECTED).green(),
@@ -37,11 +41,18 @@ impl Opt {
 			)
 		} else {
 			format!("{} {}", style(*chars::CHECKBOX_ACTIVE).cyan(), self.label)
+		};
+
+		if let Some(hint) = &self.hint {
+			let hint = format!("({})", hint);
+			format!("{} {}", fmt, style(hint).dim())
+		} else {
+			fmt
 		}
 	}
 
 	fn unselect(&self) -> String {
-		if self.select {
+		let fmt = if self.select {
 			format!(
 				"{} {}",
 				style(*chars::CHECKBOX_SELECTED).green(),
@@ -53,6 +64,13 @@ impl Opt {
 				style(*chars::CHECKBOX_INACTIVE).dim(),
 				style(&self.label).dim()
 			)
+		};
+
+		if let Some(hint) = &self.hint {
+			let len = hint.len() + 2;
+			format!("{} {}", fmt, " ".repeat(len))
+		} else {
+			fmt
 		}
 	}
 }
@@ -86,7 +104,14 @@ impl MultiSelect {
 	#[must_use]
 	pub fn option<S: Into<String>>(mut self, val: S, label: S) -> Self {
 		// todo duplicate
-		let opt = Opt::new(val, label);
+		let opt = Opt::new(val, label, None);
+		self.options.push(opt);
+		self
+	}
+
+	#[must_use]
+	pub fn option_hint<S: Into<String>>(mut self, val: S, label: S, hint: S) -> Self {
+		let opt = Opt::new(val, label, Some(hint));
 		self.options.push(opt);
 		self
 	}

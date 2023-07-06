@@ -16,6 +16,7 @@ fn main() {
 		.message("multi")
 		.option("opt1", "option 1")
 		.option("opt2", "option 2")
+		.option_hint("opt3", "option 3", "hint")
 		.interact();
 
 	outro("");

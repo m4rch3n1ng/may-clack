@@ -38,6 +38,7 @@ impl Input {
 		self
 	}
 
+	#[must_use]
 	pub fn placeholder(self) -> Self {
 		todo!()
 	}
