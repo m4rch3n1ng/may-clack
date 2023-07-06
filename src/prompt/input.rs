@@ -1,11 +1,13 @@
 use crate::style::chars;
-use console::{style, Term};
+use console::style;
 use crossterm::{cursor, QueueableCommand};
+use rustyline::DefaultEditor;
 use std::io::{stdout, Write};
 
 pub struct Input {
 	message: Option<String>,
 	default_value: Option<String>,
+	initial_value: Option<String>,
 }
 
 impl Default for Input {
@@ -20,6 +22,7 @@ impl Input {
 		Input {
 			message: None,
 			default_value: None,
+			initial_value: None,
 		}
 	}
 
@@ -35,12 +38,14 @@ impl Input {
 		self
 	}
 
-	pub fn placeholder(&self) {
+	pub fn placeholder(self) -> Self {
 		todo!()
 	}
 
-	pub fn initial_value(&self) {
-		todo!()
+	#[must_use]
+	pub fn initial_value<S: Into<String>>(mut self, init: S) -> Self {
+		self.initial_value = Some(init.into());
+		self
 	}
 
 	// todo: Result
@@ -48,10 +53,15 @@ impl Input {
 	pub fn interact(self) -> Option<String> {
 		self.init();
 
-		let term = Term::stdout();
-		let read_line = term.read_line();
+		let prompt = format!("{}  ", style(*chars::BAR).cyan());
+		let mut editor = DefaultEditor::new().unwrap();
+		let line = if let Some(init) = &self.initial_value {
+			editor.readline_with_initial(&prompt, (init, ""))
+		} else {
+			editor.readline(&prompt)
+		};
 
-		if let Ok(value) = read_line {
+		if let Ok(value) = line {
 			if !value.is_empty() {
 				self.out(&value);
 				Some(value)
