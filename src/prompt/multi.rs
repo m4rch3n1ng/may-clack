@@ -120,7 +120,7 @@ impl MultiSelect {
 					}
 				}
 				Key::ArrowDown => {
-					if idx < max {
+					if idx < max - 1 {
 						self.draw_old(idx);
 						println!();
 
