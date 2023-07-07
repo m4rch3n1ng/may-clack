@@ -114,7 +114,7 @@ impl MultiSelect {
 		}
 
 		self.init();
-		self.draw_new(0);
+		self.draw_select(0);
 
 		let term = Term::stdout();
 
@@ -122,31 +122,40 @@ impl MultiSelect {
 		let max = self.options.len();
 		loop {
 			match term.read_key().ok()? {
-				Key::ArrowUp => {
+				Key::ArrowUp | Key::ArrowLeft => {
+					self.draw_unselect(idx);
+					let mut stdout = stdout();
+
 					if idx > 0 {
-						self.draw_old(idx);
 						idx -= 1;
-
-						let mut stdout = stdout();
 						let _ = stdout.queue(cursor::MoveUp(1));
-						let _ = stdout.flush();
-
-						self.draw_new(idx);
+					} else {
+						idx = max - 1;
+						let _ = stdout.queue(cursor::MoveDown(max as u16 - 1));
 					}
+
+					let _ = stdout.flush();
+					self.draw_select(idx);
 				}
-				Key::ArrowDown => {
-					if idx < max - 1 {
-						self.draw_old(idx);
-						println!();
+				Key::ArrowDown | Key::ArrowRight => {
+					self.draw_unselect(idx);
+					let mut stdout = stdout();
 
+					if idx < max - 1 {
 						idx += 1;
-						self.draw_new(idx);
+						let _ = stdout.queue(cursor::MoveDown(1));
+					} else {
+						idx = 0;
+						let _ = stdout.queue(cursor::MoveUp(max as u16 - 1));
 					}
+
+					let _ = stdout.flush();
+					self.draw_select(idx);
 				}
 				Key::Char(' ') => {
 					let opt = self.options.get_mut(idx).unwrap();
 					opt.toggle();
-					self.draw_new(idx);
+					self.draw_select(idx);
 				}
 				Key::Enter => {
 					let indices = self
@@ -173,13 +182,13 @@ impl MultiSelect {
 }
 
 impl MultiSelect {
-	fn draw_new(&self, idx: usize) {
+	fn draw_select(&self, idx: usize) {
 		let opt = self.options.get(idx).unwrap();
 		let line = opt.select();
 		MultiSelect::draw(&line);
 	}
 
-	fn draw_old(&self, idx: usize) {
+	fn draw_unselect(&self, idx: usize) {
 		let opt = self.options.get(idx).unwrap();
 		let line = opt.unselect();
 		MultiSelect::draw(&line);
