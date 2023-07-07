@@ -24,7 +24,7 @@ impl Opt {
 
 		if let Some(hint) = &self.hint {
 			let hint = format!("({})", hint);
-			format!("{} {}", fmt, hint)
+			format!("{} {}", fmt, style(hint).dim())
 		} else {
 			fmt
 		}
