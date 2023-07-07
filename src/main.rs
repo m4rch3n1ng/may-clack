@@ -1,5 +1,5 @@
 use crossterm::style::{style, Stylize};
-use may_prompt::{confirm, input, intro, multi, outro, select};
+use may_clack::{confirm, input, intro, multi, outro, select};
 
 // todo testing please ignore
 
