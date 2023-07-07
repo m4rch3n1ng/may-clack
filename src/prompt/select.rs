@@ -52,22 +52,19 @@ impl Opt {
 	}
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct Select {
-	message: Option<String>,
+	message: String,
 	options: Vec<Opt>,
 }
 
 impl Select {
 	#[must_use]
-	pub fn new() -> Self {
-		Select::default()
-	}
-
-	#[must_use]
-	pub fn message<S: Into<String>>(mut self, msg: S) -> Self {
-		self.message = Some(msg.into());
-		self
+	pub fn new<S: Into<String>>(message: S) -> Self {
+		Select {
+			message: message.into(),
+			options: vec![],
+		}
 	}
 
 	#[must_use]
@@ -158,10 +155,9 @@ impl Select {
 impl Select {
 	fn init(&self) {
 		let mut stdout = stdout();
-		let msg = self.message.as_ref().unwrap();
 
 		println!("{}", *chars::BAR);
-		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), msg);
+		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
 
 		for opt in &self.options {
 			let line = opt.unselect();
@@ -182,8 +178,7 @@ impl Select {
 		let _ = stdout.queue(cursor::MoveUp(idx as u16 + 1));
 		let _ = stdout.flush();
 
-		let msg = self.message.clone().unwrap();
-		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), msg);
+		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 
 		for opt in &self.options {
 			let len = opt.len();
@@ -200,6 +195,6 @@ impl Select {
 }
 
 #[must_use]
-pub fn prompt() -> Select {
-	Select::new()
+pub fn prompt<S: Into<String>>(message: S) -> Select {
+	Select::new(message)
 }

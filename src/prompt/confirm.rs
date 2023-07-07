@@ -5,31 +5,19 @@ use std::io::{stdout, Write};
 
 #[derive(Debug, Clone)]
 pub struct Confirm {
-	message: Option<String>,
+	message: String,
 	initial_value: bool,
 	prompts: (String, String),
 }
 
-impl Default for Confirm {
-	fn default() -> Self {
-		Self::new()
-	}
-}
-
 impl Confirm {
 	#[must_use]
-	pub fn new() -> Confirm {
+	pub fn new<S: Into<String>>(message: S) -> Confirm {
 		Confirm {
-			message: None,
+			message: message.into(),
 			initial_value: false,
 			prompts: ("Yes".into(), "No".into()),
 		}
-	}
-
-	#[must_use]
-	pub fn message<S: Into<String>>(mut self, msg: S) -> Self {
-		self.message = Some(msg.into());
-		self
 	}
 
 	#[must_use]
@@ -103,10 +91,9 @@ impl Confirm {
 impl Confirm {
 	fn init(&self) {
 		let mut stdout = stdout();
-		let msg = self.message.as_ref().unwrap();
 
 		println!("{}", *chars::BAR);
-		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), msg);
+		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
 		println!("{}", style(*chars::BAR).cyan());
 		print!("{}", style(*chars::BAR_END).cyan());
 
@@ -124,7 +111,6 @@ impl Confirm {
 		let _ = stdout.queue(cursor::MoveToColumn(0));
 		let _ = stdout.flush();
 
-		let msg = self.message.as_ref().unwrap();
 		let answ = if value {
 			&self.prompts.0
 		} else {
@@ -133,7 +119,7 @@ impl Confirm {
 
 		let len = 2 + self.prompts.0.chars().count() + 3 + 2 + self.prompts.1.chars().count();
 
-		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), msg);
+		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 		println!(
 			"{}  {}{}",
 			*chars::BAR,
@@ -144,6 +130,6 @@ impl Confirm {
 }
 
 #[must_use]
-pub fn prompt() -> Confirm {
-	Confirm::new()
+pub fn prompt<S: Into<String>>(message: S) -> Confirm {
+	Confirm::new(message)
 }

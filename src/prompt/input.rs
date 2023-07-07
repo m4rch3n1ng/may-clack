@@ -4,23 +4,21 @@ use crossterm::{cursor, QueueableCommand};
 use rustyline::DefaultEditor;
 use std::io::{stdout, Write};
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct Input {
-	message: Option<String>,
+	message: String,
 	default_value: Option<String>,
 	initial_value: Option<String>,
 }
 
 impl Input {
 	#[must_use]
-	pub fn new() -> Self {
-		Input::default()
-	}
-
-	#[must_use]
-	pub fn message<S: Into<String>>(mut self, msg: S) -> Self {
-		self.message = Some(msg.into());
-		self
+	pub fn new<S: Into<String>>(message: S) -> Self {
+		Input {
+			message: message.into(),
+			default_value: None,
+			initial_value: None,
+		}
 	}
 
 	#[must_use]
@@ -75,10 +73,9 @@ impl Input {
 impl Input {
 	fn init(&self) {
 		let mut stdout = stdout();
-		let msg = self.message.as_ref().unwrap();
 
 		println!("{}", *chars::BAR);
-		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), msg);
+		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
 		println!("{}", style(*chars::BAR).cyan());
 		print!("{}", style(*chars::BAR_END).cyan());
 
@@ -95,14 +92,12 @@ impl Input {
 		let _ = stdout.queue(cursor::MoveToColumn(0));
 		let _ = stdout.flush();
 
-		let msg = self.message.as_ref().unwrap();
-
-		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), msg);
+		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 		println!("{}  {}", *chars::BAR, style(value).dim());
 	}
 }
 
 #[must_use]
-pub fn prompt() -> Input {
-	Input::new()
+pub fn prompt<S: Into<String>>(message: S) -> Input {
+	Input::new(message)
 }
