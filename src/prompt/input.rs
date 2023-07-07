@@ -4,26 +4,17 @@ use crossterm::{cursor, QueueableCommand};
 use rustyline::DefaultEditor;
 use std::io::{stdout, Write};
 
+#[derive(Debug, Default, Clone)]
 pub struct Input {
 	message: Option<String>,
 	default_value: Option<String>,
 	initial_value: Option<String>,
 }
 
-impl Default for Input {
-	fn default() -> Self {
-		Self::new()
-	}
-}
-
 impl Input {
 	#[must_use]
-	pub fn new() -> Input {
-		Input {
-			message: None,
-			default_value: None,
-			initial_value: None,
-		}
+	pub fn new() -> Self {
+		Input::default()
 	}
 
 	#[must_use]

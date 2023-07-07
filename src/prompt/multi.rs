@@ -3,6 +3,7 @@ use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
 
+#[derive(Debug, Clone)]
 struct Opt {
 	pub value: String,
 	pub label: String,
@@ -75,24 +76,16 @@ impl Opt {
 	}
 }
 
+#[derive(Debug, Default, Clone)]
 pub struct MultiSelect {
 	message: Option<String>,
 	options: Vec<Opt>,
 }
 
-impl Default for MultiSelect {
-	fn default() -> Self {
-		MultiSelect::new()
-	}
-}
-
 impl MultiSelect {
 	#[must_use]
 	pub fn new() -> Self {
-		MultiSelect {
-			message: None,
-			options: vec![],
-		}
+		MultiSelect::default()
 	}
 
 	#[must_use]

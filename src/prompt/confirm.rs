@@ -3,6 +3,7 @@ use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
 
+#[derive(Debug, Clone)]
 pub struct Confirm {
 	message: Option<String>,
 	initial_value: bool,
