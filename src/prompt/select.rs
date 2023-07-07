@@ -5,10 +5,9 @@ use std::io::{stdout, Write};
 
 #[derive(Debug, Clone)]
 struct Opt {
-	pub value: String,
-	pub label: String,
-	pub hint: Option<String>,
-	pub active: bool,
+	value: String,
+	label: String,
+	hint: Option<String>,
 }
 
 impl Opt {
@@ -16,76 +15,53 @@ impl Opt {
 		Opt {
 			value: value.into(),
 			label: label.into(),
-			hint: hint.map(|st| st.into()),
-			active: false,
+			hint: hint.map(|hint| hint.into()),
 		}
 	}
 
-	pub fn toggle(&mut self) {
-		self.active = !self.active;
-	}
-
-	pub fn len(&self) -> usize {
-		let check_len = chars::CHECKBOX_INACTIVE.len();
-		let label_len = self.label.len();
-		let hint_len = self.hint.as_ref().map_or(0, |hint| hint.len() + 2 + 1);
-
-		check_len + 1 + label_len + hint_len
-	}
-
-	fn select(&self) -> String {
-		let fmt = if self.active {
-			format!(
-				"{} {}",
-				style(*chars::CHECKBOX_SELECTED).green(),
-				self.label
-			)
-		} else {
-			format!("{} {}", style(*chars::CHECKBOX_ACTIVE).cyan(), self.label)
-		};
+	pub fn select(&self) -> String {
+		let fmt = format!("{} {}", style(*chars::RADIO_ACTIVE).green(), self.label);
 
 		if let Some(hint) = &self.hint {
 			let hint = format!("({})", hint);
-			format!("{} {}", fmt, style(hint).dim())
+			format!("{} {}", fmt, hint)
 		} else {
 			fmt
 		}
 	}
 
-	fn unselect(&self) -> String {
-		let fmt = if self.active {
-			format!(
-				"{} {}",
-				style(*chars::CHECKBOX_SELECTED).green(),
-				style(&self.label).dim()
-			)
-		} else {
-			format!(
-				"{} {}",
-				style(*chars::CHECKBOX_INACTIVE).dim(),
-				style(&self.label).dim()
-			)
+	pub fn unselect(&self) -> String {
+		let fmt = match &self.hint {
+			Some(hint) => format!(
+				"{} {} {}",
+				*chars::RADIO_INACTIVE,
+				self.label,
+				" ".repeat(hint.len() + 2)
+			),
+			None => format!("{} {}", *chars::RADIO_INACTIVE, self.label),
 		};
+		style(fmt).to_string()
+	}
 
-		if let Some(hint) = &self.hint {
-			let len = hint.len() + 2;
-			format!("{} {}", fmt, " ".repeat(len))
-		} else {
-			fmt
-		}
+	pub fn len(&self) -> usize {
+		let check_len = chars::RADIO_ACTIVE.len();
+		let label_len = self.label.len();
+		let hint_len = self.hint.as_ref().map_or(0, |hint| hint.len() + 1 + 2);
+
+		check_len + 1 + label_len + hint_len
 	}
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct MultiSelect {
+pub struct Select {
 	message: Option<String>,
 	options: Vec<Opt>,
 }
 
-impl MultiSelect {
+impl Select {
 	#[must_use]
 	pub fn new() -> Self {
-		MultiSelect::default()
+		Select::default()
 	}
 
 	#[must_use]
@@ -95,23 +71,21 @@ impl MultiSelect {
 	}
 
 	#[must_use]
-	pub fn option<S: Into<String>>(mut self, val: S, label: S) -> Self {
-		// todo duplicate
-		let opt = Opt::new(val, label, None);
+	pub fn option<S: Into<String>>(mut self, value: S, label: S) -> Self {
+		let opt = Opt::new(value, label, None);
 		self.options.push(opt);
 		self
 	}
 
 	#[must_use]
-	pub fn option_hint<S: Into<String>>(mut self, val: S, label: S, hint: S) -> Self {
-		let opt = Opt::new(val, label, Some(hint));
+	pub fn option_hint<S: Into<String>>(mut self, value: S, label: S, hint: S) -> Self {
+		let opt = Opt::new(value, label, Some(hint));
 		self.options.push(opt);
 		self
 	}
 
-	// todo error
 	#[must_use]
-	pub fn interact(mut self) -> Option<Vec<String>> {
+	pub fn interact(self) -> Option<String> {
 		if self.options.is_empty() {
 			return None;
 		}
@@ -125,7 +99,7 @@ impl MultiSelect {
 		let max = self.options.len();
 		loop {
 			match term.read_key().ok()? {
-				Key::ArrowUp => {
+				Key::ArrowUp | Key::ArrowLeft => {
 					if idx > 0 {
 						self.draw_old(idx);
 						idx -= 1;
@@ -137,7 +111,7 @@ impl MultiSelect {
 						self.draw_new(idx);
 					}
 				}
-				Key::ArrowDown => {
+				Key::ArrowDown | Key::ArrowRight => {
 					if idx < max - 1 {
 						self.draw_old(idx);
 						println!();
@@ -146,28 +120,11 @@ impl MultiSelect {
 						self.draw_new(idx);
 					}
 				}
-				Key::Char(' ') => {
-					let opt = self.options.get_mut(idx).unwrap();
-					opt.toggle();
-					self.draw_new(idx);
-				}
 				Key::Enter => {
-					let indices = self
-						.options
-						.iter()
-						.filter(|opt| opt.active)
-						.collect::<Vec<_>>();
+					self.out(idx);
 
-					self.out(idx, &indices);
-
-					let all = self
-						.options
-						.into_iter()
-						.filter(|opt| opt.active)
-						.map(|opt| opt.value)
-						.collect();
-
-					return Some(all);
+					let opt = self.options.get(idx).cloned().unwrap();
+					return Some(opt.value);
 				}
 				_ => {}
 			}
@@ -175,17 +132,17 @@ impl MultiSelect {
 	}
 }
 
-impl MultiSelect {
+impl Select {
 	fn draw_new(&self, idx: usize) {
 		let opt = self.options.get(idx).unwrap();
 		let line = opt.select();
-		MultiSelect::draw(&line);
+		Select::draw(&line);
 	}
 
 	fn draw_old(&self, idx: usize) {
 		let opt = self.options.get(idx).unwrap();
 		let line = opt.unselect();
-		MultiSelect::draw(&line);
+		Select::draw(&line);
 	}
 
 	fn draw(line: &str) {
@@ -198,7 +155,7 @@ impl MultiSelect {
 	}
 }
 
-impl MultiSelect {
+impl Select {
 	fn init(&self) {
 		let mut stdout = stdout();
 		let msg = self.message.as_ref().unwrap();
@@ -218,7 +175,7 @@ impl MultiSelect {
 		let _ = stdout.flush();
 	}
 
-	fn out(&self, idx: usize, values: &[&Opt]) {
+	fn out(&self, idx: usize) {
 		let mut stdout = stdout();
 
 		let _ = stdout.queue(cursor::MoveToColumn(0));
@@ -237,21 +194,12 @@ impl MultiSelect {
 		let mv = self.options.len() as u16 + 1;
 		let _ = stdout.queue(cursor::MoveUp(mv));
 
-		let vals = values
-			.iter()
-			.map(|&opt| opt.label.clone())
-			.collect::<Vec<_>>();
-
-		let val_string = if vals.is_empty() {
-			"none".into()
-		} else {
-			vals.join(", ")
-		};
-		println!("{}  {}", *chars::BAR, style(val_string).dim());
+		let label = self.options.get(idx).cloned().unwrap().label;
+		println!("{}  {}", *chars::BAR, style(label).dim());
 	}
 }
 
 #[must_use]
-pub fn prompt() -> MultiSelect {
-	MultiSelect::new()
+pub fn prompt() -> Select {
+	Select::new()
 }
