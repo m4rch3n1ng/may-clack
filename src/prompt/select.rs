@@ -88,7 +88,7 @@ impl Select {
 			return None;
 		}
 
-		self.init();
+		self.w_init();
 		self.draw_select(0);
 
 		let term = Term::stdout();
@@ -128,7 +128,7 @@ impl Select {
 					self.draw_select(idx);
 				}
 				Key::Enter => {
-					self.out(idx);
+					self.w_out(idx);
 
 					let opt = self.options.get(idx).cloned().unwrap();
 					return Some(opt.value);
@@ -163,7 +163,7 @@ impl Select {
 }
 
 impl Select {
-	fn init(&self) {
+	fn w_init(&self) {
 		let mut stdout = stdout();
 
 		println!("{}", *chars::BAR);
@@ -181,7 +181,7 @@ impl Select {
 		let _ = stdout.flush();
 	}
 
-	fn out(&self, idx: usize) {
+	fn w_out(&self, idx: usize) {
 		let mut stdout = stdout();
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(idx as u16 + 1));

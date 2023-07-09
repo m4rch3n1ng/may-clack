@@ -35,7 +35,7 @@ impl Confirm {
 	// todo: Result
 	#[must_use]
 	pub fn interact(self) -> Option<bool> {
-		self.init();
+		self.w_init();
 
 		let term = Term::stdout();
 		// let _ = term.hide_cursor(); // todo
@@ -49,17 +49,17 @@ impl Confirm {
 				}
 				Key::Char('y' | 'Y') => {
 					let _ = term.show_cursor();
-					self.out(true);
+					self.w_out(true);
 					return Some(true);
 				}
 				Key::Char('n' | 'N') => {
 					let _ = term.show_cursor();
-					self.out(false);
+					self.w_out(false);
 					return Some(false);
 				}
 				Key::Enter => {
 					let _ = term.show_cursor();
-					self.out(a);
+					self.w_out(a);
 					return Some(a);
 				}
 				_ => {}
@@ -98,7 +98,7 @@ impl Confirm {
 }
 
 impl Confirm {
-	fn init(&self) {
+	fn w_init(&self) {
 		let mut stdout = stdout();
 
 		println!("{}", *chars::BAR);
@@ -114,7 +114,7 @@ impl Confirm {
 		let _ = stdout.flush();
 	}
 
-	fn out(&self, value: bool) {
+	fn w_out(&self, value: bool) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();

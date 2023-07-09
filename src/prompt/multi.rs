@@ -113,7 +113,7 @@ impl MultiSelect {
 			return None;
 		}
 
-		self.init();
+		self.w_init();
 		self.draw_select(0);
 
 		let term = Term::stdout();
@@ -164,7 +164,7 @@ impl MultiSelect {
 						.filter(|opt| opt.active)
 						.collect::<Vec<_>>();
 
-					self.out(idx, &indices);
+					self.w_out(idx, &indices);
 
 					let all = self
 						.options
@@ -205,7 +205,7 @@ impl MultiSelect {
 }
 
 impl MultiSelect {
-	fn init(&self) {
+	fn w_init(&self) {
 		let mut stdout = stdout();
 
 		println!("{}", *chars::BAR);
@@ -223,7 +223,7 @@ impl MultiSelect {
 		let _ = stdout.flush();
 	}
 
-	fn out(&self, idx: usize, values: &[&Opt]) {
+	fn w_out(&self, idx: usize, values: &[&Opt]) {
 		let mut stdout = stdout();
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(idx as u16 + 1));

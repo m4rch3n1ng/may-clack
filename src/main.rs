@@ -7,16 +7,14 @@ fn main() {
 	println!();
 	intro(&style(" test ").reverse().to_string());
 
-	let do_input = input("input").default_value("default").interact();
-	if do_input.is_none() {
-		do_cancel();
-	}
-
-	let do_input_validate = input("validate").validate(|x| !x.is_empty()).interact();
-	if do_input_validate.is_none() {
-		do_cancel();
-	}
-
+	let do_input = input("input")
+		.default_value("default")
+		.cancel(do_cancel)
+		.interact();
+	let do_input_validate = input("validate")
+		.validate(|x| !x.is_empty())
+		.cancel(do_cancel)
+		.interact();
 	let do_confirm = confirm("confirm").prompts("true", "false").interact();
 	let do_multi = multi("multi")
 		.option("opt1", "option 1")

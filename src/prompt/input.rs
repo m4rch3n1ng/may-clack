@@ -11,6 +11,7 @@ pub struct Input {
 	default_value: Option<String>,
 	initial_value: Option<String>,
 	validate: Option<Box<ValidateFn>>,
+	cancel: Option<Box<dyn Fn()>>,
 }
 
 impl Input {
@@ -21,6 +22,7 @@ impl Input {
 			default_value: None,
 			initial_value: None,
 			validate: None,
+			cancel: None,
 		}
 	}
 
@@ -59,10 +61,19 @@ impl Input {
 		}
 	}
 
+	pub fn cancel<F>(mut self, cancel: F) -> Self
+	where
+		F: Fn() + 'static,
+	{
+		let cancel = Box::new(cancel);
+		self.cancel = Some(cancel);
+		self
+	}
+
 	// todo: Result
 	#[must_use]
 	pub fn interact(self) -> Option<String> {
-		self.init();
+		self.w_init();
 
 		let prompt = format!("{}  ", style(*chars::BAR).cyan());
 		let mut editor = DefaultEditor::new().unwrap();
@@ -84,26 +95,30 @@ impl Input {
 				}
 			} else {
 				// todo already written value?
-				self.cancel();
+				self.w_cancel();
+				if let Some(cancel) = self.cancel {
+					cancel();
+				}
+
 				return None;
 			}
 		};
 
 		if !value.is_empty() {
-			self.out(&value);
+			self.w_out(&value);
 			Some(value)
 		} else if let Some(default_value) = self.default_value.clone() {
-			self.out(&default_value);
+			self.w_out(&default_value);
 			Some(default_value)
 		} else {
-			self.out("");
+			self.w_out("");
 			None
 		}
 	}
 }
 
 impl Input {
-	fn init(&self) {
+	fn w_init(&self) {
 		let mut stdout = stdout();
 
 		println!("{}", *chars::BAR);
@@ -118,7 +133,7 @@ impl Input {
 		let _ = stdout.flush();
 	}
 
-	fn out(&self, value: &str) {
+	fn w_out(&self, value: &str) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
 		let _ = stdout.flush();
@@ -127,7 +142,7 @@ impl Input {
 		println!("{}  {}", *chars::BAR, style(value).dim());
 	}
 
-	fn cancel(&self) {
+	fn w_cancel(&self) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
 		let _ = stdout.flush();
