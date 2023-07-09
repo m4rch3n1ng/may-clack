@@ -47,9 +47,18 @@ impl Confirm {
 					a = !a;
 					self.draw(a);
 				}
+				Key::Char('y') | Key::Char('Y') => {
+					let _ = term.show_cursor();
+					self.out(true);
+					return Some(true);
+				}
+				Key::Char('n') | Key::Char('N') => {
+					let _ = term.show_cursor();
+					self.out(false);
+					return Some(false);
+				}
 				Key::Enter => {
 					let _ = term.show_cursor();
-					println!();
 					self.out(a);
 					return Some(a);
 				}
@@ -107,8 +116,7 @@ impl Confirm {
 
 	fn out(&self, value: bool) {
 		let mut stdout = stdout();
-		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
-		let _ = stdout.queue(cursor::MoveToColumn(0));
+		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
 
 		let answ = if value {
