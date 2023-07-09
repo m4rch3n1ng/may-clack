@@ -83,6 +83,8 @@ impl Input {
 					let _ = stdout.flush();
 				}
 			} else {
+				// todo already written value?
+				self.cancel();
 				return None;
 			}
 		};
@@ -119,11 +121,23 @@ impl Input {
 	fn out(&self, value: &str) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
-		let _ = stdout.queue(cursor::MoveToColumn(0));
 		let _ = stdout.flush();
 
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 		println!("{}  {}", *chars::BAR, style(value).dim());
+	}
+
+	fn cancel(&self) {
+		let mut stdout = stdout();
+		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
+		let _ = stdout.flush();
+
+		println!("{}  {}", style(*chars::STEP_CANCEL).red(), self.message);
+		println!(
+			"{}  {}",
+			*chars::BAR,
+			style("cancelled").strikethrough().dim()
+		);
 	}
 }
 

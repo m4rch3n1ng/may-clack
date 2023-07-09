@@ -14,5 +14,6 @@ pub use multi::MultiSelect;
 pub use select::prompt as select;
 pub use select::Select;
 
+pub use misc::cancel;
 pub use misc::intro;
 pub use misc::outro;

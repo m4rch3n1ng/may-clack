@@ -68,6 +68,7 @@ impl Select {
 	}
 
 	#[must_use]
+	// todo check for max amt of options
 	pub fn option<S: Into<String>>(mut self, value: S, label: S) -> Self {
 		let opt = Opt::new(value, label, None);
 		self.options.push(opt);

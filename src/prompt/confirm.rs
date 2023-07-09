@@ -47,12 +47,12 @@ impl Confirm {
 					a = !a;
 					self.draw(a);
 				}
-				Key::Char('y') | Key::Char('Y') => {
+				Key::Char('y' | 'Y') => {
 					let _ = term.show_cursor();
 					self.out(true);
 					return Some(true);
 				}
-				Key::Char('n') | Key::Char('N') => {
+				Key::Char('n' | 'N') => {
 					let _ = term.show_cursor();
 					self.out(false);
 					return Some(false);

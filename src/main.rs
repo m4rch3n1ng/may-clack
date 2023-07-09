@@ -1,5 +1,5 @@
 use crossterm::style::{style, Stylize};
-use may_clack::{confirm, input, intro, multi, outro, select};
+use may_clack::{cancel, confirm, input, intro, multi, outro, select};
 
 // todo testing please ignore
 
@@ -8,7 +8,15 @@ fn main() {
 	intro(&style(" test ").reverse().to_string());
 
 	let do_input = input("input").default_value("default").interact();
+	if do_input.is_none() {
+		do_cancel();
+	}
+
 	let do_input_validate = input("validate").validate(|x| !x.is_empty()).interact();
+	if do_input_validate.is_none() {
+		do_cancel();
+	}
+
 	let do_confirm = confirm("confirm").prompts("true", "false").interact();
 	let do_multi = multi("multi")
 		.option("opt1", "option 1")
@@ -28,4 +36,9 @@ fn main() {
 	println!("confirm {:?}", do_confirm);
 	println!("multi {:?}", do_multi);
 	println!("select {:?}", do_select);
+}
+
+fn do_cancel() {
+	cancel("demo cancelled");
+	std::process::exit(1);
 }
