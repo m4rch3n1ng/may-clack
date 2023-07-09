@@ -4,11 +4,13 @@ use crossterm::{cursor, QueueableCommand};
 use rustyline::DefaultEditor;
 use std::io::{stdout, Write};
 
-#[derive(Debug, Clone)]
+type ValidateFn = dyn Fn(&str) -> bool;
+
 pub struct Input {
 	message: String,
 	default_value: Option<String>,
 	initial_value: Option<String>,
+	validate: Option<Box<ValidateFn>>,
 }
 
 impl Input {
@@ -18,6 +20,7 @@ impl Input {
 			message: message.into(),
 			default_value: None,
 			initial_value: None,
+			validate: None,
 		}
 	}
 
@@ -38,6 +41,24 @@ impl Input {
 		self
 	}
 
+	#[must_use]
+	pub fn validate<F>(mut self, validate: F) -> Self
+	where
+		F: Fn(&str) -> bool + 'static,
+	{
+		let validate = Box::new(validate);
+		self.validate = Some(validate);
+		self
+	}
+
+	fn do_validate(&self, input: &str) -> bool {
+		if let Some(validate) = self.validate.as_deref() {
+			validate(input)
+		} else {
+			true
+		}
+	}
+
 	// todo: Result
 	#[must_use]
 	pub fn interact(self) -> Option<String> {
@@ -45,25 +66,34 @@ impl Input {
 
 		let prompt = format!("{}  ", style(*chars::BAR).cyan());
 		let mut editor = DefaultEditor::new().unwrap();
-		let line = if let Some(init) = &self.initial_value {
-			editor.readline_with_initial(&prompt, (init, ""))
-		} else {
-			editor.readline(&prompt)
+
+		let value = loop {
+			let line = if let Some(init) = &self.initial_value {
+				editor.readline_with_initial(&prompt, (init, ""))
+			} else {
+				editor.readline(&prompt)
+			};
+
+			if let Ok(value) = line {
+				if self.do_validate(&value) {
+					break value;
+				} else {
+					let mut stdout = stdout();
+					let _ = stdout.queue(cursor::MoveToPreviousLine(1));
+					let _ = stdout.flush();
+				}
+			} else {
+				return None;
+			}
 		};
 
-		if let Ok(value) = line {
-			if !value.is_empty() {
-				self.out(&value);
-				Some(value)
-			} else if let Some(default_value) = self.default_value.clone() {
-				self.out(&default_value);
-				Some(default_value)
-			} else {
-				self.out("");
-				None
-			}
+		if !value.is_empty() {
+			self.out(&value);
+			Some(value)
+		} else if let Some(default_value) = self.default_value.clone() {
+			self.out(&default_value);
+			Some(default_value)
 		} else {
-			// todo error
 			self.out("");
 			None
 		}

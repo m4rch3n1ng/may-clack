@@ -183,8 +183,7 @@ impl Select {
 	fn out(&self, idx: usize) {
 		let mut stdout = stdout();
 
-		let _ = stdout.queue(cursor::MoveToColumn(0));
-		let _ = stdout.queue(cursor::MoveUp(idx as u16 + 1));
+		let _ = stdout.queue(cursor::MoveToPreviousLine(idx as u16 + 1));
 		let _ = stdout.flush();
 
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
