@@ -4,7 +4,7 @@ use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
 
 #[derive(Debug, Clone)]
-struct Opt {
+pub struct Opt {
 	value: String,
 	label: String,
 	hint: Option<String>,
@@ -19,7 +19,11 @@ impl Opt {
 		}
 	}
 
-	pub fn select(&self) -> String {
+	pub fn simple<S: Into<String>>(value: S, label: S) -> Self {
+		Opt::new(value, label, None)
+	}
+
+	fn select(&self) -> String {
 		let fmt = format!("{} {}", style(*chars::RADIO_ACTIVE).green(), self.label);
 
 		if let Some(hint) = &self.hint {
@@ -30,7 +34,7 @@ impl Opt {
 		}
 	}
 
-	pub fn unselect(&self) -> String {
+	fn unselect(&self) -> String {
 		let fmt = match &self.hint {
 			Some(hint) => format!(
 				"{} {} {}",
@@ -43,7 +47,7 @@ impl Opt {
 		style(fmt).to_string()
 	}
 
-	pub fn len(&self) -> usize {
+	fn len(&self) -> usize {
 		let check_len = chars::RADIO_ACTIVE.len();
 		let label_len = self.label.len();
 		let hint_len = self.hint.as_ref().map_or(0, |hint| hint.len() + 1 + 2);
@@ -79,6 +83,11 @@ impl Select {
 	pub fn option_hint<S: Into<String>>(mut self, value: S, label: S, hint: S) -> Self {
 		let opt = Opt::new(value, label, Some(hint));
 		self.options.push(opt);
+		self
+	}
+
+	pub fn options(mut self, options: Vec<Opt>) -> Self {
+		self.options = options;
 		self
 	}
 

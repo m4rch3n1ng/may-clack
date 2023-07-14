@@ -4,7 +4,7 @@ use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
 
 #[derive(Debug, Clone)]
-struct Opt {
+pub struct Opt {
 	pub value: String,
 	pub label: String,
 	pub hint: Option<String>,
@@ -21,11 +21,15 @@ impl Opt {
 		}
 	}
 
-	pub fn toggle(&mut self) {
+	pub fn simple<S: Into<String>>(value: S, label: S) -> Self {
+		Opt::new(value, label, None)
+	}
+
+	fn toggle(&mut self) {
 		self.active = !self.active;
 	}
 
-	pub fn len(&self) -> usize {
+	fn len(&self) -> usize {
 		let check_len = chars::CHECKBOX_INACTIVE.len();
 		let label_len = self.label.len();
 		let hint_len = self.hint.as_ref().map_or(0, |hint| hint.len() + 2 + 1);
@@ -103,6 +107,12 @@ impl MultiSelect {
 	pub fn option_hint<S: Into<String>>(mut self, val: S, label: S, hint: S) -> Self {
 		let opt = Opt::new(val, label, Some(hint));
 		self.options.push(opt);
+		self
+	}
+
+	#[must_use]
+	pub fn options(mut self, options: Vec<Opt>) -> Self {
+		self.options = options;
 		self
 	}
 
