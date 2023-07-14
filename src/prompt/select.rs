@@ -204,6 +204,6 @@ impl Select {
 }
 
 #[must_use]
-pub fn prompt<S: Into<String>>(message: S) -> Select {
+pub fn select<S: Into<String>>(message: S) -> Select {
 	Select::new(message)
 }

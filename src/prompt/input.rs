@@ -61,6 +61,7 @@ impl Input {
 		}
 	}
 
+	#[must_use]
 	pub fn cancel<F>(mut self, cancel: F) -> Self
 	where
 		F: Fn() + 'static,
@@ -157,6 +158,6 @@ impl Input {
 }
 
 #[must_use]
-pub fn prompt<S: Into<String>>(message: S) -> Input {
+pub fn input<S: Into<String>>(message: S) -> Input {
 	Input::new(message)
 }

@@ -1,5 +1,7 @@
 use crossterm::style::{style, Stylize};
-use may_clack::{cancel, confirm, input, intro, multi, outro, select};
+use may_clack::{
+	cancel, confirm::confirm, input::input, intro, multi::multi, outro, select::select,
+};
 
 // todo testing please ignore
 

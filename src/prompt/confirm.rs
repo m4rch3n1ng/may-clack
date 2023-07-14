@@ -138,6 +138,6 @@ impl Confirm {
 }
 
 #[must_use]
-pub fn prompt<S: Into<String>>(message: S) -> Confirm {
+pub fn confirm<S: Into<String>>(message: S) -> Confirm {
 	Confirm::new(message)
 }

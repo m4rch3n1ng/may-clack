@@ -255,6 +255,6 @@ impl MultiSelect {
 }
 
 #[must_use]
-pub fn prompt<S: Into<String>>(message: S) -> MultiSelect {
+pub fn multi<S: Into<String>>(message: S) -> MultiSelect {
 	MultiSelect::new(message)
 }
