@@ -56,7 +56,7 @@ impl MultiInput {
 
 	#[must_use]
 	pub fn max(mut self, max: u16) -> Self {
-		self.max = max.into();
+		self.max = max;
 		self
 	}
 
@@ -99,6 +99,7 @@ impl MultiInput {
 				editor.readline(&prompt)
 			};
 
+			// todo this looks refactor-able
 			if let Ok(value) = line {
 				if value.is_empty() {
 					if enforce_non_empty {
@@ -108,14 +109,12 @@ impl MultiInput {
 					} else {
 						break InteractOnce::Value(None);
 					}
+				} else if self.do_validate(&value) {
+					break InteractOnce::Value(Some(value));
 				} else {
-					if self.do_validate(&value) {
-						break InteractOnce::Value(Some(value));
-					} else {
-						let mut stdout = stdout();
-						let _ = stdout.queue(cursor::MoveToPreviousLine(1));
-						let _ = stdout.flush();
-					}
+					let mut stdout = stdout();
+					let _ = stdout.queue(cursor::MoveToPreviousLine(1));
+					let _ = stdout.flush();
 				}
 			} else {
 				break InteractOnce::Cancel;
@@ -129,7 +128,6 @@ impl MultiInput {
 		self.w_init();
 
 		let mut v = vec![];
-
 		loop {
 			let enforce_non_empty = (v.len() as u16) < self.min;
 			let once = self.interact_once(enforce_non_empty);

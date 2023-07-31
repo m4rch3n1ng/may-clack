@@ -86,6 +86,7 @@ impl Select {
 		self
 	}
 
+	#[must_use]
 	pub fn options(mut self, options: Vec<Opt>) -> Self {
 		self.options = options;
 		self
