@@ -6,6 +6,7 @@ use std::io::{stdout, Write};
 
 type ValidateFn = dyn Fn(&str) -> bool;
 
+// todo required
 pub struct Input {
 	message: String,
 	default_value: Option<String>,
@@ -34,7 +35,7 @@ impl Input {
 
 	#[must_use]
 	pub fn placeholder(self) -> Self {
-		todo!()
+		todo!();
 	}
 
 	#[must_use]
@@ -43,6 +44,7 @@ impl Input {
 		self
 	}
 
+	// todo option to only validate non-empty
 	#[must_use]
 	pub fn validate<F>(mut self, validate: F) -> Self
 	where
@@ -141,6 +143,11 @@ impl Input {
 
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 		println!("{}  {}", *chars::BAR, style(value).dim());
+		println!("{}", style(*chars::BAR).cyan());
+		print!("{}", style(*chars::BAR_END).cyan());
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
+		let _ = stdout.flush();
 	}
 
 	fn w_cancel(&self) {
