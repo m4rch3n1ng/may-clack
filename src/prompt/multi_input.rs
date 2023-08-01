@@ -92,8 +92,9 @@ impl MultiInput {
 		let prompt = format!("{}  ", style(*chars::BAR).cyan());
 		let mut editor = DefaultEditor::new().unwrap();
 
+		let mut initial_value = self.initial_value.clone();
 		loop {
-			let line = if let Some(init) = &self.initial_value {
+			let line = if let Some(ref init) = initial_value {
 				editor.readline_with_initial(&prompt, (init, ""))
 			} else {
 				editor.readline(&prompt)
@@ -103,6 +104,7 @@ impl MultiInput {
 			if let Ok(value) = line {
 				if value.is_empty() {
 					if enforce_non_empty {
+						initial_value = None;
 						let mut stdout = stdout();
 						let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 						let _ = stdout.flush();
@@ -112,6 +114,7 @@ impl MultiInput {
 				} else if self.do_validate(&value) {
 					break InteractOnce::Value(Some(value));
 				} else {
+					initial_value = Some(value);
 					let mut stdout = stdout();
 					let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 					let _ = stdout.flush();
@@ -123,7 +126,6 @@ impl MultiInput {
 	}
 
 	// todo max
-	// todo validate
 	pub fn interact(self) -> Option<Vec<String>> {
 		self.w_init();
 

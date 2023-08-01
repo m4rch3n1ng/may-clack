@@ -6,7 +6,6 @@ use std::io::{stdout, Write};
 
 type ValidateFn = dyn Fn(&str) -> bool;
 
-// todo required
 pub struct Input {
 	message: String,
 	default_value: Option<String>,
@@ -52,7 +51,6 @@ impl Input {
 		self
 	}
 
-	// todo option to only validate non-empty
 	#[must_use]
 	pub fn validate<F>(mut self, validate: F) -> Self
 	where
@@ -89,8 +87,9 @@ impl Input {
 		let prompt = format!("{}  ", style(*chars::BAR).cyan());
 		let mut editor = DefaultEditor::new().unwrap();
 
+		let mut initial_value = self.initial_value.clone();
 		let value = loop {
-			let line = if let Some(init) = &self.initial_value {
+			let line = if let Some(ref init) = initial_value {
 				editor.readline_with_initial(&prompt, (init, ""))
 			} else {
 				editor.readline(&prompt)
@@ -99,6 +98,7 @@ impl Input {
 			if let Ok(value) = line {
 				if value.is_empty() {
 					if self.required {
+						initial_value = None;
 						let mut stdout = stdout();
 						let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 						let _ = stdout.flush();
@@ -108,6 +108,7 @@ impl Input {
 				} else if self.do_validate(&value) {
 					break Some(value);
 				} else {
+					initial_value = Some(value);
 					let mut stdout = stdout();
 					let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 					let _ = stdout.flush();
