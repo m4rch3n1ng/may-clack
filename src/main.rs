@@ -8,7 +8,7 @@ use may_clack::{
 
 fn main() {
 	println!();
-	intro(&style(" test ").reverse().to_string());
+	intro(style(" test ").reverse());
 
 	let do_input = input("input")
 		.default_value("default")
