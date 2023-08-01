@@ -40,12 +40,12 @@ impl Confirm {
 		let term = Term::stdout();
 		// let _ = term.hide_cursor(); // todo
 
-		let mut a = self.initial_value;
+		let mut val = self.initial_value;
 		loop {
 			match term.read_key().ok()? {
 				Key::ArrowUp | Key::ArrowDown | Key::ArrowLeft | Key::ArrowRight => {
-					a = !a;
-					self.draw(a);
+					val = !val;
+					self.draw(val);
 				}
 				Key::Char('y' | 'Y') => {
 					let _ = term.show_cursor();
@@ -59,8 +59,8 @@ impl Confirm {
 				}
 				Key::Enter => {
 					let _ = term.show_cursor();
-					self.w_out(a);
-					return Some(a);
+					self.w_out(val);
+					return Some(val);
 				}
 				_ => {}
 			}

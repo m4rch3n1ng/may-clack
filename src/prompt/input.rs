@@ -11,6 +11,7 @@ pub struct Input {
 	message: String,
 	default_value: Option<String>,
 	initial_value: Option<String>,
+	required: bool,
 	validate: Option<Box<ValidateFn>>,
 	cancel: Option<Box<dyn Fn()>>,
 }
@@ -22,6 +23,7 @@ impl Input {
 			message: message.into(),
 			default_value: None,
 			initial_value: None,
+			required: false,
 			validate: None,
 			cancel: None,
 		}
@@ -41,6 +43,12 @@ impl Input {
 	#[must_use]
 	pub fn initial_value<S: Into<String>>(mut self, init: S) -> Self {
 		self.initial_value = Some(init.into());
+		self
+	}
+
+	#[must_use]
+	pub fn required(mut self) -> Self {
+		self.required = true;
 		self
 	}
 
@@ -89,8 +97,16 @@ impl Input {
 			};
 
 			if let Ok(value) = line {
-				if self.do_validate(&value) {
-					break value;
+				if value.is_empty() {
+					if self.required {
+						let mut stdout = stdout();
+						let _ = stdout.queue(cursor::MoveToPreviousLine(1));
+						let _ = stdout.flush();
+					} else {
+						break None;
+					}
+				} else if self.do_validate(&value) {
+					break Some(value);
 				} else {
 					let mut stdout = stdout();
 					let _ = stdout.queue(cursor::MoveToPreviousLine(1));
@@ -107,7 +123,7 @@ impl Input {
 			}
 		};
 
-		if !value.is_empty() {
+		if let Some(value) = value {
 			self.w_out(&value);
 			Some(value)
 		} else if let Some(default_value) = self.default_value.clone() {

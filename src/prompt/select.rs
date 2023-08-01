@@ -62,6 +62,7 @@ pub struct Select {
 	options: Vec<Opt>,
 }
 
+// todo less mode
 impl Select {
 	#[must_use]
 	pub fn new<S: Into<String>>(message: S) -> Self {
@@ -73,6 +74,7 @@ impl Select {
 
 	#[must_use]
 	// todo check for max amt of options
+	// todo check duplicates
 	pub fn option<S: Into<String>>(mut self, value: S, label: S) -> Self {
 		let opt = Opt::new(value, label, None);
 		self.options.push(opt);

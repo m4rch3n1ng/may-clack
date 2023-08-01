@@ -15,7 +15,8 @@ fn main() {
 		.cancel(do_cancel)
 		.interact();
 	let do_input_validate = input("validate")
-		.validate(|x| !x.is_empty())
+		.required()
+		.validate(|x| x.is_ascii())
 		.cancel(do_cancel)
 		.interact();
 	let do_multi_input = multi_input("multi input").cancel(do_cancel).interact();
