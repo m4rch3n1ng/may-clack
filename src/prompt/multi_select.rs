@@ -1,4 +1,4 @@
-use crate::style::chars;
+use crate::{error::ClackSelectError, style::chars};
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
@@ -114,9 +114,9 @@ impl MultiSelect {
 
 	// todo error
 	// todo remove mut
-	pub fn interact(&mut self) -> Option<Vec<String>> {
+	pub fn interact(&mut self) -> Result<Vec<String>, ClackSelectError> {
 		if self.options.is_empty() {
-			return None;
+			return Err(ClackSelectError::NoOptions);
 		}
 
 		self.w_init();
@@ -127,7 +127,7 @@ impl MultiSelect {
 		let mut idx = 0;
 		let max = self.options.len();
 		loop {
-			match term.read_key().ok()? {
+			match term.read_key()? {
 				Key::ArrowUp | Key::ArrowLeft => {
 					self.draw_unselect(idx);
 					let mut stdout = stdout();
@@ -180,7 +180,7 @@ impl MultiSelect {
 						.map(|opt| opt.value)
 						.collect();
 
-					return Some(all);
+					return Ok(all);
 				}
 				_ => {}
 			}

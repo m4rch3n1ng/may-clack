@@ -15,10 +15,9 @@ fn main() {
 		.cancel(do_cancel)
 		.interact();
 	let do_input_validate = input("validate")
-		.required()
 		.validate(|x| x.is_ascii())
 		.cancel(do_cancel)
-		.interact();
+		.required();
 	let do_multi_input = multi_input("multi input").cancel(do_cancel).interact();
 	let do_confirm = confirm("confirm").prompts("true", "false").interact();
 	let do_multi_select = multi_select("multi select")

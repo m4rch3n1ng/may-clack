@@ -4,7 +4,7 @@ use console::style;
 use crossterm::{cursor, QueueableCommand};
 use rustyline::DefaultEditor;
 
-use crate::style::chars;
+use crate::{error::ClackInputError, style::chars};
 
 type ValidateFn = dyn Fn(&str) -> bool;
 
@@ -15,13 +15,6 @@ pub struct MultiInput {
 	initial_value: Option<String>,
 	min: u16,
 	max: u16,
-}
-
-// todo rm derive
-#[derive(Debug)]
-enum InteractOnce {
-	Cancel,
-	Value(Option<String>),
 }
 
 impl MultiInput {
@@ -81,9 +74,9 @@ impl MultiInput {
 		self
 	}
 
-	fn interact_once(&self, enforce_non_empty: bool) -> InteractOnce {
+	fn interact_once(&self, enforce_non_empty: bool) -> Result<Option<String>, ClackInputError> {
 		let prompt = format!("{}  ", style(*chars::BAR).cyan());
-		let mut editor = DefaultEditor::new().unwrap();
+		let mut editor = DefaultEditor::new()?;
 
 		let mut initial_value = self.initial_value.clone();
 		loop {
@@ -102,10 +95,10 @@ impl MultiInput {
 						let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 						let _ = stdout.flush();
 					} else {
-						break InteractOnce::Value(None);
+						break Ok(None);
 					}
 				} else if self.do_validate(&value) {
-					break InteractOnce::Value(Some(value));
+					break Ok(Some(value));
 				} else {
 					initial_value = Some(value);
 					let mut stdout = stdout();
@@ -113,13 +106,13 @@ impl MultiInput {
 					let _ = stdout.flush();
 				}
 			} else {
-				break InteractOnce::Cancel;
+				break Err(ClackInputError::Cancelled);
 			}
 		}
 	}
 
 	// todo max
-	pub fn interact(&self) -> Option<Vec<String>> {
+	pub fn interact(&self) -> Result<Vec<String>, ClackInputError> {
 		self.w_init();
 
 		let mut v = vec![];
@@ -128,26 +121,27 @@ impl MultiInput {
 			let once = self.interact_once(enforce_non_empty);
 
 			match once {
-				InteractOnce::Cancel => {
+				Ok(Some(value)) => {
+					self.w_line(&value);
+					v.push(value);
+				}
+				Ok(None) => {
+					self.w_out(v.len());
+					break;
+				}
+				Err(ClackInputError::Cancelled) => {
 					self.w_cancel(v.len());
 					if let Some(cancel) = self.cancel.as_ref() {
 						cancel();
 					}
 
-					return None;
+					return Err(ClackInputError::Cancelled);
 				}
-				InteractOnce::Value(Some(value)) => {
-					self.w_line(&value);
-					v.push(value);
-				}
-				InteractOnce::Value(None) => {
-					self.w_out(v.len());
-					break;
-				}
+				Err(err) => return Err(err),
 			}
 		}
 
-		Some(v)
+		Ok(v)
 	}
 }
 

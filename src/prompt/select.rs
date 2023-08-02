@@ -1,4 +1,4 @@
-use crate::style::chars;
+use crate::{error::ClackSelectError, style::chars};
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
@@ -90,9 +90,9 @@ impl Select {
 		self
 	}
 
-	pub fn interact(&self) -> Option<String> {
+	pub fn interact(&self) -> Result<String, ClackSelectError> {
 		if self.options.is_empty() {
-			return None;
+			return Err(ClackSelectError::NoOptions);
 		}
 
 		self.w_init();
@@ -103,7 +103,7 @@ impl Select {
 		let mut idx = 0;
 		let max = self.options.len();
 		loop {
-			match term.read_key().ok()? {
+			match term.read_key()? {
 				Key::ArrowUp | Key::ArrowLeft => {
 					self.draw_unselect(idx);
 					let mut stdout = stdout();
@@ -138,7 +138,7 @@ impl Select {
 					self.w_out(idx);
 
 					let opt = self.options.get(idx).cloned().unwrap();
-					return Some(opt.value);
+					return Ok(opt.value);
 				}
 				_ => {}
 			}

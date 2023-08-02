@@ -1,4 +1,4 @@
-use crate::style::chars;
+use crate::{error::ClackError, style::chars};
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
@@ -29,8 +29,7 @@ impl Confirm {
 		self
 	}
 
-	// todo: Result
-	pub fn interact(&self) -> Option<bool> {
+	pub fn interact(&self) -> Result<bool, ClackError> {
 		self.w_init();
 
 		let term = Term::stdout();
@@ -38,7 +37,7 @@ impl Confirm {
 
 		let mut val = self.initial_value;
 		loop {
-			match term.read_key().ok()? {
+			match term.read_key()? {
 				Key::ArrowUp | Key::ArrowDown | Key::ArrowLeft | Key::ArrowRight => {
 					val = !val;
 					self.draw(val);
@@ -46,17 +45,17 @@ impl Confirm {
 				Key::Char('y' | 'Y') => {
 					let _ = term.show_cursor();
 					self.w_out(true);
-					return Some(true);
+					return Ok(true);
 				}
 				Key::Char('n' | 'N') => {
 					let _ = term.show_cursor();
 					self.w_out(false);
-					return Some(false);
+					return Ok(false);
 				}
 				Key::Enter => {
 					let _ = term.show_cursor();
 					self.w_out(val);
-					return Some(val);
+					return Ok(val);
 				}
 				_ => {}
 			}
