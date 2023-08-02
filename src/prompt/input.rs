@@ -29,30 +29,30 @@ impl Input {
 	}
 
 	#[must_use]
-	pub fn default_value<S: Into<String>>(mut self, def: S) -> Self {
+	pub fn default_value<S: Into<String>>(&mut self, def: S) -> &mut Self {
 		self.default_value = Some(def.into());
 		self
 	}
 
 	#[must_use]
-	pub fn placeholder(self) -> Self {
+	pub fn placeholder(&mut self) -> &mut Self {
 		todo!();
 	}
 
 	#[must_use]
-	pub fn initial_value<S: Into<String>>(mut self, init: S) -> Self {
+	pub fn initial_value<S: Into<String>>(&mut self, init: S) -> &mut Self {
 		self.initial_value = Some(init.into());
 		self
 	}
 
 	#[must_use]
-	pub fn required(mut self) -> Self {
+	pub fn required(&mut self) -> &mut Self {
 		self.required = true;
 		self
 	}
 
 	#[must_use]
-	pub fn validate<F>(mut self, validate: F) -> Self
+	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
 		F: Fn(&str) -> bool + 'static,
 	{
@@ -70,7 +70,7 @@ impl Input {
 	}
 
 	#[must_use]
-	pub fn cancel<F>(mut self, cancel: F) -> Self
+	pub fn cancel<F>(&mut self, cancel: F) -> &mut Self
 	where
 		F: Fn() + 'static,
 	{
@@ -81,7 +81,7 @@ impl Input {
 
 	// todo: Result
 	#[must_use]
-	pub fn interact(self) -> Option<String> {
+	pub fn interact(&self) -> Option<String> {
 		self.w_init();
 
 		let prompt = format!("{}  ", style(*chars::BAR).cyan());
@@ -116,7 +116,7 @@ impl Input {
 			} else {
 				// todo already written value?
 				self.w_cancel();
-				if let Some(cancel) = self.cancel {
+				if let Some(cancel) = self.cancel.as_ref() {
 					cancel();
 				}
 

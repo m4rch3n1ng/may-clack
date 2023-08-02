@@ -21,20 +21,20 @@ impl Confirm {
 	}
 
 	#[must_use]
-	pub fn initial_value(mut self, b: bool) -> Self {
+	pub fn initial_value(&mut self, b: bool) -> &mut Self {
 		self.initial_value = b;
 		self
 	}
 
 	#[must_use]
-	pub fn prompts<S: Into<String>>(mut self, yes: S, no: S) -> Self {
+	pub fn prompts<S: Into<String>>(&mut self, yes: S, no: S) -> &mut Self {
 		self.prompts = (yes.into(), no.into());
 		self
 	}
 
 	// todo: Result
 	#[must_use]
-	pub fn interact(self) -> Option<bool> {
+	pub fn interact(&self) -> Option<bool> {
 		self.w_init();
 
 		let term = Term::stdout();

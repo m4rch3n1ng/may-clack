@@ -75,27 +75,27 @@ impl Select {
 	#[must_use]
 	// todo check for max amt of options
 	// todo check duplicates
-	pub fn option<S: Into<String>>(mut self, value: S, label: S) -> Self {
+	pub fn option<S: Into<String>>(&mut self, value: S, label: S) -> &mut Self {
 		let opt = Opt::new(value, label, None);
 		self.options.push(opt);
 		self
 	}
 
 	#[must_use]
-	pub fn option_hint<S: Into<String>>(mut self, value: S, label: S, hint: S) -> Self {
+	pub fn option_hint<S: Into<String>>(&mut self, value: S, label: S, hint: S) -> &mut Self {
 		let opt = Opt::new(value, label, Some(hint));
 		self.options.push(opt);
 		self
 	}
 
 	#[must_use]
-	pub fn options(mut self, options: Vec<Opt>) -> Self {
+	pub fn options(&mut self, options: Vec<Opt>) -> &mut Self {
 		self.options = options;
 		self
 	}
 
 	#[must_use]
-	pub fn interact(self) -> Option<String> {
+	pub fn interact(&self) -> Option<String> {
 		if self.options.is_empty() {
 			return None;
 		}

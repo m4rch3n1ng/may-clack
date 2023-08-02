@@ -96,7 +96,7 @@ impl MultiSelect {
 	}
 
 	#[must_use]
-	pub fn option<S: Into<String>>(mut self, val: S, label: S) -> Self {
+	pub fn option<S: Into<String>>(&mut self, val: S, label: S) -> &mut Self {
 		// todo duplicate
 		let opt = Opt::new(val, label, None);
 		self.options.push(opt);
@@ -104,21 +104,22 @@ impl MultiSelect {
 	}
 
 	#[must_use]
-	pub fn option_hint<S: Into<String>>(mut self, val: S, label: S, hint: S) -> Self {
+	pub fn option_hint<S: Into<String>>(&mut self, val: S, label: S, hint: S) -> &mut Self {
 		let opt = Opt::new(val, label, Some(hint));
 		self.options.push(opt);
 		self
 	}
 
 	#[must_use]
-	pub fn options(mut self, options: Vec<Opt>) -> Self {
+	pub fn options(&mut self, options: Vec<Opt>) -> &mut Self {
 		self.options = options;
 		self
 	}
 
 	// todo error
+	// todo remove mut
 	#[must_use]
-	pub fn interact(mut self) -> Option<Vec<String>> {
+	pub fn interact(&mut self) -> Option<Vec<String>> {
 		if self.options.is_empty() {
 			return None;
 		}
@@ -178,8 +179,9 @@ impl MultiSelect {
 
 					let all = self
 						.options
-						.into_iter()
+						.iter()
 						.filter(|opt| opt.active)
+						.cloned()
 						.map(|opt| opt.value)
 						.collect();
 

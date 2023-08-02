@@ -38,30 +38,30 @@ impl MultiInput {
 	}
 
 	#[must_use]
-	pub fn placeholder(self) -> Self {
+	pub fn placeholder(&mut self) -> &mut Self {
 		todo!();
 	}
 
 	#[must_use]
-	pub fn initial_value<S: Into<String>>(mut self, initial_value: S) -> Self {
+	pub fn initial_value<S: Into<String>>(&mut self, initial_value: S) -> &mut Self {
 		self.initial_value = Some(initial_value.into());
 		self
 	}
 
 	#[must_use]
-	pub fn min(mut self, min: u16) -> Self {
+	pub fn min(&mut self, min: u16) -> &mut Self {
 		self.min = min;
 		self
 	}
 
 	#[must_use]
-	pub fn max(mut self, max: u16) -> Self {
+	pub fn max(&mut self, max: u16) -> &mut Self {
 		self.max = max;
 		self
 	}
 
 	#[must_use]
-	pub fn validate<F>(mut self, validate: F) -> Self
+	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
 		F: Fn(&str) -> bool + 'static,
 	{
@@ -79,7 +79,7 @@ impl MultiInput {
 	}
 
 	#[must_use]
-	pub fn cancel<F>(mut self, cancel: F) -> Self
+	pub fn cancel<F>(&mut self, cancel: F) -> &mut Self
 	where
 		F: Fn() + 'static,
 	{
@@ -126,7 +126,7 @@ impl MultiInput {
 	}
 
 	// todo max
-	pub fn interact(self) -> Option<Vec<String>> {
+	pub fn interact(&self) -> Option<Vec<String>> {
 		self.w_init();
 
 		let mut v = vec![];
@@ -137,7 +137,7 @@ impl MultiInput {
 			match once {
 				InteractOnce::Cancel => {
 					self.w_cancel(v.len());
-					if let Some(cancel) = self.cancel {
+					if let Some(cancel) = self.cancel.as_ref() {
 						cancel();
 					}
 
