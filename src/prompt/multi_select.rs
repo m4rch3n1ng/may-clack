@@ -114,13 +114,15 @@ impl MultiSelect {
 
 	// todo error
 	// todo remove mut
-	pub fn interact(&mut self) -> Result<Vec<String>, ClackSelectError> {
+	pub fn interact(&self) -> Result<Vec<String>, ClackSelectError> {
 		if self.options.is_empty() {
 			return Err(ClackSelectError::NoOptions);
 		}
 
+		let mut options = self.options.clone();
+
 		self.w_init();
-		self.draw_select(0);
+		self.draw_select(&options, 0);
 
 		let term = Term::stdout();
 
@@ -129,7 +131,7 @@ impl MultiSelect {
 		loop {
 			match term.read_key()? {
 				Key::ArrowUp | Key::ArrowLeft => {
-					self.draw_unselect(idx);
+					self.draw_unselect(&options, idx);
 					let mut stdout = stdout();
 
 					if idx > 0 {
@@ -141,10 +143,10 @@ impl MultiSelect {
 					}
 
 					let _ = stdout.flush();
-					self.draw_select(idx);
+					self.draw_select(&options, idx);
 				}
 				Key::ArrowDown | Key::ArrowRight => {
-					self.draw_unselect(idx);
+					self.draw_unselect(&options, idx);
 					let mut stdout = stdout();
 
 					if idx < max - 1 {
@@ -156,24 +158,22 @@ impl MultiSelect {
 					}
 
 					let _ = stdout.flush();
-					self.draw_select(idx);
+					self.draw_select(&options, idx);
 				}
 				Key::Char(' ') => {
-					let opt = self.options.get_mut(idx).unwrap();
+					let opt = options.get_mut(idx).unwrap();
 					opt.toggle();
-					self.draw_select(idx);
+					self.draw_select(&options, idx);
 				}
 				Key::Enter => {
-					let indices = self
-						.options
+					let selected_opts = options
 						.iter()
 						.filter(|opt| opt.active)
 						.collect::<Vec<_>>();
 
-					self.w_out(idx, &indices);
+					self.w_out(idx, &selected_opts);
 
-					let all = self
-						.options
+					let all = options
 						.iter()
 						.filter(|opt| opt.active)
 						.cloned()
@@ -189,14 +189,14 @@ impl MultiSelect {
 }
 
 impl MultiSelect {
-	fn draw_select(&self, idx: usize) {
-		let opt = self.options.get(idx).unwrap();
+	fn draw_select(&self, options: &[Opt], idx: usize) {
+		let opt = options.get(idx).unwrap();
 		let line = opt.select();
 		MultiSelect::draw(&line);
 	}
 
-	fn draw_unselect(&self, idx: usize) {
-		let opt = self.options.get(idx).unwrap();
+	fn draw_unselect(&self, options: &[Opt], idx: usize) {
+		let opt = options.get(idx).unwrap();
 		let line = opt.unselect();
 		MultiSelect::draw(&line);
 	}
@@ -230,7 +230,7 @@ impl MultiSelect {
 		let _ = stdout.flush();
 	}
 
-	fn w_out(&self, idx: usize, values: &[&Opt]) {
+	fn w_out(&self, idx: usize, selected: &[&Opt]) {
 		let mut stdout = stdout();
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(idx as u16 + 1));
@@ -247,7 +247,7 @@ impl MultiSelect {
 		let mv = self.options.len() as u16 + 1;
 		let _ = stdout.queue(cursor::MoveUp(mv));
 
-		let vals = values
+		let vals = selected
 			.iter()
 			.map(|&opt| opt.label.clone())
 			.collect::<Vec<_>>();
