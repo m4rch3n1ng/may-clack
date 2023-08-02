@@ -11,7 +11,6 @@ pub struct Confirm {
 }
 
 impl Confirm {
-	#[must_use]
 	pub fn new<S: Into<String>>(message: S) -> Confirm {
 		Confirm {
 			message: message.into(),
@@ -20,20 +19,17 @@ impl Confirm {
 		}
 	}
 
-	#[must_use]
 	pub fn initial_value(&mut self, b: bool) -> &mut Self {
 		self.initial_value = b;
 		self
 	}
 
-	#[must_use]
 	pub fn prompts<S: Into<String>>(&mut self, yes: S, no: S) -> &mut Self {
 		self.prompts = (yes.into(), no.into());
 		self
 	}
 
 	// todo: Result
-	#[must_use]
 	pub fn interact(&self) -> Option<bool> {
 		self.w_init();
 
@@ -137,7 +133,6 @@ impl Confirm {
 	}
 }
 
-#[must_use]
 pub fn confirm<S: Into<String>>(message: S) -> Confirm {
 	Confirm::new(message)
 }

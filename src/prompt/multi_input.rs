@@ -25,7 +25,6 @@ enum InteractOnce {
 }
 
 impl MultiInput {
-	#[must_use]
 	pub fn new<S: Into<String>>(message: S) -> Self {
 		MultiInput {
 			message: message.into(),
@@ -37,30 +36,25 @@ impl MultiInput {
 		}
 	}
 
-	#[must_use]
 	pub fn placeholder(&mut self) -> &mut Self {
 		todo!();
 	}
 
-	#[must_use]
 	pub fn initial_value<S: Into<String>>(&mut self, initial_value: S) -> &mut Self {
 		self.initial_value = Some(initial_value.into());
 		self
 	}
 
-	#[must_use]
 	pub fn min(&mut self, min: u16) -> &mut Self {
 		self.min = min;
 		self
 	}
 
-	#[must_use]
 	pub fn max(&mut self, max: u16) -> &mut Self {
 		self.max = max;
 		self
 	}
 
-	#[must_use]
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
 		F: Fn(&str) -> bool + 'static,
@@ -78,7 +72,6 @@ impl MultiInput {
 		}
 	}
 
-	#[must_use]
 	pub fn cancel<F>(&mut self, cancel: F) -> &mut Self
 	where
 		F: Fn() + 'static,

@@ -87,7 +87,6 @@ pub struct MultiSelect {
 }
 
 impl MultiSelect {
-	#[must_use]
 	pub fn new<S: Into<String>>(message: S) -> Self {
 		MultiSelect {
 			message: message.into(),
@@ -95,7 +94,6 @@ impl MultiSelect {
 		}
 	}
 
-	#[must_use]
 	pub fn option<S: Into<String>>(&mut self, val: S, label: S) -> &mut Self {
 		// todo duplicate
 		let opt = Opt::new(val, label, None);
@@ -103,14 +101,12 @@ impl MultiSelect {
 		self
 	}
 
-	#[must_use]
 	pub fn option_hint<S: Into<String>>(&mut self, val: S, label: S, hint: S) -> &mut Self {
 		let opt = Opt::new(val, label, Some(hint));
 		self.options.push(opt);
 		self
 	}
 
-	#[must_use]
 	pub fn options(&mut self, options: Vec<Opt>) -> &mut Self {
 		self.options = options;
 		self
@@ -118,7 +114,6 @@ impl MultiSelect {
 
 	// todo error
 	// todo remove mut
-	#[must_use]
 	pub fn interact(&mut self) -> Option<Vec<String>> {
 		if self.options.is_empty() {
 			return None;
@@ -266,7 +261,6 @@ impl MultiSelect {
 	}
 }
 
-#[must_use]
 pub fn multi_select<S: Into<String>>(message: S) -> MultiSelect {
 	MultiSelect::new(message)
 }
