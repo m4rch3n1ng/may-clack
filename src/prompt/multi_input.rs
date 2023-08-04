@@ -111,7 +111,6 @@ impl MultiInput {
 		}
 	}
 
-	// todo max
 	pub fn interact(&self) -> Result<Vec<String>, ClackInputError> {
 		self.w_init();
 
@@ -124,9 +123,15 @@ impl MultiInput {
 				Ok(Some(value)) => {
 					self.w_line(&value);
 					v.push(value);
+
+					if v.len() as u16 == self.max {
+						println!();
+						self.w_out(&v);
+						break;
+					}
 				}
 				Ok(None) => {
-					self.w_out(v.len());
+					self.w_out(&v);
 					break;
 				}
 				Err(ClackInputError::Cancelled) => {
@@ -177,15 +182,17 @@ impl MultiInput {
 		let _ = stdout.flush();
 	}
 
-	fn w_out(&self, amt: usize) {
+	fn w_out(&self, values: &[String]) {
+		let amt = values.len();
+
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(amt as u16 + 2));
 		let _ = stdout.flush();
 
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 
-		for _ in 0..amt {
-			println!("{}", *chars::BAR);
+		for val in values {
+			println!("{}  {}", *chars::BAR, style(val).dim());
 		}
 	}
 
