@@ -116,6 +116,10 @@ impl Input {
 			Ok(None) => unreachable!(),
 			Err(ClackInputError::Cancelled) => {
 				self.w_cancel();
+				if let Some(cancel) = self.cancel.as_ref() {
+					cancel()
+				}
+
 				Err(ClackInputError::Cancelled)
 			}
 			Err(err) => Err(err),
