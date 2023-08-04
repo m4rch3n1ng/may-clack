@@ -137,7 +137,11 @@ impl Select {
 				Key::Enter => {
 					self.w_out(idx);
 
-					let opt = self.options.get(idx).cloned().unwrap();
+					let opt = self
+						.options
+						.get(idx)
+						.cloned()
+						.expect("idx should always be in bound");
 					return Ok(opt.value);
 				}
 				_ => {}
@@ -148,13 +152,19 @@ impl Select {
 
 impl Select {
 	fn draw_select(&self, idx: usize) {
-		let opt = self.options.get(idx).unwrap();
+		let opt = self
+			.options
+			.get(idx)
+			.expect("idx should always be in bound");
 		let line = opt.select();
 		Select::draw(&line);
 	}
 
 	fn draw_unselect(&self, idx: usize) {
-		let opt = self.options.get(idx).unwrap();
+		let opt = self
+			.options
+			.get(idx)
+			.expect("idx should always be in bound");
 		let line = opt.unselect();
 		Select::draw(&line);
 	}
@@ -205,7 +215,12 @@ impl Select {
 		let mv = self.options.len() as u16 + 1;
 		let _ = stdout.queue(cursor::MoveUp(mv));
 
-		let label = self.options.get(idx).cloned().unwrap().label;
+		let label = self
+			.options
+			.get(idx)
+			.cloned()
+			.expect("idx should always be in bound")
+			.label;
 		println!("{}  {}", *chars::BAR, style(label).dim());
 	}
 }

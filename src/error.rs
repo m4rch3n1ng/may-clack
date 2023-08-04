@@ -13,13 +13,13 @@ pub enum ClackError {
 pub enum ClackInputError {
 	#[error("operation cancelled")]
 	Cancelled,
-	#[error("readline error")]
+	#[error("readline error {0}")]
 	ReadlineError(#[from] ReadlineError),
 }
 
 #[derive(Error, Debug)]
 pub enum ClackSelectError {
-	#[error("io error")]
+	#[error("io error {0}")]
 	IoError(#[from] std::io::Error),
 	#[error("operation cancelled")]
 	Cancelled,

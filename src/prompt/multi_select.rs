@@ -161,15 +161,12 @@ impl MultiSelect {
 					self.draw_select(&options, idx);
 				}
 				Key::Char(' ') => {
-					let opt = options.get_mut(idx).unwrap();
+					let opt = options.get_mut(idx).expect("idx should always be in bound");
 					opt.toggle();
 					self.draw_select(&options, idx);
 				}
 				Key::Enter => {
-					let selected_opts = options
-						.iter()
-						.filter(|opt| opt.active)
-						.collect::<Vec<_>>();
+					let selected_opts = options.iter().filter(|opt| opt.active).collect::<Vec<_>>();
 
 					self.w_out(idx, &selected_opts);
 
@@ -190,13 +187,13 @@ impl MultiSelect {
 
 impl MultiSelect {
 	fn draw_select(&self, options: &[Opt], idx: usize) {
-		let opt = options.get(idx).unwrap();
+		let opt = options.get(idx).expect("idx should always be in bound");
 		let line = opt.select();
 		MultiSelect::draw(&line);
 	}
 
 	fn draw_unselect(&self, options: &[Opt], idx: usize) {
-		let opt = options.get(idx).unwrap();
+		let opt = options.get(idx).expect("idx should always be in bound");
 		let line = opt.unselect();
 		MultiSelect::draw(&line);
 	}
