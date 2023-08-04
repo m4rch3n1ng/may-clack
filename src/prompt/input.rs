@@ -15,6 +15,18 @@ pub struct Input {
 }
 
 impl Input {
+	/// Creates a new Input struct.
+	/// 
+	/// Has a shorthand version in [`input()`]
+	/// 
+	/// ```
+	/// use may_clack::{input, input::Input};
+	/// 
+	/// // these two are equivalent
+	/// let question = Input::new("message");
+	/// let question = input("message");
+	/// ```
+	/// 
 	pub fn new<S: Into<String>>(message: S) -> Self {
 		Input {
 			message: message.into(),
@@ -25,20 +37,47 @@ impl Input {
 		}
 	}
 
+	/// Specify the default value when no input is given
+	/// 
+	/// Useful in combination with [`Input::required()`]
+	/// 
+	/// ```no_run
+	/// use may_clack::input;
+	/// 
+	/// let answer = input("message").default_value("default_value").required();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn default_value<S: Into<String>>(&mut self, def: S) -> &mut Self {
 		self.default_value = Some(def.into());
 		self
 	}
 
+	/// Todo
 	pub fn placeholder(&mut self) -> &mut Self {
 		todo!();
 	}
 
+	/// Specify the initial value
+	/// 
+	/// ```no_run
+	/// use may_clack::input;
+	/// 
+	/// let answer = input("message").initial_value("initial_value").interact();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn initial_value<S: Into<String>>(&mut self, init: S) -> &mut Self {
 		self.initial_value = Some(init.into());
 		self
 	}
 
+	/// Specify a validation function
+	/// 
+	/// ```no_run
+	/// use may_clack::input;
+	/// 
+	/// let answer = input("message").validate(|x| x.is_ascii()).interact();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
 		F: Fn(&str) -> bool + 'static,
@@ -56,6 +95,17 @@ impl Input {
 		}
 	}
 
+	/// Specify function to call on cancel
+	/// 
+	/// ```no_run
+	/// use may_clack::{input, cancel};
+	/// 
+	/// let answer = input("message").cancel(do_cancel).interact();
+	/// 
+	/// fn do_cancel() {
+	///     cancel("operation cancelled");
+	///     std::process::exit(1);
+	/// }
 	pub fn cancel<F>(&mut self, cancel: F) -> &mut Self
 	where
 		F: Fn() + 'static,
@@ -104,6 +154,16 @@ impl Input {
 		}
 	}
 
+	/// Like [`Input::interact()`], but does not return an empty line.
+	/// 
+	/// Useful when used with [`Input::default_value`], as that means that there can be no empty value.
+	/// 
+	/// ```no_run
+	/// use may_clack::input;
+	/// 
+	/// let answer = input("message").default_value("default_value").required();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn required(&self) -> Result<String, ClackInputError> {
 		self.w_init();
 
@@ -126,6 +186,24 @@ impl Input {
 		}
 	}
 
+	/// Waits for the user to submit a line of text.
+	/// 
+	/// Returns [`Option::None`] on an empty line and [`Option::Some(String)`] otherwise.
+	/// 
+	/// ```no_run
+	/// use may_clack::{input, cancel};
+	/// 
+	/// let answer = input("message")
+	///     .initial_value("initial_value")
+	///     .validate(|x| x.is_ascii())
+	///     .cancel(do_cancel)
+	///     .interact();
+	/// 
+	/// fn do_cancel() {
+	///     cancel("operation cancelled");
+	///     std::process::exit(1);
+	/// }
+	/// ```
 	pub fn interact(&self) -> Result<Option<String>, ClackInputError> {
 		self.w_init();
 
@@ -189,6 +267,7 @@ impl Input {
 	}
 }
 
+/// Shorthand for [`Input::new()`]
 pub fn input<S: Into<String>>(message: S) -> Input {
 	Input::new(message)
 }

@@ -132,6 +132,7 @@ impl Confirm {
 	}
 }
 
+/// Shorthand for [`Confirm::new()`]
 pub fn confirm<S: Into<String>>(message: S) -> Confirm {
 	Confirm::new(message)
 }

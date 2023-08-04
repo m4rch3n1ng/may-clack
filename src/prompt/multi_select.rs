@@ -258,6 +258,7 @@ impl MultiSelect {
 	}
 }
 
+/// Shorthand for [`MultiSelect::new()`]
 pub fn multi_select<S: Into<String>>(message: S) -> MultiSelect {
 	MultiSelect::new(message)
 }

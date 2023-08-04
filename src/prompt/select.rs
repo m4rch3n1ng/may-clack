@@ -225,6 +225,7 @@ impl Select {
 	}
 }
 
+/// Shorthand for [`Select::new()`]
 pub fn select<S: Into<String>>(message: S) -> Select {
 	Select::new(message)
 }

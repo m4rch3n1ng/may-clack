@@ -221,6 +221,7 @@ impl MultiInput {
 	}
 }
 
+// shorthand for [`MultiInput::new()`]
 pub fn multi_input<S: Into<String>>(message: S) -> MultiInput {
 	MultiInput::new(message)
 }
