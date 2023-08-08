@@ -3,6 +3,16 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ClackError {
+	#[error("{0}")]
+	ClackSimpleError(#[from] ClackSimpleError),
+	#[error("{0}")]
+	ClackInputError(#[from] ClackInputError),
+	#[error("{0}")]
+	ClackSelectError(#[from] ClackSelectError),
+}
+
+#[derive(Error, Debug)]
+pub enum ClackSimpleError {
 	#[error("io error")]
 	IoError(#[from] std::io::Error),
 	#[error("operation cancelled")]

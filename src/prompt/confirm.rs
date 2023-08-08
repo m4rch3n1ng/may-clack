@@ -1,4 +1,4 @@
-use crate::{error::ClackError, style::chars};
+use crate::{error::ClackSimpleError, style::chars};
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::io::{stdout, Write};
@@ -29,7 +29,7 @@ impl Confirm {
 		self
 	}
 
-	pub fn interact(&self) -> Result<bool, ClackError> {
+	pub fn interact(&self) -> Result<bool, ClackSimpleError> {
 		self.w_init();
 
 		let term = Term::stdout();
