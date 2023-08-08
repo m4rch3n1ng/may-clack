@@ -16,17 +16,17 @@ pub struct Input {
 
 impl Input {
 	/// Creates a new Input struct.
-	/// 
+	///
 	/// Has a shorthand version in [`input()`]
-	/// 
+	///
 	/// ```
 	/// use may_clack::{input, input::Input};
-	/// 
+	///
 	/// // these two are equivalent
 	/// let question = Input::new("message");
 	/// let question = input("message");
 	/// ```
-	/// 
+	///
 	pub fn new<S: Into<String>>(message: S) -> Self {
 		Input {
 			message: message.into(),
@@ -38,12 +38,12 @@ impl Input {
 	}
 
 	/// Specify the default value when no input is given
-	/// 
+	///
 	/// Useful in combination with [`Input::required()`]
-	/// 
+	///
 	/// ```no_run
 	/// use may_clack::input;
-	/// 
+	///
 	/// let answer = input("message").default_value("default_value").required();
 	/// println!("answer {:?}", answer);
 	/// ```
@@ -58,10 +58,10 @@ impl Input {
 	}
 
 	/// Specify the initial value
-	/// 
+	///
 	/// ```no_run
 	/// use may_clack::input;
-	/// 
+	///
 	/// let answer = input("message").initial_value("initial_value").interact();
 	/// println!("answer {:?}", answer);
 	/// ```
@@ -71,10 +71,10 @@ impl Input {
 	}
 
 	/// Specify a validation function
-	/// 
+	///
 	/// ```no_run
 	/// use may_clack::input;
-	/// 
+	///
 	/// let answer = input("message").validate(|x| x.is_ascii()).interact();
 	/// println!("answer {:?}", answer);
 	/// ```
@@ -96,12 +96,12 @@ impl Input {
 	}
 
 	/// Specify function to call on cancel
-	/// 
+	///
 	/// ```no_run
 	/// use may_clack::{input, cancel};
-	/// 
+	///
 	/// let answer = input("message").cancel(do_cancel).interact();
-	/// 
+	///
 	/// fn do_cancel() {
 	///     cancel("operation cancelled");
 	///     std::process::exit(1);
@@ -155,12 +155,12 @@ impl Input {
 	}
 
 	/// Like [`Input::interact()`], but does not return an empty line.
-	/// 
+	///
 	/// Useful when used with [`Input::default_value`], as that means that there can be no empty value.
-	/// 
+	///
 	/// ```no_run
 	/// use may_clack::input;
-	/// 
+	///
 	/// let answer = input("message").default_value("default_value").required();
 	/// println!("answer {:?}", answer);
 	/// ```
@@ -176,7 +176,7 @@ impl Input {
 			Ok(None) => unreachable!(),
 			Err(ClackInputError::Cancelled) => {
 				self.w_cancel();
-				if let Some(cancel) = self.cancel.as_ref() {
+				if let Some(cancel) = self.cancel.as_deref() {
 					cancel()
 				}
 
@@ -187,18 +187,18 @@ impl Input {
 	}
 
 	/// Waits for the user to submit a line of text.
-	/// 
+	///
 	/// Returns [`Option::None`] on an empty line and [`Option::Some(String)`] otherwise.
-	/// 
+	///
 	/// ```no_run
 	/// use may_clack::{input, cancel};
-	/// 
+	///
 	/// let answer = input("message")
 	///     .initial_value("initial_value")
 	///     .validate(|x| x.is_ascii())
 	///     .cancel(do_cancel)
 	///     .interact();
-	/// 
+	///
 	/// fn do_cancel() {
 	///     cancel("operation cancelled");
 	///     std::process::exit(1);
@@ -216,6 +216,10 @@ impl Input {
 			}
 			Err(ClackInputError::Cancelled) => {
 				self.w_cancel();
+				if let Some(cancel) = self.cancel.as_deref() {
+					cancel()
+				}
+
 				Err(ClackInputError::Cancelled)
 			}
 			Err(err) => Err(err),

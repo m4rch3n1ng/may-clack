@@ -136,7 +136,7 @@ impl MultiInput {
 				}
 				Err(ClackInputError::Cancelled) => {
 					self.w_cancel(v.len());
-					if let Some(cancel) = self.cancel.as_ref() {
+					if let Some(cancel) = self.cancel.as_deref() {
 						cancel();
 					}
 

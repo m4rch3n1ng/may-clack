@@ -76,7 +76,7 @@
 //!
 //! ```no_run
 //! use may_clack::select;
-//! 
+//!
 //! let fruit = select("Pick a fruit")
 //!     .option_hint("mango", "Mango", "The best one")
 //!     .option("peach", "Peach")
@@ -84,14 +84,14 @@
 //!     .interact();
 //! println!("fruit {:?}", fruit);
 //! ```
-//! 
+//!
 //! ## MultiSelect
-//! 
+//!
 //! The [`multi_select::MultiSelect`] component allows the user to choose multiple values from a list of options.
-//! 
+//!
 //! ```no_run
 //! use may_clack::multi_select;
-//! 
+//!
 //! let toppings = multi_select("Choose your toppings")
 //!     .option("fruits", "Dried fruits")
 //!     .option("chocolate", "Chocolate Chips")
@@ -99,18 +99,18 @@
 //!     .interact();
 //! println!("toppings {:?}", toppings);
 //! ```
-//! 
+//!
 //! ## MultiInput
-//! 
+//!
 //! The [`multi_input::MultiInput`] component accepts multiple lines of text.
-//! 
+//!
 //! ```no_run
 //! use may_clack::multi_input;
-//! 
+//!
 //! let lines = multi_input("idk").interact();
 //! println!("lines {:?}", lines);
 //! ```
-//! 
+//!
 
 pub mod error;
 mod prompt;
