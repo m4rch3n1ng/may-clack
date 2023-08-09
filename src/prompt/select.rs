@@ -23,7 +23,7 @@ impl Opt {
 		Opt::new(value, label, None)
 	}
 
-	fn select(&self) -> String {
+	fn focus(&self) -> String {
 		let fmt = format!("{} {}", style(*chars::RADIO_ACTIVE).green(), self.label);
 
 		if let Some(hint) = &self.hint {
@@ -34,7 +34,7 @@ impl Opt {
 		}
 	}
 
-	fn unselect(&self) -> String {
+	fn unfocus(&self) -> String {
 		let fmt = match &self.hint {
 			Some(hint) => format!(
 				"{} {} {}",
@@ -96,7 +96,7 @@ impl Select {
 		}
 
 		self.w_init();
-		self.draw_select(0);
+		self.draw_focus(0);
 
 		let term = Term::stdout();
 
@@ -105,7 +105,7 @@ impl Select {
 		loop {
 			match term.read_key()? {
 				Key::ArrowUp | Key::ArrowLeft => {
-					self.draw_unselect(idx);
+					self.draw_unfocus(idx);
 					let mut stdout = stdout();
 
 					if idx > 0 {
@@ -117,10 +117,10 @@ impl Select {
 					}
 
 					let _ = stdout.flush();
-					self.draw_select(idx);
+					self.draw_focus(idx);
 				}
 				Key::ArrowDown | Key::ArrowRight => {
-					self.draw_unselect(idx);
+					self.draw_unfocus(idx);
 					let mut stdout = stdout();
 
 					if idx < max - 1 {
@@ -132,7 +132,7 @@ impl Select {
 					}
 
 					let _ = stdout.flush();
-					self.draw_select(idx);
+					self.draw_focus(idx);
 				}
 				Key::Enter => {
 					self.w_out(idx);
@@ -151,21 +151,21 @@ impl Select {
 }
 
 impl Select {
-	fn draw_select(&self, idx: usize) {
+	fn draw_focus(&self, idx: usize) {
 		let opt = self
 			.options
 			.get(idx)
 			.expect("idx should always be in bound");
-		let line = opt.select();
+		let line = opt.focus();
 		Select::draw(&line);
 	}
 
-	fn draw_unselect(&self, idx: usize) {
+	fn draw_unfocus(&self, idx: usize) {
 		let opt = self
 			.options
 			.get(idx)
 			.expect("idx should always be in bound");
-		let line = opt.unselect();
+		let line = opt.unfocus();
 		Select::draw(&line);
 	}
 
@@ -187,7 +187,7 @@ impl Select {
 		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
 
 		for opt in &self.options {
-			let line = opt.unselect();
+			let line = opt.unfocus();
 			println!("{}  {}", style(*chars::BAR).cyan(), line);
 		}
 
@@ -213,7 +213,7 @@ impl Select {
 		println!(" ");
 
 		let mv = self.options.len() as u16 + 1;
-		let _ = stdout.queue(cursor::MoveUp(mv));
+		let _ = stdout.queue(cursor::MoveToPreviousLine(mv));
 
 		let label = self
 			.options

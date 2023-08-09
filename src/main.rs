@@ -34,6 +34,24 @@ fn main() {
 		.option_hint("val 3", "value 3", "hint")
 		.interact();
 
+	/* less mode test */
+
+	let do_less_noop = multi_select("less")
+		.option("val 1", "value 1")
+		.option("val 2", "value 2")
+		.option_hint("val 3", "value 3", "hint")
+		.less(5)
+		.interact();
+
+	let do_less = multi_select("less")
+		.option("val 1", "value 1")
+		.option("val 2", "value 2")
+		.option_hint("val 3", "value 3", "hint")
+		.option("val 4", "value 4")
+		.option("val 5", "value 5")
+		.less(3)
+		.interact();
+
 	outro("");
 
 	println!("input {:?}", do_input);
@@ -42,6 +60,9 @@ fn main() {
 	println!("confirm {:?}", do_confirm);
 	println!("multi_select {:?}", do_multi_select);
 	println!("select {:?}", do_select);
+
+	println!("do_less_noop {:?}", do_less_noop);
+	println!("do_less {:?}", do_less);
 }
 
 fn do_cancel() {

@@ -37,7 +37,7 @@ impl Opt {
 		check_len + 1 + label_len + hint_len
 	}
 
-	fn select(&self) -> String {
+	fn focus(&self) -> String {
 		let fmt = if self.active {
 			format!(
 				"{} {}",
@@ -56,7 +56,7 @@ impl Opt {
 		}
 	}
 
-	fn unselect(&self) -> String {
+	fn unfocus(&self) -> String {
 		let fmt = if self.active {
 			format!(
 				"{} {}",
@@ -84,6 +84,7 @@ impl Opt {
 pub struct MultiSelect {
 	message: String,
 	options: Vec<Opt>,
+	less: Option<u16>,
 }
 
 impl MultiSelect {
@@ -91,6 +92,7 @@ impl MultiSelect {
 		MultiSelect {
 			message: message.into(),
 			options: vec![],
+			less: None,
 		}
 	}
 
@@ -112,6 +114,17 @@ impl MultiSelect {
 		self
 	}
 
+	/// Enable paging.
+	///
+	/// # Panics
+	///
+	/// Panics when the given value is 0.
+	pub fn less(&mut self, less: u16) -> &mut Self {
+		assert!(less > 0, "less value has to be greater than zero");
+		self.less = Some(less);
+		self
+	}
+
 	// todo error
 	// todo remove mut
 	pub fn interact(&self) -> Result<Vec<String>, ClackSelectError> {
@@ -121,54 +134,98 @@ impl MultiSelect {
 
 		let mut options = self.options.clone();
 
-		self.w_init();
-		self.draw_select(&options, 0);
-
-		let term = Term::stdout();
+		let max = self.options.len();
+		let is_less = self.less.is_some() && self.options.len() as u16 > self.less.unwrap();
 
 		let mut idx = 0;
-		let max = self.options.len();
+		let mut less_idx: u16 = 0;
+
+		if !is_less {
+			self.w_init();
+		} else {
+			self.w_init_less();
+		}
+
+		let term = Term::stdout();
 		loop {
 			match term.read_key()? {
 				Key::ArrowUp | Key::ArrowLeft => {
-					self.draw_unselect(&options, idx);
-					let mut stdout = stdout();
+					if !is_less {
+						self.draw_unfocus(&options, idx);
+						let mut stdout = stdout();
 
-					if idx > 0 {
-						idx -= 1;
-						let _ = stdout.queue(cursor::MoveUp(1));
+						if idx > 0 {
+							idx -= 1;
+							let _ = stdout.queue(cursor::MoveUp(1));
+						} else {
+							idx = max - 1;
+							let _ = stdout.queue(cursor::MoveDown(max as u16 - 1));
+						}
+
+						let _ = stdout.flush();
+						self.draw_focus(&options, idx);
 					} else {
-						idx = max - 1;
-						let _ = stdout.queue(cursor::MoveDown(max as u16 - 1));
-					}
+						let prev = idx;
+						let prev_less = less_idx;
 
-					let _ = stdout.flush();
-					self.draw_select(&options, idx);
+						if idx > 0 {
+							idx -= 1;
+							less_idx = less_idx.saturating_sub(1);
+						} else {
+							let less = self.less.expect("less should unwrap if is_less");
+							idx = max - 1;
+							less_idx = less - 1;
+						}
+
+						self.draw_less(&options, idx, prev, less_idx, prev_less);
+					}
 				}
 				Key::ArrowDown | Key::ArrowRight => {
-					self.draw_unselect(&options, idx);
-					let mut stdout = stdout();
+					if !is_less {
+						self.draw_unfocus(&options, idx);
+						let mut stdout = stdout();
 
-					if idx < max - 1 {
-						idx += 1;
-						let _ = stdout.queue(cursor::MoveDown(1));
+						if idx < max - 1 {
+							idx += 1;
+							let _ = stdout.queue(cursor::MoveDown(1));
+						} else {
+							idx = 0;
+							let _ = stdout.queue(cursor::MoveUp(max as u16 - 1));
+						}
+
+						let _ = stdout.flush();
+						self.draw_focus(&options, idx);
 					} else {
-						idx = 0;
-						let _ = stdout.queue(cursor::MoveUp(max as u16 - 1));
-					}
+						let prev = idx;
+						let prev_less = less_idx;
 
-					let _ = stdout.flush();
-					self.draw_select(&options, idx);
+						if idx < max - 1 {
+							let less = self.less.expect("less should unwrap if is_less");
+							idx += 1;
+							if less_idx < less - 1 {
+								less_idx += 1;
+							}
+						} else {
+							idx = 0;
+							less_idx = 0;
+						}
+
+						self.draw_less(&options, idx, prev, less_idx, prev_less);
+					}
 				}
 				Key::Char(' ') => {
 					let opt = options.get_mut(idx).expect("idx should always be in bound");
 					opt.toggle();
-					self.draw_select(&options, idx);
+					self.draw_focus(&options, idx);
 				}
 				Key::Enter => {
 					let selected_opts = options.iter().filter(|opt| opt.active).collect::<Vec<_>>();
 
-					self.w_out(idx, &selected_opts);
+					if !is_less {
+						self.w_out(idx, &selected_opts);
+					} else {
+						self.w_out_less(idx, less_idx, &selected_opts);
+					}
 
 					let all = options
 						.iter()
@@ -186,15 +243,15 @@ impl MultiSelect {
 }
 
 impl MultiSelect {
-	fn draw_select(&self, options: &[Opt], idx: usize) {
+	fn draw_focus(&self, options: &[Opt], idx: usize) {
 		let opt = options.get(idx).expect("idx should always be in bound");
-		let line = opt.select();
+		let line = opt.focus();
 		MultiSelect::draw(&line);
 	}
 
-	fn draw_unselect(&self, options: &[Opt], idx: usize) {
+	fn draw_unfocus(&self, options: &[Opt], idx: usize) {
 		let opt = options.get(idx).expect("idx should always be in bound");
-		let line = opt.unselect();
+		let line = opt.unfocus();
 		MultiSelect::draw(&line);
 	}
 
@@ -206,9 +263,63 @@ impl MultiSelect {
 		print!("{}  {}", style(*chars::BAR).cyan(), line);
 		let _ = stdout.flush();
 	}
+
+	fn draw_less(&self, opts: &[Opt], idx: usize, prev_idx: usize, less_idx: u16, prev_less: u16) {
+		let mut stdout = stdout();
+		if prev_less > 0 {
+			let _ = stdout.queue(cursor::MoveToPreviousLine(prev_less));
+		}
+
+		let _ = stdout.queue(cursor::MoveToColumn(0));
+		let _ = stdout.flush();
+
+		let less = self.less.expect("less should unwrap if is_less");
+		for i in 0..less.into() {
+			let prev = prev_idx + i - prev_less as usize;
+			let prev_opt = opts.get(prev).unwrap();
+			let len = prev_opt.len();
+			print!("   {}", " ".repeat(len));
+
+			let _ = stdout.queue(cursor::MoveToColumn(0));
+			let _ = stdout.flush();
+
+			let i_idx = idx + i - less_idx as usize;
+			let opt = opts.get(i_idx).unwrap();
+			let line = opt.unfocus();
+			println!("{}  {}", style(*chars::BAR).cyan(), line);
+		}
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(less));
+		let _ = stdout.flush();
+
+		if less_idx > 0 {
+			let _ = stdout.queue(cursor::MoveToNextLine(less_idx));
+			let _ = stdout.flush();
+		}
+
+		self.draw_focus(opts, idx);
+	}
 }
 
 impl MultiSelect {
+	fn w_init_less(&self) {
+		println!("{}", *chars::BAR);
+		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
+
+		self.draw_less(&self.options, 0, 0, 0, 0);
+
+		let less = self.less.expect("less should unwrap if is_less");
+		let mut stdout = stdout();
+		let _ = stdout.queue(cursor::MoveToNextLine(less));
+		let _ = stdout.flush();
+
+		println!("{}  .........", style(*chars::BAR).cyan());
+		print!("{}", style(*chars::BAR_END).cyan());
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(less + 1));
+		let _ = stdout.flush();
+	}
+
 	fn w_init(&self) {
 		let mut stdout = stdout();
 
@@ -216,7 +327,7 @@ impl MultiSelect {
 		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
 
 		for opt in &self.options {
-			let line = opt.unselect();
+			let line = opt.unfocus();
 			println!("{}  {}", style(*chars::BAR).cyan(), line);
 		}
 
@@ -225,6 +336,8 @@ impl MultiSelect {
 		let len = self.options.len() as u16;
 		let _ = stdout.queue(cursor::MoveToPreviousLine(len));
 		let _ = stdout.flush();
+
+		self.draw_focus(&self.options, 0);
 	}
 
 	fn w_out(&self, idx: usize, selected: &[&Opt]) {
@@ -242,7 +355,47 @@ impl MultiSelect {
 		println!(" ");
 
 		let mv = self.options.len() as u16 + 1;
-		let _ = stdout.queue(cursor::MoveUp(mv));
+		let _ = stdout.queue(cursor::MoveToPreviousLine(mv));
+
+		let vals = selected
+			.iter()
+			.map(|&opt| opt.label.clone())
+			.collect::<Vec<_>>();
+
+		let val_string = if vals.is_empty() {
+			"none".into()
+		} else {
+			vals.join(", ")
+		};
+		println!("{}  {}", *chars::BAR, style(val_string).dim());
+	}
+
+	fn w_out_less(&self, idx: usize, less_idx: u16, selected: &[&Opt]) {
+		let mut stdout = stdout();
+		if less_idx > 0 {
+			let _ = stdout.queue(cursor::MoveToPreviousLine(less_idx));
+		}
+
+		// let _ = stdout.queue(cursor::MoveToColumn(0));
+		// let _ = stdout.flush();
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
+		let _ = stdout.flush();
+
+		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
+
+		let less = self.less.expect("less should unwrap if is_less");
+		for i in 0..less.into() {
+			let prev = idx + i - less_idx as usize;
+			let prev_opt = self.options.get(prev).unwrap();
+			let len = prev_opt.len();
+			println!("   {}", " ".repeat(len));
+		}
+		println!("            ");
+		println!(" ");
+
+		let mv = less + 2;
+		let _ = stdout.queue(cursor::MoveToPreviousLine(mv));
 
 		let vals = selected
 			.iter()
