@@ -1,7 +1,7 @@
 use console::style;
-use may_clack::{cancel, input, intro, multi_input, outro};
+use may_clack::{cancel, error::ClackInputError, input, intro, multi_input, outro};
 
-fn main() {
+fn main() -> Result<(), ClackInputError> {
 	println!();
 	intro(style(" test ").reverse());
 
@@ -18,6 +18,8 @@ fn main() {
 
 	println!("single {:?}", do_validate_input);
 	println!("multi {:?}", do_validate_multi_input);
+
+	Ok(())
 }
 
 fn do_cancel() {
