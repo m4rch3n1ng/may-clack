@@ -1,7 +1,10 @@
 use crate::{error::ClackSelectError, style::chars};
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
-use std::io::{stdout, Write};
+use std::{
+	fmt::Display,
+	io::{stdout, Write},
+};
 
 #[derive(Debug, Clone)]
 pub struct Opt<T: Clone> {
@@ -57,16 +60,16 @@ impl<T: Clone> Opt<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Select<T: Clone> {
-	message: String,
+pub struct Select<M: Display, T: Clone> {
+	message: M,
 	options: Vec<Opt<T>>,
 }
 
 // todo less mode
-impl<T: Clone> Select<T> {
-	pub fn new<S: Into<String>>(message: S) -> Self {
+impl<M: Display, T: Clone> Select<M, T> {
+	pub fn new(message: M) -> Self {
 		Select {
-			message: message.into(),
+			message,
 			options: vec![],
 		}
 	}
@@ -150,7 +153,7 @@ impl<T: Clone> Select<T> {
 	}
 }
 
-impl<T: Clone> Select<T> {
+impl<M: Display, T: Clone> Select<M, T> {
 	fn draw_focus(&self, idx: usize) {
 		let opt = self
 			.options
@@ -179,7 +182,7 @@ impl<T: Clone> Select<T> {
 	}
 }
 
-impl<T: Clone> Select<T> {
+impl<M: Display, T: Clone> Select<M, T> {
 	fn w_init(&self) {
 		let mut stdout = stdout();
 
@@ -226,6 +229,6 @@ impl<T: Clone> Select<T> {
 }
 
 /// Shorthand for [`Select::new()`]
-pub fn select<S: Into<String>, T: Clone>(message: S) -> Select<T> {
+pub fn select<M: Display, T: Clone>(message: M) -> Select<M, T> {
 	Select::new(message)
 }

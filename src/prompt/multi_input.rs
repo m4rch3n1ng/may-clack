@@ -1,4 +1,7 @@
-use std::io::{stdout, Write};
+use std::{
+	fmt::Display,
+	io::{stdout, Write},
+};
 
 use console::style;
 use crossterm::{cursor, QueueableCommand};
@@ -8,8 +11,8 @@ use crate::{error::ClackInputError, style::chars};
 
 type ValidateFn = dyn Fn(&str) -> bool;
 
-pub struct MultiInput {
-	message: String,
+pub struct MultiInput<M: Display> {
+	message: M,
 	validate: Option<Box<ValidateFn>>,
 	cancel: Option<Box<dyn Fn()>>,
 	initial_value: Option<String>,
@@ -17,10 +20,10 @@ pub struct MultiInput {
 	max: u16,
 }
 
-impl MultiInput {
-	pub fn new<S: Into<String>>(message: S) -> Self {
+impl<M: Display> MultiInput<M> {
+	pub fn new(message: M) -> Self {
 		MultiInput {
-			message: message.into(),
+			message,
 			validate: None,
 			initial_value: None,
 			cancel: None,
@@ -150,7 +153,7 @@ impl MultiInput {
 	}
 }
 
-impl MultiInput {
+impl<M: Display> MultiInput<M> {
 	fn w_init(&self) {
 		let mut stdout = stdout();
 
@@ -222,6 +225,6 @@ impl MultiInput {
 }
 
 // shorthand for [`MultiInput::new()`]
-pub fn multi_input<S: Into<String>>(message: S) -> MultiInput {
+pub fn multi_input<M: Display>(message: M) -> MultiInput<M> {
 	MultiInput::new(message)
 }

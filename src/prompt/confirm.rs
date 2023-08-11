@@ -1,19 +1,22 @@
 use crate::{error::ClackSimpleError, style::chars};
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
-use std::io::{stdout, Write};
+use std::{
+	fmt::Display,
+	io::{stdout, Write},
+};
 
 #[derive(Debug, Clone)]
-pub struct Confirm {
-	message: String,
+pub struct Confirm<M: Display> {
+	message: M,
 	initial_value: bool,
 	prompts: (String, String),
 }
 
-impl Confirm {
-	pub fn new<S: Into<String>>(message: S) -> Confirm {
+impl<M: Display> Confirm<M> {
+	pub fn new(message: M) -> Confirm<M> {
 		Confirm {
-			message: message.into(),
+			message,
 			initial_value: false,
 			prompts: ("Yes".into(), "No".into()),
 		}
@@ -63,8 +66,8 @@ impl Confirm {
 	}
 }
 
-impl Confirm {
-	fn radio_pnt(b: bool, w: &str) -> String {
+impl<M: Display> Confirm<M> {
+	fn radio_pnt(&self, b: bool, w: &str) -> String {
 		if b {
 			format!("{} {}", style(*chars::RADIO_ACTIVE).green(), w)
 		} else {
@@ -75,8 +78,8 @@ impl Confirm {
 	}
 
 	fn radio(&self, b: bool) -> String {
-		let yes = Confirm::radio_pnt(b, &self.prompts.0);
-		let no = Confirm::radio_pnt(!b, &self.prompts.1);
+		let yes = self.radio_pnt(b, &self.prompts.0);
+		let no = self.radio_pnt(!b, &self.prompts.1);
 
 		format!("{} / {}", yes, no)
 	}
@@ -92,7 +95,7 @@ impl Confirm {
 	}
 }
 
-impl Confirm {
+impl<M: Display> Confirm<M> {
 	fn w_init(&self) {
 		let mut stdout = stdout();
 
@@ -133,6 +136,6 @@ impl Confirm {
 }
 
 /// Shorthand for [`Confirm::new()`]
-pub fn confirm<S: Into<String>>(message: S) -> Confirm {
+pub fn confirm<M: Display>(message: M) -> Confirm<M> {
 	Confirm::new(message)
 }

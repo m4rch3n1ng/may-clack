@@ -2,19 +2,22 @@ use crate::{error::ClackInputError, style::chars};
 use console::style;
 use crossterm::{cursor, QueueableCommand};
 use rustyline::DefaultEditor;
-use std::io::{stdout, Write};
+use std::{
+	fmt::Display,
+	io::{stdout, Write},
+};
 
 type ValidateFn = dyn Fn(&str) -> bool;
 
-pub struct Input {
-	message: String,
+pub struct Input<M: Display> {
+	message: M,
 	default_value: Option<String>,
 	initial_value: Option<String>,
 	validate: Option<Box<ValidateFn>>,
 	cancel: Option<Box<dyn Fn()>>,
 }
 
-impl Input {
+impl<M: Display> Input<M> {
 	/// Creates a new Input struct.
 	///
 	/// Has a shorthand version in [`input()`]
@@ -27,9 +30,9 @@ impl Input {
 	/// let question = input("message");
 	/// ```
 	///
-	pub fn new<S: Into<String>>(message: S) -> Self {
+	pub fn new(message: M) -> Self {
 		Input {
-			message: message.into(),
+			message,
 			default_value: None,
 			initial_value: None,
 			validate: None,
@@ -227,7 +230,7 @@ impl Input {
 	}
 }
 
-impl Input {
+impl<M: Display> Input<M> {
 	fn w_init(&self) {
 		let mut stdout = stdout();
 
@@ -272,6 +275,6 @@ impl Input {
 }
 
 /// Shorthand for [`Input::new()`]
-pub fn input<S: Into<String>>(message: S) -> Input {
+pub fn input<M: Display>(message: M) -> Input<M> {
 	Input::new(message)
 }

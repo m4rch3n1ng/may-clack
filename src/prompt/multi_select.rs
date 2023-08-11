@@ -1,7 +1,10 @@
 use crate::{error::ClackSelectError, style::chars};
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
-use std::io::{stdout, Write};
+use std::{
+	fmt::Display,
+	io::{stdout, Write},
+};
 
 #[derive(Debug, Clone)]
 pub struct Opt<T: Clone> {
@@ -81,16 +84,16 @@ impl<T: Clone> Opt<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct MultiSelect<T: Clone> {
-	message: String,
+pub struct MultiSelect<M: Display, T: Clone> {
+	message: M,
 	options: Vec<Opt<T>>,
 	less: Option<u16>,
 }
 
-impl<T: Clone> MultiSelect<T> {
-	pub fn new<S: Into<String>>(message: S) -> Self {
+impl<M: Display, T: Clone> MultiSelect<M, T> {
+	pub fn new(message: M) -> Self {
 		MultiSelect {
-			message: message.into(),
+			message,
 			options: vec![],
 			less: None,
 		}
@@ -242,7 +245,7 @@ impl<T: Clone> MultiSelect<T> {
 	}
 }
 
-impl<T: Clone> MultiSelect<T> {
+impl<M: Display, T: Clone> MultiSelect<M, T> {
 	fn draw_focus(&self, options: &[Opt<T>], idx: usize) {
 		let opt = options.get(idx).expect("idx should always be in bound");
 		let line = opt.focus();
@@ -308,7 +311,7 @@ impl<T: Clone> MultiSelect<T> {
 	}
 }
 
-impl<T: Clone> MultiSelect<T> {
+impl<M: Display, T: Clone> MultiSelect<M, T> {
 	fn w_init_less(&self) {
 		println!("{}", *chars::BAR);
 		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
@@ -419,6 +422,6 @@ impl<T: Clone> MultiSelect<T> {
 }
 
 /// Shorthand for [`MultiSelect::new()`]
-pub fn multi_select<S: Into<String>, T: Clone>(message: S) -> MultiSelect<T> {
+pub fn multi_select<M: Display, T: Clone>(message: M) -> MultiSelect<M, T> {
 	MultiSelect::new(message)
 }
