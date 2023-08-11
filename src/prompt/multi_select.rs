@@ -267,14 +267,7 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		let _ = stdout.flush();
 	}
 
-	fn draw_less(
-		&self,
-		opts: &[Opt<T>],
-		idx: usize,
-		prev_idx: usize,
-		less_idx: u16,
-		prev_less: u16,
-	) {
+	fn draw_less(&self, opts: &[Opt<T>], idx: usize, prev: usize, less_idx: u16, prev_less: u16) {
 		let mut stdout = stdout();
 		if prev_less > 0 {
 			let _ = stdout.queue(cursor::MoveToPreviousLine(prev_less));
@@ -285,7 +278,7 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 
 		let less = self.less.expect("less should unwrap if is_less");
 		for i in 0..less.into() {
-			let prev = prev_idx + i - prev_less as usize;
+			let prev = prev + i - prev_less as usize;
 			let prev_opt = opts.get(prev).unwrap();
 			let len = prev_opt.len();
 			print!("   {}", " ".repeat(len));
@@ -385,9 +378,6 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		if less_idx > 0 {
 			let _ = stdout.queue(cursor::MoveToPreviousLine(less_idx));
 		}
-
-		// let _ = stdout.queue(cursor::MoveToColumn(0));
-		// let _ = stdout.flush();
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();

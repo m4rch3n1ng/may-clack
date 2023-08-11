@@ -1,5 +1,5 @@
 use console::style;
-use may_clack::{confirm, intro, multi_input, outro, error::ClackError};
+use may_clack::{confirm, error::ClackError, intro, multi_input, outro};
 
 fn main() -> Result<(), ClackError> {
 	intro("generic messages");
