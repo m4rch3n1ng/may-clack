@@ -32,3 +32,7 @@ pub mod chars {
 		pub static ref CHECKBOX_INACTIVE: &'static str = is_unicode("◻", "[ ]");
 	}
 }
+
+pub mod ansi {
+	pub const CLEAR_LINE: &str = "\x1b[2K";
+}

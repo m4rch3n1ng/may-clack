@@ -1,4 +1,7 @@
-use crate::{error::ClackSelectError, style::chars};
+use crate::{
+	error::ClackSelectError,
+	style::{ansi, chars},
+};
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::{
@@ -38,24 +41,7 @@ impl<T: Clone> Opt<T> {
 	}
 
 	fn unfocus(&self) -> String {
-		let fmt = match &self.hint {
-			Some(hint) => format!(
-				"{} {} {}",
-				*chars::RADIO_INACTIVE,
-				self.label,
-				" ".repeat(hint.len() + 2)
-			),
-			None => format!("{} {}", *chars::RADIO_INACTIVE, self.label),
-		};
-		style(fmt).to_string()
-	}
-
-	fn len(&self) -> usize {
-		let check_len = chars::RADIO_ACTIVE.len();
-		let label_len = self.label.len();
-		let hint_len = self.hint.as_ref().map_or(0, |hint| hint.len() + 1 + 2);
-
-		check_len + 1 + label_len + hint_len
+		format!("{} {}", *chars::RADIO_INACTIVE, self.label)
 	}
 }
 
@@ -66,7 +52,6 @@ pub struct Select<M: Display, T: Clone> {
 	less: Option<u16>,
 }
 
-// todo less mode
 impl<M: Display, T: Clone> Select<M, T> {
 	pub fn new(message: M) -> Self {
 		Select {
@@ -144,7 +129,6 @@ impl<M: Display, T: Clone> Select<M, T> {
 						let _ = stdout.flush();
 						self.draw_focus(idx);
 					} else {
-						let prev = idx;
 						let prev_less = less_idx;
 
 						if idx > 0 {
@@ -156,7 +140,7 @@ impl<M: Display, T: Clone> Select<M, T> {
 							less_idx = less - 1;
 						}
 
-						self.draw_less(idx, prev, less_idx, prev_less);
+						self.draw_less(idx, less_idx, prev_less);
 					}
 				}
 				Key::ArrowDown | Key::ArrowRight => {
@@ -175,7 +159,6 @@ impl<M: Display, T: Clone> Select<M, T> {
 						let _ = stdout.flush();
 						self.draw_focus(idx);
 					} else {
-						let prev = idx;
 						let prev_less = less_idx;
 
 						if idx < max - 1 {
@@ -189,7 +172,7 @@ impl<M: Display, T: Clone> Select<M, T> {
 							less_idx = 0;
 						}
 
-						self.draw_less(idx, prev, less_idx, prev_less);
+						self.draw_less(idx, less_idx, prev_less);
 					}
 				}
 				Key::Enter => {
@@ -236,11 +219,12 @@ impl<M: Display, T: Clone> Select<M, T> {
 		let _ = stdout.queue(cursor::MoveToColumn(0));
 		let _ = stdout.flush();
 
+		print!("{}", ansi::CLEAR_LINE);
 		print!("{}  {}", style(*chars::BAR).cyan(), line);
 		let _ = stdout.flush();
 	}
 
-	fn draw_less(&self, idx: usize, prev: usize, less_idx: u16, prev_less: u16) {
+	fn draw_less(&self, idx: usize, less_idx: u16, prev_less: u16) {
 		let mut stdout = stdout();
 		if prev_less > 0 {
 			let _ = stdout.queue(cursor::MoveToPreviousLine(prev_less));
@@ -251,17 +235,13 @@ impl<M: Display, T: Clone> Select<M, T> {
 
 		let less = self.less.expect("less should unwrap if is_less");
 		for i in 0..less.into() {
-			let prev = prev + i - prev_less as usize;
-			let prev_opt = self.options.get(prev).unwrap();
-			let len = prev_opt.len();
-			print!("   {}", " ".repeat(len));
-
 			let _ = stdout.queue(cursor::MoveToColumn(0));
 			let _ = stdout.flush();
 
 			let i_idx = idx + i - less_idx as usize;
 			let opt = self.options.get(i_idx).unwrap();
 			let line = opt.unfocus();
+			print!("{}", ansi::CLEAR_LINE);
 			println!("{}  {}", style(*chars::BAR).cyan(), line);
 		}
 
@@ -282,7 +262,7 @@ impl<M: Display, T: Clone> Select<M, T> {
 		println!("{}", *chars::BAR);
 		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
 
-		self.draw_less(0, 0, 0, 0);
+		self.draw_less(0, 0, 0);
 
 		let less = self.less.expect("less should unwrap if is_less");
 		let mut stdout = stdout();
@@ -322,11 +302,10 @@ impl<M: Display, T: Clone> Select<M, T> {
 
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 
-		for opt in &self.options {
-			let len = opt.len();
-			println!("   {}", " ".repeat(len));
+		for _ in &self.options {
+			println!("{}", ansi::CLEAR_LINE);
 		}
-		println!(" ");
+		println!("{}", ansi::CLEAR_LINE);
 
 		let mv = self.options.len() as u16 + 1;
 		let _ = stdout.queue(cursor::MoveToPreviousLine(mv));
@@ -352,15 +331,12 @@ impl<M: Display, T: Clone> Select<M, T> {
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 
 		let less = self.less.expect("less should unwrap if is_less");
-		for i in 0..less.into() {
-			let prev = idx + i - less_idx as usize;
-			let prev_opt = self.options.get(prev).unwrap();
-			let len = prev_opt.len();
-			println!("   {}", " ".repeat(len));
+		for _ in 0..less.into() {
+			println!("{}", ansi::CLEAR_LINE);
 		}
 
-		println!("            ");
-		println!(" ");
+		println!("{}", ansi::CLEAR_LINE);
+		println!("{}", ansi::CLEAR_LINE);
 
 		let mv = less + 2;
 		let _ = stdout.queue(cursor::MoveToPreviousLine(mv));

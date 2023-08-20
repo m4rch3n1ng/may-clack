@@ -1,4 +1,7 @@
-use crate::{error::ClackInputError, style::chars};
+use crate::{
+	error::ClackInputError,
+	style::{ansi, chars},
+};
 use console::style;
 use crossterm::{cursor, QueueableCommand};
 use rustyline::DefaultEditor;
@@ -159,7 +162,7 @@ impl<M: Display> Input<M> {
 
 	/// Like [`Input::interact()`], but does not return an empty line.
 	///
-	/// Useful when used with [`Input::default_value`], as that means that there can be no empty value.
+	/// Useful when used with [`Input::default_value()`], as that means that there can be no empty value.
 	///
 	/// ```no_run
 	/// use may_clack::input;
@@ -180,7 +183,7 @@ impl<M: Display> Input<M> {
 			Err(ClackInputError::Cancelled) => {
 				self.w_cancel();
 				if let Some(cancel) = self.cancel.as_deref() {
-					cancel()
+					cancel();
 				}
 
 				Err(ClackInputError::Cancelled)
@@ -191,7 +194,7 @@ impl<M: Display> Input<M> {
 
 	/// Waits for the user to submit a line of text.
 	///
-	/// Returns [`Option::None`] on an empty line and [`Option::Some(String)`] otherwise.
+	/// Returns [`Option::None`] on an empty line and [`Option::Some::<String>`] otherwise.
 	///
 	/// ```no_run
 	/// use may_clack::{input, cancel};
@@ -220,7 +223,7 @@ impl<M: Display> Input<M> {
 			Err(ClackInputError::Cancelled) => {
 				self.w_cancel();
 				if let Some(cancel) = self.cancel.as_deref() {
-					cancel()
+					cancel();
 				}
 
 				Err(ClackInputError::Cancelled)
@@ -266,6 +269,8 @@ impl<M: Display> Input<M> {
 		let _ = stdout.flush();
 
 		println!("{}  {}", style(*chars::STEP_CANCEL).red(), self.message);
+
+		print!("{}", style(ansi::CLEAR_LINE));
 		println!(
 			"{}  {}",
 			*chars::BAR,

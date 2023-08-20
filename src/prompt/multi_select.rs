@@ -1,4 +1,7 @@
-use crate::{error::ClackSelectError, style::chars};
+use crate::{
+	error::ClackSelectError,
+	style::{ansi, chars},
+};
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::{
@@ -32,14 +35,6 @@ impl<T: Clone> Opt<T> {
 		self.active = !self.active;
 	}
 
-	fn len(&self) -> usize {
-		let check_len = chars::CHECKBOX_INACTIVE.len();
-		let label_len = self.label.len();
-		let hint_len = self.hint.as_ref().map_or(0, |hint| hint.len() + 2 + 1);
-
-		check_len + 1 + label_len + hint_len
-	}
-
 	fn focus(&self) -> String {
 		let fmt = if self.active {
 			format!(
@@ -60,7 +55,7 @@ impl<T: Clone> Opt<T> {
 	}
 
 	fn unfocus(&self) -> String {
-		let fmt = if self.active {
+		if self.active {
 			format!(
 				"{} {}",
 				style(*chars::CHECKBOX_SELECTED).green(),
@@ -72,13 +67,6 @@ impl<T: Clone> Opt<T> {
 				style(*chars::CHECKBOX_INACTIVE).dim(),
 				style(&self.label).dim()
 			)
-		};
-
-		if let Some(hint) = &self.hint {
-			let len = hint.len() + 2;
-			format!("{} {}", fmt, " ".repeat(len))
-		} else {
-			fmt
 		}
 	}
 }
@@ -168,7 +156,6 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 						let _ = stdout.flush();
 						self.draw_focus(&options, idx);
 					} else {
-						let prev = idx;
 						let prev_less = less_idx;
 
 						if idx > 0 {
@@ -180,7 +167,7 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 							less_idx = less - 1;
 						}
 
-						self.draw_less(&options, idx, prev, less_idx, prev_less);
+						self.draw_less(&options, idx, less_idx, prev_less);
 					}
 				}
 				Key::ArrowDown | Key::ArrowRight => {
@@ -199,7 +186,6 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 						let _ = stdout.flush();
 						self.draw_focus(&options, idx);
 					} else {
-						let prev = idx;
 						let prev_less = less_idx;
 
 						if idx < max - 1 {
@@ -213,7 +199,7 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 							less_idx = 0;
 						}
 
-						self.draw_less(&options, idx, prev, less_idx, prev_less);
+						self.draw_less(&options, idx, less_idx, prev_less);
 					}
 				}
 				Key::Char(' ') => {
@@ -227,7 +213,7 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 					if !is_less {
 						self.w_out(idx, &selected_opts);
 					} else {
-						self.w_out_less(idx, less_idx, &selected_opts);
+						self.w_out_less(less_idx, &selected_opts);
 					}
 
 					let all = options
@@ -263,11 +249,12 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		let _ = stdout.queue(cursor::MoveToColumn(0));
 		let _ = stdout.flush();
 
+		print!("{}", ansi::CLEAR_LINE);
 		print!("{}  {}", style(*chars::BAR).cyan(), line);
 		let _ = stdout.flush();
 	}
 
-	fn draw_less(&self, opts: &[Opt<T>], idx: usize, prev: usize, less_idx: u16, prev_less: u16) {
+	fn draw_less(&self, opts: &[Opt<T>], idx: usize, less_idx: u16, prev_less: u16) {
 		let mut stdout = stdout();
 		if prev_less > 0 {
 			let _ = stdout.queue(cursor::MoveToPreviousLine(prev_less));
@@ -278,17 +265,14 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 
 		let less = self.less.expect("less should unwrap if is_less");
 		for i in 0..less.into() {
-			let prev = prev + i - prev_less as usize;
-			let prev_opt = opts.get(prev).unwrap();
-			let len = prev_opt.len();
-			print!("   {}", " ".repeat(len));
-
 			let _ = stdout.queue(cursor::MoveToColumn(0));
 			let _ = stdout.flush();
 
 			let i_idx = idx + i - less_idx as usize;
 			let opt = opts.get(i_idx).unwrap();
 			let line = opt.unfocus();
+
+			print!("{}", ansi::CLEAR_LINE);
 			println!("{}  {}", style(*chars::BAR).cyan(), line);
 		}
 
@@ -309,7 +293,7 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		println!("{}", *chars::BAR);
 		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
 
-		self.draw_less(&self.options, 0, 0, 0, 0);
+		self.draw_less(&self.options, 0, 0, 0);
 
 		let less = self.less.expect("less should unwrap if is_less");
 		let mut stdout = stdout();
@@ -351,11 +335,10 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 
-		for opt in &self.options {
-			let len = opt.len();
-			println!("   {}", " ".repeat(len));
+		for _ in &self.options {
+			println!("{}", ansi::CLEAR_LINE);
 		}
-		println!(" ");
+		println!("{}", ansi::CLEAR_LINE);
 
 		let mv = self.options.len() as u16 + 1;
 		let _ = stdout.queue(cursor::MoveToPreviousLine(mv));
@@ -373,7 +356,7 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		println!("{}  {}", *chars::BAR, style(val_string).dim());
 	}
 
-	fn w_out_less(&self, idx: usize, less_idx: u16, selected: &[&Opt<T>]) {
+	fn w_out_less(&self, less_idx: u16, selected: &[&Opt<T>]) {
 		let mut stdout = stdout();
 		if less_idx > 0 {
 			let _ = stdout.queue(cursor::MoveToPreviousLine(less_idx));
@@ -385,14 +368,11 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 
 		let less = self.less.expect("less should unwrap if is_less");
-		for i in 0..less.into() {
-			let prev = idx + i - less_idx as usize;
-			let prev_opt = self.options.get(prev).unwrap();
-			let len = prev_opt.len();
-			println!("   {}", " ".repeat(len));
+		for _ in 0..less.into() {
+			println!("{}", ansi::CLEAR_LINE);
 		}
-		println!("            ");
-		println!(" ");
+		println!("{}", ansi::CLEAR_LINE);
+		println!("{}", ansi::CLEAR_LINE);
 
 		let mv = less + 2;
 		let _ = stdout.queue(cursor::MoveToPreviousLine(mv));

@@ -1,4 +1,7 @@
-use crate::{error::ClackSimpleError, style::chars};
+use crate::{
+	error::ClackSimpleError,
+	style::{ansi, chars},
+};
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
 use std::{
@@ -18,7 +21,7 @@ impl<M: Display> Confirm<M> {
 		Confirm {
 			message,
 			initial_value: false,
-			prompts: ("Yes".into(), "No".into()),
+			prompts: ("yes".into(), "no".into()),
 		}
 	}
 
@@ -123,15 +126,11 @@ impl<M: Display> Confirm<M> {
 			&self.prompts.1
 		};
 
-		let len = 2 + self.prompts.0.chars().count() + 3 + 2 + self.prompts.1.chars().count();
+		// let len = 2 + self.prompts.0.chars().count() + 3 + 2 + self.prompts.1.chars().count();
 
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
-		println!(
-			"{}  {}{}",
-			*chars::BAR,
-			style(answ).dim(),
-			" ".repeat(len - answ.len())
-		);
+		print!("{}", ansi::CLEAR_LINE);
+		println!("{}  {}", *chars::BAR, style(answ).dim());
 	}
 }
 

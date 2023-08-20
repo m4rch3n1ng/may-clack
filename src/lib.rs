@@ -16,7 +16,7 @@
 //!
 //! when the user cancels a question, you can use the [`cancel`] utility to provide a cancellation message.
 //!   
-//! when cancelled will return a [`error::ClackError::Cancelled`], a [`error::ClackInputError::Cancelled`]
+//! when cancelled will return a [`error::ClackSimpleError::Cancelled`], a [`error::ClackInputError::Cancelled`]
 //! or a [`error::ClackSelectError::Cancelled`], depending on input type, Err in a Result.
 //!
 //! all input types that can return a `Cancelled` Err will also have the option to add a `.cancel` callback
@@ -32,8 +32,8 @@
 //!
 //! ## General
 //!
-//! there are 6 components: [input](#input), [confirm](#confirm),
-//! [select](#select), [multi_select](#multi_select), [multi_input](#multi_input)
+//! there are 6 components: [`input`](#input), [`confirm`](#confirm),
+//! [`select`](#select), [`multi_select`](#multi_select), [`multi_input`](#multi_input)
 //!
 //! each of the input types returns a struct, that allows you to setup the prompt.  
 //! since every prompt needs a message the initial
@@ -70,22 +70,29 @@
 //! println!("answer {:?}", answer);
 //! ```
 //!
-//! ## Select
+//! ## `Select`
 //!
 //! The [`select::Select`] component allows the user to choose one value from a list of options.
 //!
 //! ```no_run
 //! use may_clack::select;
 //!
-//! let fruit = select("Pick a fruit")
-//!     .option_hint("mango", "Mango", "The best one")
-//!     .option("peach", "Peach")
-//!     .option("passionfruit", "Passion fruit")
+//! #[derive(Debug, Clone)]
+//! enum Fruit {
+//!     Mango,
+//!     Peach,
+//!     PassionFruit,
+//! }
+//!
+//! let fruit = select("pick a fruit")
+//!     .option_hint(Fruit::Mango, "Mango", "The best one")
+//!     .option(Fruit::Peach, "Peach")
+//!     .option(Fruit::PassionFruit, "Passion fruit")
 //!     .interact();
 //! println!("fruit {:?}", fruit);
 //! ```
 //!
-//! ## MultiSelect
+//! ## `MultiSelect`
 //!
 //! The [`multi_select::MultiSelect`] component allows the user to choose multiple values from a list of options.
 //!
@@ -100,7 +107,7 @@
 //! println!("toppings {:?}", toppings);
 //! ```
 //!
-//! ## MultiInput
+//! ## `MultiInput`
 //!
 //! The [`multi_input::MultiInput`] component accepts multiple lines of text.
 //!

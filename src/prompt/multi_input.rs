@@ -2,12 +2,10 @@ use std::{
 	fmt::Display,
 	io::{stdout, Write},
 };
-
 use console::style;
 use crossterm::{cursor, QueueableCommand};
 use rustyline::DefaultEditor;
-
-use crate::{error::ClackInputError, style::chars};
+use crate::{error::ClackInputError, style::{chars, ansi}};
 
 type ValidateFn = dyn Fn(&str) -> bool;
 
@@ -194,9 +192,19 @@ impl<M: Display> MultiInput<M> {
 
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 
+		if amt == 0 {
+			println!("{}", *chars::BAR);
+		}
+
 		for val in values {
 			println!("{}  {}", *chars::BAR, style(val).dim());
 		}
+
+		println!("{}", style(ansi::CLEAR_LINE));
+		println!("{}", style(ansi::CLEAR_LINE));
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
+		let _ = stdout.flush();
 	}
 
 	fn w_cancel(&self, amt: usize) {
