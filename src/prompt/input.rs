@@ -85,7 +85,7 @@ impl<M: Display> Input<M> {
 	/// use may_clack::input;
 	///
 	/// let answer = input("message")
-	///     .validate(|x| if !x.is_ascii() { Some("only use ascii characters") } else { None })
+	///     .validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
 	///     .interact();
 	/// println!("answer {:?}", answer);
 	/// ```
@@ -154,7 +154,7 @@ impl<M: Display> Input<M> {
 						initial_value = None;
 
 						is_val = true;
-						self.w_val(&value, "value is required");
+						self.w_val("value is required");
 					} else {
 						break Ok(None);
 					}
@@ -162,7 +162,7 @@ impl<M: Display> Input<M> {
 					initial_value = Some(value.clone());
 
 					is_val = true;
-					self.w_val(&value, text);
+					self.w_val(text);
 				} else {
 					break Ok(Some(value));
 				}
@@ -213,7 +213,7 @@ impl<M: Display> Input<M> {
 	///
 	/// let answer = input("message")
 	///     .initial_value("initial_value")
-	///     .validate(|x| if !x.is_ascii() { Some("only use ascii characters") } else { None })
+	///     .validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
 	///     .cancel(do_cancel)
 	///     .interact();
 	///
@@ -261,13 +261,13 @@ impl<M: Display> Input<M> {
 		let _ = stdout.flush();
 	}
 
-	fn w_val(&self, value: &str, text: &str) {
+	fn w_val(&self, text: &str) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
 		let _ = stdout.flush();
 
 		println!("{}  {}", style(*chars::STEP_ERROR).yellow(), self.message);
-		println!("{}  {}", style(*chars::BAR).yellow(), value);
+		println!("{}", style(*chars::BAR).yellow());
 
 		print!("{}", ansi::CLEAR_LINE);
 		print!(

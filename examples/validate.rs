@@ -6,17 +6,11 @@ fn main() -> Result<(), ClackInputError> {
 	intro(style(" test ").reverse());
 
 	let do_validate_input = input("validate single")
-		.validate(|x| {
-			if !x.is_ascii() {
-				Some("only use ascii characters")
-			} else {
-				None
-			}
-		})
+		.validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
 		.cancel(do_cancel)
 		.required();
 	let do_validate_multi_input = multi_input("validate multi")
-		.validate(|x| x.is_ascii())
+		.validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
 		.cancel(do_cancel)
 		.interact();
 

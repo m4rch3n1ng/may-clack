@@ -1,13 +1,16 @@
-use std::{
-	fmt::Display,
-	io::{stdout, Write},
+use crate::{
+	error::ClackInputError,
+	style::{ansi, chars},
 };
 use console::style;
 use crossterm::{cursor, QueueableCommand};
 use rustyline::DefaultEditor;
-use crate::{error::ClackInputError, style::{chars, ansi}};
+use std::{
+	fmt::Display,
+	io::{stdout, Write},
+};
 
-type ValidateFn = dyn Fn(&str) -> bool;
+type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 
 pub struct MultiInput<M: Display> {
 	message: M,
@@ -51,18 +54,18 @@ impl<M: Display> MultiInput<M> {
 
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
-		F: Fn(&str) -> bool + 'static,
+		F: Fn(&str) -> Option<&'static str> + 'static,
 	{
 		let validate = Box::new(validate);
 		self.validate = Some(validate);
 		self
 	}
 
-	fn do_validate(&self, input: &str) -> bool {
+	fn do_validate(&self, input: &str) -> Option<&'static str> {
 		if let Some(validate) = self.validate.as_deref() {
 			validate(input)
 		} else {
-			true
+			None
 		}
 	}
 
@@ -75,16 +78,25 @@ impl<M: Display> MultiInput<M> {
 		self
 	}
 
-	fn interact_once(&self, enforce_non_empty: bool) -> Result<Option<String>, ClackInputError> {
-		let prompt = format!("{}  ", style(*chars::BAR).cyan());
+	fn interact_once(
+		&self,
+		enforce_non_empty: bool,
+		amt: u16,
+	) -> Result<Option<String>, ClackInputError> {
+		let default_prompt = format!("{}  ", style(*chars::BAR).cyan());
+		let val_prompt = format!("{}  ", style(*chars::BAR).yellow());
 		let mut editor = DefaultEditor::new()?;
 
 		let mut initial_value = self.initial_value.clone();
+		let mut is_val = false;
+
 		loop {
+			let prompt = if is_val { &val_prompt } else { &default_prompt };
+
 			let line = if let Some(ref init) = initial_value {
-				editor.readline_with_initial(&prompt, (init, ""))
+				editor.readline_with_initial(prompt, (init, ""))
 			} else {
-				editor.readline(&prompt)
+				editor.readline(prompt)
 			};
 
 			// todo this looks refactor-able
@@ -92,19 +104,21 @@ impl<M: Display> MultiInput<M> {
 				if value.is_empty() {
 					if enforce_non_empty {
 						initial_value = None;
-						let mut stdout = stdout();
-						let _ = stdout.queue(cursor::MoveToPreviousLine(1));
-						let _ = stdout.flush();
+
+						is_val = true;
+
+						let text = format!("minimum {}", self.min);
+						self.w_val(&text, amt);
 					} else {
 						break Ok(None);
 					}
-				} else if self.do_validate(&value) {
-					break Ok(Some(value));
-				} else {
+				} else if let Some(text) = self.do_validate(&value) {
 					initial_value = Some(value);
-					let mut stdout = stdout();
-					let _ = stdout.queue(cursor::MoveToPreviousLine(1));
-					let _ = stdout.flush();
+
+					is_val = true;
+					self.w_val(text, amt);
+				} else {
+					break Ok(Some(value));
 				}
 			} else {
 				break Err(ClackInputError::Cancelled);
@@ -117,12 +131,14 @@ impl<M: Display> MultiInput<M> {
 
 		let mut v = vec![];
 		loop {
-			let enforce_non_empty = (v.len() as u16) < self.min;
-			let once = self.interact_once(enforce_non_empty);
+			let amt = v.len() as u16;
+
+			let enforce_non_empty = amt < self.min;
+			let once = self.interact_once(enforce_non_empty, amt);
 
 			match once {
 				Ok(Some(value)) => {
-					self.w_line(&value);
+					self.w_line(&value, amt);
 					v.push(value);
 
 					if v.len() as u16 == self.max {
@@ -167,19 +183,46 @@ impl<M: Display> MultiInput<M> {
 		let _ = stdout.flush();
 	}
 
-	fn w_line(&self, value: &str) {
+	fn w_line(&self, value: &str, amt: u16) {
 		let mut stdout = stdout();
-		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
+		let _ = stdout.queue(cursor::MoveToPreviousLine(amt + 2));
 		let _ = stdout.flush();
+
+		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
+
+		for _ in 0..amt {
+			println!("{}", style(*chars::BAR).cyan());
+		}
 
 		println!("{}  {}", style(*chars::BAR).cyan(), style(value).dim());
 		println!("{}", style(*chars::BAR).cyan());
+
+		print!("{}", ansi::CLEAR_LINE);
 		print!("{}", style(*chars::BAR_END).cyan());
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
+	}
 
-		print!("{}  ", style(*chars::BAR).cyan());
+	fn w_val(&self, text: &str, amt: u16) {
+		let mut stdout = stdout();
+		let _ = stdout.queue(cursor::MoveToPreviousLine(amt + 2));
+		let _ = stdout.flush();
+
+		println!("{}  {}", style(*chars::STEP_ERROR).yellow(), self.message);
+
+		for _ in 0..(amt + 1) {
+			println!("{}", style(*chars::BAR).yellow());
+		}
+
+		print!("{}", ansi::CLEAR_LINE);
+		print!(
+			"{}  {}",
+			style(*chars::BAR_END).yellow(),
+			style(text).yellow()
+		);
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
 	}
 
@@ -212,13 +255,16 @@ impl<M: Display> MultiInput<M> {
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
 
-		print!(
+		print!("{}", style(ansi::CLEAR_LINE));
+		println!(
 			"{}  {}",
 			*chars::BAR,
 			style("cancelled").strikethrough().dim()
 		);
 
-		let _ = stdout.queue(cursor::MoveToPreviousLine(amt as u16 + 1));
+		print!("{}", style(ansi::CLEAR_LINE));
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(amt as u16 + 2));
 		let _ = stdout.flush();
 
 		println!("{}  {}", style(*chars::STEP_CANCEL).red(), self.message);
