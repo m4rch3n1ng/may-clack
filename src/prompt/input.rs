@@ -10,7 +10,7 @@ use std::{
 	io::{stdout, Write},
 };
 
-type ValidateFn = dyn Fn(&str) -> bool;
+type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 
 pub struct Input<M: Display> {
 	message: M,
@@ -76,28 +76,34 @@ impl<M: Display> Input<M> {
 		self
 	}
 
-	/// Specify a validation function
+	/// Specify a validation function.
+	///
+	/// On a successful validation, return a `None` from the closure,
+	/// and on an unsuccessful validation return a `Some<&'static str>` with the error message.
 	///
 	/// ```no_run
 	/// use may_clack::input;
 	///
-	/// let answer = input("message").validate(|x| x.is_ascii()).interact();
+	/// let answer = input("message")
+	///     .validate(|x| if !x.is_ascii() { Some("only use ascii characters") } else { None })
+	///     .interact();
 	/// println!("answer {:?}", answer);
 	/// ```
+	///
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
-		F: Fn(&str) -> bool + 'static,
+		F: Fn(&str) -> Option<&'static str> + 'static,
 	{
 		let validate = Box::new(validate);
 		self.validate = Some(validate);
 		self
 	}
 
-	fn do_validate(&self, input: &str) -> bool {
+	fn do_validate(&self, input: &str) -> Option<&'static str> {
 		if let Some(validate) = self.validate.as_deref() {
 			validate(input)
 		} else {
-			true
+			None
 		}
 	}
 
@@ -122,15 +128,21 @@ impl<M: Display> Input<M> {
 	}
 
 	fn interact_once(&self, enforce_non_empty: bool) -> Result<Option<String>, ClackInputError> {
-		let prompt = format!("{}  ", style(*chars::BAR).cyan());
+		let default_prompt = format!("{}  ", style(*chars::BAR).cyan());
+		let val_prompt = format!("{}  ", style(*chars::BAR).yellow());
+
 		let mut editor = DefaultEditor::new()?;
 
 		let mut initial_value = self.initial_value.clone();
+		let mut is_val = false;
+
 		loop {
+			let prompt = if is_val { &val_prompt } else { &default_prompt };
+
 			let line = if let Some(ref init) = initial_value {
-				editor.readline_with_initial(&prompt, (init, ""))
+				editor.readline_with_initial(prompt, (init, ""))
 			} else {
-				editor.readline(&prompt)
+				editor.readline(prompt)
 			};
 
 			// todo this looks refactor-able
@@ -140,19 +152,19 @@ impl<M: Display> Input<M> {
 						break Ok(Some(default_value));
 					} else if enforce_non_empty {
 						initial_value = None;
-						let mut stdout = stdout();
-						let _ = stdout.queue(cursor::MoveToPreviousLine(1));
-						let _ = stdout.flush();
+
+						is_val = true;
+						self.w_val(&value, "value is required");
 					} else {
 						break Ok(None);
 					}
-				} else if self.do_validate(&value) {
-					break Ok(Some(value));
+				} else if let Some(text) = self.do_validate(&value) {
+					initial_value = Some(value.clone());
+
+					is_val = true;
+					self.w_val(&value, text);
 				} else {
-					initial_value = Some(value);
-					let mut stdout = stdout();
-					let _ = stdout.queue(cursor::MoveToPreviousLine(1));
-					let _ = stdout.flush();
+					break Ok(Some(value));
 				}
 			} else {
 				break Err(ClackInputError::Cancelled);
@@ -164,7 +176,7 @@ impl<M: Display> Input<M> {
 	///
 	/// Useful when used with [`Input::default_value()`], as that means that there can be no empty value.
 	///
-	/// ```no_run
+	/// ```no_runf
 	/// use may_clack::input;
 	///
 	/// let answer = input("message").default_value("default_value").required();
@@ -194,14 +206,14 @@ impl<M: Display> Input<M> {
 
 	/// Waits for the user to submit a line of text.
 	///
-	/// Returns [`Option::None`] on an empty line and [`Option::Some::<String>`] otherwise.
+	/// Returns [`None`] on an empty line and [`Some::<String>`] otherwise.
 	///
 	/// ```no_run
 	/// use may_clack::{input, cancel};
 	///
 	/// let answer = input("message")
 	///     .initial_value("initial_value")
-	///     .validate(|x| x.is_ascii())
+	///     .validate(|x| if !x.is_ascii() { Some("only use ascii characters") } else { None })
 	///     .cancel(do_cancel)
 	///     .interact();
 	///
@@ -249,6 +261,25 @@ impl<M: Display> Input<M> {
 		let _ = stdout.flush();
 	}
 
+	fn w_val(&self, value: &str, text: &str) {
+		let mut stdout = stdout();
+		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
+		let _ = stdout.flush();
+
+		println!("{}  {}", style(*chars::STEP_ERROR).yellow(), self.message);
+		println!("{}  {}", style(*chars::BAR).yellow(), value);
+
+		print!("{}", ansi::CLEAR_LINE);
+		print!(
+			"{}  {}",
+			style(*chars::BAR_END).yellow(),
+			style(text).yellow()
+		);
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
+		let _ = stdout.flush();
+	}
+
 	fn w_out(&self, value: &str) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
@@ -256,8 +287,8 @@ impl<M: Display> Input<M> {
 
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 		println!("{}  {}", *chars::BAR, style(value).dim());
-		println!("{}", style(*chars::BAR).cyan());
-		print!("{}", style(*chars::BAR_END).cyan());
+
+		println!("{}", style(ansi::CLEAR_LINE));
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
@@ -276,6 +307,11 @@ impl<M: Display> Input<M> {
 			*chars::BAR,
 			style("cancelled").strikethrough().dim()
 		);
+
+		println!("{}", style(ansi::CLEAR_LINE));
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
+		let _ = stdout.flush();
 	}
 }
 

@@ -6,7 +6,13 @@ fn main() -> Result<(), ClackInputError> {
 	intro(style(" test ").reverse());
 
 	let do_validate_input = input("validate single")
-		.validate(|x| x.is_ascii())
+		.validate(|x| {
+			if !x.is_ascii() {
+				Some("only use ascii characters")
+			} else {
+				None
+			}
+		})
 		.cancel(do_cancel)
 		.required();
 	let do_validate_multi_input = multi_input("validate multi")
