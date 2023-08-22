@@ -10,25 +10,25 @@ use std::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Opt<T: Clone> {
+pub struct Opt<T: Clone, O: Display + Clone> {
 	pub value: T,
-	pub label: String,
+	pub label: O,
 	pub hint: Option<String>,
 	pub active: bool,
 }
 
-impl<T: Clone> Opt<T> {
-	pub fn new<S: Into<String>>(value: T, label: S, hint: Option<S>) -> Self {
+impl<T: Clone, O: Display + Clone> Opt<T, O> {
+	pub fn new<S: Into<String>>(value: T, label: O, hint: Option<S>) -> Self {
 		Opt {
 			value,
-			label: label.into(),
+			label,
 			hint: hint.map(|st| st.into()),
 			active: false,
 		}
 	}
 
-	pub fn simple<S: Into<String>>(value: T, label: S) -> Self {
-		Opt::new(value, label, None)
+	pub fn simple(value: T, label: O) -> Self {
+		Opt::new(value, label, None::<String>)
 	}
 
 	fn toggle(&mut self) {
@@ -72,13 +72,13 @@ impl<T: Clone> Opt<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct MultiSelect<M: Display, T: Clone> {
+pub struct MultiSelect<M: Display, T: Clone, O: Display + Clone> {
 	message: M,
-	options: Vec<Opt<T>>,
+	options: Vec<Opt<T, O>>,
 	less: Option<u16>,
 }
 
-impl<M: Display, T: Clone> MultiSelect<M, T> {
+impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	pub fn new(message: M) -> Self {
 		MultiSelect {
 			message,
@@ -87,20 +87,20 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		}
 	}
 
-	pub fn option<S: Into<String>>(&mut self, val: T, label: S) -> &mut Self {
+	pub fn option(&mut self, val: T, label: O) -> &mut Self {
 		// todo duplicate
-		let opt = Opt::new(val, label, None);
+		let opt = Opt::new(val, label, None::<String>);
 		self.options.push(opt);
 		self
 	}
 
-	pub fn option_hint<S: Into<String>>(&mut self, val: T, label: S, hint: S) -> &mut Self {
+	pub fn option_hint<S: Into<String>>(&mut self, val: T, label: O, hint: S) -> &mut Self {
 		let opt = Opt::new(val, label, Some(hint));
 		self.options.push(opt);
 		self
 	}
 
-	pub fn options(&mut self, options: Vec<Opt<T>>) -> &mut Self {
+	pub fn options(&mut self, options: Vec<Opt<T, O>>) -> &mut Self {
 		self.options = options;
 		self
 	}
@@ -231,14 +231,14 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 	}
 }
 
-impl<M: Display, T: Clone> MultiSelect<M, T> {
-	fn draw_focus(&self, options: &[Opt<T>], idx: usize) {
+impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
+	fn draw_focus(&self, options: &[Opt<T, O>], idx: usize) {
 		let opt = options.get(idx).expect("idx should always be in bound");
 		let line = opt.focus();
 		self.draw(&line);
 	}
 
-	fn draw_unfocus(&self, options: &[Opt<T>], idx: usize) {
+	fn draw_unfocus(&self, options: &[Opt<T, O>], idx: usize) {
 		let opt = options.get(idx).expect("idx should always be in bound");
 		let line = opt.unfocus();
 		self.draw(&line);
@@ -254,7 +254,7 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		let _ = stdout.flush();
 	}
 
-	fn draw_less(&self, opts: &[Opt<T>], idx: usize, less_idx: u16, prev_less: u16) {
+	fn draw_less(&self, opts: &[Opt<T, O>], idx: usize, less_idx: u16, prev_less: u16) {
 		let mut stdout = stdout();
 		if prev_less > 0 {
 			let _ = stdout.queue(cursor::MoveToPreviousLine(prev_less));
@@ -288,7 +288,7 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 	}
 }
 
-impl<M: Display, T: Clone> MultiSelect<M, T> {
+impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	fn w_init_less(&self) {
 		println!("{}", *chars::BAR);
 		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
@@ -327,7 +327,7 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		self.draw_focus(&self.options, 0);
 	}
 
-	fn w_out(&self, idx: usize, selected: &[&Opt<T>]) {
+	fn w_out(&self, idx: usize, selected: &[&Opt<T, O>]) {
 		let mut stdout = stdout();
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(idx as u16 + 1));
@@ -351,12 +351,12 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		let val_string = if vals.is_empty() {
 			"none".into()
 		} else {
-			vals.join(", ")
+			self.join(&vals)
 		};
 		println!("{}  {}", *chars::BAR, style(val_string).dim());
 	}
 
-	fn w_out_less(&self, less_idx: u16, selected: &[&Opt<T>]) {
+	fn w_out_less(&self, less_idx: u16, selected: &[&Opt<T, O>]) {
 		let mut stdout = stdout();
 		if less_idx > 0 {
 			let _ = stdout.queue(cursor::MoveToPreviousLine(less_idx));
@@ -385,13 +385,20 @@ impl<M: Display, T: Clone> MultiSelect<M, T> {
 		let val_string = if vals.is_empty() {
 			"none".into()
 		} else {
-			vals.join(", ")
+			self.join(&vals)
 		};
 		println!("{}  {}", *chars::BAR, style(val_string).dim());
+	}
+
+	fn join(&self, v: &[O]) -> String {
+		v.iter()
+			.map(|val| format!("{}", val))
+			.collect::<Vec<_>>()
+			.join(", ")
 	}
 }
 
 /// Shorthand for [`MultiSelect::new()`]
-pub fn multi_select<M: Display, T: Clone>(message: M) -> MultiSelect<M, T> {
+pub fn multi_select<M: Display, T: Clone, O: Display + Clone>(message: M) -> MultiSelect<M, T, O> {
 	MultiSelect::new(message)
 }

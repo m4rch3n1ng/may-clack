@@ -10,23 +10,23 @@ use std::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Opt<T: Clone> {
+pub struct Opt<T: Clone, O: Display + Clone> {
 	value: T,
-	label: String,
+	label: O,
 	hint: Option<String>,
 }
 
-impl<T: Clone> Opt<T> {
-	pub fn new<S: Into<String>>(value: T, label: S, hint: Option<S>) -> Self {
+impl<T: Clone, O: Display + Clone> Opt<T, O> {
+	pub fn new<S: Into<String>>(value: T, label: O, hint: Option<S>) -> Self {
 		Opt {
 			value,
-			label: label.into(),
+			label,
 			hint: hint.map(|hint| hint.into()),
 		}
 	}
 
-	pub fn simple<S: Into<String>>(value: T, label: S) -> Self {
-		Opt::new(value, label, None)
+	pub fn simple(value: T, label: O) -> Self {
+		Opt::new(value, label, None::<String>)
 	}
 
 	fn focus(&self) -> String {
@@ -46,13 +46,13 @@ impl<T: Clone> Opt<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Select<M: Display, T: Clone> {
+pub struct Select<M: Display, T: Clone, O: Display + Clone> {
 	message: M,
-	options: Vec<Opt<T>>,
+	options: Vec<Opt<T, O>>,
 	less: Option<u16>,
 }
 
-impl<M: Display, T: Clone> Select<M, T> {
+impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 	pub fn new(message: M) -> Self {
 		Select {
 			message,
@@ -63,19 +63,19 @@ impl<M: Display, T: Clone> Select<M, T> {
 
 	// todo check for max amt of options
 	// todo check duplicates
-	pub fn option<S: Into<String>>(&mut self, value: T, label: S) -> &mut Self {
-		let opt = Opt::new(value, label, None);
+	pub fn option(&mut self, value: T, label: O) -> &mut Self {
+		let opt = Opt::new(value, label, None::<String>);
 		self.options.push(opt);
 		self
 	}
 
-	pub fn option_hint<S: Into<String>>(&mut self, value: T, label: S, hint: S) -> &mut Self {
+	pub fn option_hint<S: Into<String>>(&mut self, value: T, label: O, hint: S) -> &mut Self {
 		let opt = Opt::new(value, label, Some(hint));
 		self.options.push(opt);
 		self
 	}
 
-	pub fn options(&mut self, options: Vec<Opt<T>>) -> &mut Self {
+	pub fn options(&mut self, options: Vec<Opt<T, O>>) -> &mut Self {
 		self.options = options;
 		self
 	}
@@ -195,7 +195,7 @@ impl<M: Display, T: Clone> Select<M, T> {
 	}
 }
 
-impl<M: Display, T: Clone> Select<M, T> {
+impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 	fn draw_focus(&self, idx: usize) {
 		let opt = self
 			.options
@@ -257,7 +257,7 @@ impl<M: Display, T: Clone> Select<M, T> {
 	}
 }
 
-impl<M: Display, T: Clone> Select<M, T> {
+impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 	fn w_init_less(&self) {
 		println!("{}", *chars::BAR);
 		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
@@ -352,6 +352,6 @@ impl<M: Display, T: Clone> Select<M, T> {
 }
 
 /// Shorthand for [`Select::new()`]
-pub fn select<M: Display, T: Clone>(message: M) -> Select<M, T> {
+pub fn select<M: Display, T: Clone, O: Display + Clone>(message: M) -> Select<M, T, O> {
 	Select::new(message)
 }
