@@ -6,4 +6,4 @@ this is a rust port of the npm package [@clack/prompts](https://www.npmjs.com/pa
 
 **this project is still a work in progress**
 
-while the basic api will likely not change, this crate is still lacking features, proper error handling and documentation, among other things
+the api will likely change still
