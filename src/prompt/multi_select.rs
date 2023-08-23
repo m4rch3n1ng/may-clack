@@ -1,6 +1,6 @@
 use crate::{
 	error::ClackSelectError,
-	style::{ansi, chars},
+	style::{ansi, chars, IS_UNICODE},
 };
 use console::{style, Key, Term};
 use crossterm::{cursor, QueueableCommand};
@@ -8,6 +8,7 @@ use std::{
 	fmt::Display,
 	io::{stdout, Write},
 };
+use unicode_truncate::UnicodeTruncateStr;
 
 #[derive(Debug, Clone)]
 pub struct Opt<T: Clone, O: Display + Clone> {
@@ -35,15 +36,29 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 		self.active = !self.active;
 	}
 
+	fn trunc(&self, hint: usize) -> String {
+		let size = crossterm::terminal::size();
+		let label = format!("{}", self.label);
+
+		let one_three = if *IS_UNICODE { 1 } else { 3 };
+
+		match size {
+			Ok((width, _height)) => label
+				.unicode_truncate(width as usize - 4 - one_three - hint)
+				.0
+				.to_owned(),
+			Err(_) => label,
+		}
+	}
+
 	fn focus(&self) -> String {
+		let hint_len = self.hint.as_deref().map(|hint| hint.len() + 3).unwrap_or(0);
+		let label = self.trunc(hint_len);
+
 		let fmt = if self.active {
-			format!(
-				"{} {}",
-				style(*chars::CHECKBOX_SELECTED).green(),
-				self.label
-			)
+			format!("{} {}", style(*chars::CHECKBOX_SELECTED).green(), label)
 		} else {
-			format!("{} {}", style(*chars::CHECKBOX_ACTIVE).cyan(), self.label)
+			format!("{} {}", style(*chars::CHECKBOX_ACTIVE).cyan(), label)
 		};
 
 		if let Some(hint) = &self.hint {
@@ -55,17 +70,19 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	}
 
 	fn unfocus(&self) -> String {
+		let label = self.trunc(0);
+
 		if self.active {
 			format!(
 				"{} {}",
 				style(*chars::CHECKBOX_SELECTED).green(),
-				style(&self.label).dim()
+				style(label).dim()
 			)
 		} else {
 			format!(
 				"{} {}",
 				style(*chars::CHECKBOX_INACTIVE).dim(),
-				style(&self.label).dim()
+				style(label).dim()
 			)
 		}
 	}
@@ -202,6 +219,41 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 						self.draw_less(&options, idx, less_idx, prev_less);
 					}
 				}
+				Key::PageDown => {
+					if is_less {
+						let prev_less = less_idx;
+						let less = self.less.expect("less should unwrap if is_less");
+
+						if idx + less as usize >= max - 1 {
+							less_idx = less - 1;
+							idx = max - 1;
+						} else {
+							idx += less as usize;
+
+							if max - idx < (less - less_idx) as usize {
+								less_idx = less - (max - idx) as u16
+							}
+						}
+
+						self.draw_less(&options, idx, less_idx, prev_less);
+					}
+				}
+				Key::PageUp => {
+					if is_less {
+						let prev_less = less_idx;
+						let less = self.less.expect("less should unwrap if is_less");
+
+						if idx <= less as usize {
+							less_idx = 0;
+							idx = 0;
+						} else {
+							idx -= less as usize;
+							less_idx = prev_less.min(idx as u16);
+						}
+
+						self.draw_less(&options, idx, less_idx, prev_less);
+					}
+				}
 				Key::Char(' ') => {
 					let opt = options.get_mut(idx).expect("idx should always be in bound");
 					opt.toggle();
@@ -276,7 +328,18 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 			println!("{}  {}", style(*chars::BAR).cyan(), line);
 		}
 
-		let _ = stdout.queue(cursor::MoveToPreviousLine(less));
+		let max = self.options.len();
+		let amt = max.to_string().len();
+		print!("{}", ansi::CLEAR_LINE);
+		println!(
+			"{}  ......... ({:#0amt$}/{})",
+			style(*chars::BAR).cyan(),
+			idx + 1,
+			max,
+			amt = amt
+		);
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(less + 1));
 		let _ = stdout.flush();
 
 		if less_idx > 0 {

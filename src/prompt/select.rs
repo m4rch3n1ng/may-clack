@@ -8,6 +8,7 @@ use std::{
 	fmt::Display,
 	io::{stdout, Write},
 };
+use unicode_truncate::UnicodeTruncateStr;
 
 #[derive(Debug, Clone)]
 pub struct Opt<T: Clone, O: Display + Clone> {
@@ -29,8 +30,24 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 		Opt::new(value, label, None::<String>)
 	}
 
+	fn trunc(&self, hint: usize) -> String {
+		let size = crossterm::terminal::size();
+		let label = format!("{}", self.label);
+
+		match size {
+			Ok((width, _height)) => label
+				.unicode_truncate(width as usize - 5 - hint)
+				.0
+				.to_owned(),
+			Err(_) => label,
+		}
+	}
+
 	fn focus(&self) -> String {
-		let fmt = format!("{} {}", style(*chars::RADIO_ACTIVE).green(), self.label);
+		let hint_len = self.hint.as_deref().map(|hint| hint.len() + 3).unwrap_or(0);
+		let label = self.trunc(hint_len);
+
+		let fmt = format!("{} {}", style(*chars::RADIO_ACTIVE).green(), label);
 
 		if let Some(hint) = &self.hint {
 			let hint = format!("({})", hint);
@@ -41,7 +58,8 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	}
 
 	fn unfocus(&self) -> String {
-		format!("{} {}", *chars::RADIO_INACTIVE, self.label)
+		let label = self.trunc(0);
+		format!("{} {}", *chars::RADIO_INACTIVE, label)
 	}
 }
 
@@ -175,6 +193,41 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 						self.draw_less(idx, less_idx, prev_less);
 					}
 				}
+				Key::PageDown => {
+					if is_less {
+						let prev_less = less_idx;
+						let less = self.less.expect("less should unwrap if is_less");
+
+						if idx + less as usize >= max - 1 {
+							less_idx = less - 1;
+							idx = max - 1;
+						} else {
+							idx += less as usize;
+
+							if max - idx < (less - less_idx) as usize {
+								less_idx = less - (max - idx) as u16
+							}
+						}
+
+						self.draw_less(idx, less_idx, prev_less);
+					}
+				}
+				Key::PageUp => {
+					if is_less {
+						let prev_less = less_idx;
+						let less = self.less.expect("less should unwrap if is_less");
+
+						if idx <= less as usize {
+							less_idx = 0;
+							idx = 0;
+						} else {
+							idx -= less as usize;
+							less_idx = prev_less.min(idx as u16);
+						}
+
+						self.draw_less(idx, less_idx, prev_less);
+					}
+				}
 				Key::Enter => {
 					if !is_less {
 						self.w_out(idx);
@@ -241,11 +294,23 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 			let i_idx = idx + i - less_idx as usize;
 			let opt = self.options.get(i_idx).unwrap();
 			let line = opt.unfocus();
+
 			print!("{}", ansi::CLEAR_LINE);
 			println!("{}  {}", style(*chars::BAR).cyan(), line);
 		}
 
-		let _ = stdout.queue(cursor::MoveToPreviousLine(less));
+		let max = self.options.len();
+		let amt = max.to_string().len();
+		print!("{}", ansi::CLEAR_LINE);
+		println!(
+			"{}  ......... ({:#0amt$}/{})",
+			style(*chars::BAR).cyan(),
+			idx + 1,
+			max,
+			amt = amt
+		);
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(less + 1));
 		let _ = stdout.flush();
 
 		if less_idx > 0 {

@@ -34,8 +34,18 @@ fn main() -> Result<(), ClackSelectError> {
 		.less(3)
 		.interact();
 
+	let mut page_up_down = select("page up / down");
+	page_up_down.less(10);
+
+	for i in 0..100 {
+		page_up_down.option(i, i);
+	}
+
+	let page_up_down = page_up_down.interact()?;
+
 	outro("");
 
+	println!("page_up_down {:?}", page_up_down);
 	println!("select_less {:?}", select_less);
 	println!("multi_less_noop {:?}", multi_less_noop);
 	println!("multi_less {:?}", multi_less);

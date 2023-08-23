@@ -2,7 +2,7 @@ use is_unicode_supported::is_unicode_supported;
 use lazy_static::lazy_static;
 
 lazy_static! {
-	static ref IS_UNICODE: bool = is_unicode_supported();
+	pub static ref IS_UNICODE: bool = is_unicode_supported();
 }
 
 fn is_unicode(unicode: &'static str, non_unicode: &'static str) -> &'static str {
