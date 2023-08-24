@@ -1,5 +1,5 @@
 use crate::{
-	error::ClackInputError,
+	error::ClackError,
 	style::{ansi, chars},
 };
 use console::style;
@@ -127,7 +127,7 @@ impl<M: Display> Input<M> {
 		self
 	}
 
-	fn interact_once(&self, enforce_non_empty: bool) -> Result<Option<String>, ClackInputError> {
+	fn interact_once(&self, enforce_non_empty: bool) -> Result<Option<String>, ClackError> {
 		let default_prompt = format!("{}  ", style(*chars::BAR).cyan());
 		let val_prompt = format!("{}  ", style(*chars::BAR).yellow());
 
@@ -167,7 +167,7 @@ impl<M: Display> Input<M> {
 					break Ok(Some(value));
 				}
 			} else {
-				break Err(ClackInputError::Cancelled);
+				break Err(ClackError::Cancelled);
 			}
 		}
 	}
@@ -182,7 +182,7 @@ impl<M: Display> Input<M> {
 	/// let answer = input("message").default_value("default_value").required();
 	/// println!("answer {:?}", answer);
 	/// ```
-	pub fn required(&self) -> Result<String, ClackInputError> {
+	pub fn required(&self) -> Result<String, ClackError> {
 		self.w_init();
 
 		let interact = self.interact_once(true);
@@ -192,13 +192,13 @@ impl<M: Display> Input<M> {
 				Ok(value)
 			}
 			Ok(None) => unreachable!(),
-			Err(ClackInputError::Cancelled) => {
+			Err(ClackError::Cancelled) => {
 				self.w_cancel();
 				if let Some(cancel) = self.cancel.as_deref() {
 					cancel();
 				}
 
-				Err(ClackInputError::Cancelled)
+				Err(ClackError::Cancelled)
 			}
 			Err(err) => Err(err),
 		}
@@ -222,7 +222,7 @@ impl<M: Display> Input<M> {
 	///     std::process::exit(1);
 	/// }
 	/// ```
-	pub fn interact(&self) -> Result<Option<String>, ClackInputError> {
+	pub fn interact(&self) -> Result<Option<String>, ClackError> {
 		self.w_init();
 
 		let interact = self.interact_once(false);
@@ -232,13 +232,13 @@ impl<M: Display> Input<M> {
 				self.w_out(&v);
 				Ok(val)
 			}
-			Err(ClackInputError::Cancelled) => {
+			Err(ClackError::Cancelled) => {
 				self.w_cancel();
 				if let Some(cancel) = self.cancel.as_deref() {
 					cancel();
 				}
 
-				Err(ClackInputError::Cancelled)
+				Err(ClackError::Cancelled)
 			}
 			Err(err) => Err(err),
 		}

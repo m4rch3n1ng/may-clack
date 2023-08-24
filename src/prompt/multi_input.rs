@@ -1,5 +1,5 @@
 use crate::{
-	error::ClackInputError,
+	error::ClackError,
 	style::{ansi, chars},
 };
 use console::style;
@@ -82,7 +82,7 @@ impl<M: Display> MultiInput<M> {
 		&self,
 		enforce_non_empty: bool,
 		amt: u16,
-	) -> Result<Option<String>, ClackInputError> {
+	) -> Result<Option<String>, ClackError> {
 		let default_prompt = format!("{}  ", style(*chars::BAR).cyan());
 		let val_prompt = format!("{}  ", style(*chars::BAR).yellow());
 		let mut editor = DefaultEditor::new()?;
@@ -121,12 +121,12 @@ impl<M: Display> MultiInput<M> {
 					break Ok(Some(value));
 				}
 			} else {
-				break Err(ClackInputError::Cancelled);
+				break Err(ClackError::Cancelled);
 			}
 		}
 	}
 
-	pub fn interact(&self) -> Result<Vec<String>, ClackInputError> {
+	pub fn interact(&self) -> Result<Vec<String>, ClackError> {
 		self.w_init();
 
 		let mut v = vec![];
@@ -151,13 +151,13 @@ impl<M: Display> MultiInput<M> {
 					self.w_out(&v);
 					break;
 				}
-				Err(ClackInputError::Cancelled) => {
+				Err(ClackError::Cancelled) => {
 					self.w_cancel(v.len());
 					if let Some(cancel) = self.cancel.as_deref() {
 						cancel();
 					}
 
-					return Err(ClackInputError::Cancelled);
+					return Err(ClackError::Cancelled);
 				}
 				Err(err) => return Err(err),
 			}

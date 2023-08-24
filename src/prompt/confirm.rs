@@ -1,5 +1,5 @@
 use crate::{
-	error::ClackSimpleError,
+	error::ClackError,
 	style::{ansi, chars},
 };
 use console::{style, Key, Term};
@@ -35,7 +35,7 @@ impl<M: Display> Confirm<M> {
 		self
 	}
 
-	pub fn interact(&self) -> Result<bool, ClackSimpleError> {
+	pub fn interact(&self) -> Result<bool, ClackError> {
 		self.w_init();
 
 		let term = Term::stdout();

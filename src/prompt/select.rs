@@ -1,5 +1,5 @@
 use crate::{
-	error::ClackSelectError,
+	error::ClackError,
 	style::{ansi, chars},
 };
 use console::{style, Key, Term};
@@ -109,9 +109,9 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 		self
 	}
 
-	pub fn interact(&self) -> Result<T, ClackSelectError> {
+	pub fn interact(&self) -> Result<T, ClackError> {
 		if self.options.is_empty() {
-			return Err(ClackSelectError::NoOptions);
+			return Err(ClackError::NoOptions);
 		}
 
 		let term = Term::stdout();

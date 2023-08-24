@@ -1,5 +1,5 @@
 use console::style;
-use may_clack::{error::ClackSelectError, intro, multi_select, outro, select};
+use may_clack::{error::ClackError, intro, multi_select, outro, select};
 use std::fmt::Display;
 
 #[derive(Debug, Clone)]
@@ -19,7 +19,7 @@ impl Display for SelectEnum {
 	}
 }
 
-fn main() -> Result<(), ClackSelectError> {
+fn main() -> Result<(), ClackError> {
 	println!();
 	intro(style(" generic select ").reverse());
 

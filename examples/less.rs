@@ -1,11 +1,11 @@
 use console::style;
-use may_clack::{error::ClackSelectError, intro, multi_select, outro, select};
+use may_clack::{error::ClackError, intro, multi_select, outro, select};
 
 /// Activating "less" mode activates a pager.
 ///
 /// With the value given to the `.less(val: i32)` function,
 /// you can decide the amount of options per page.
-fn main() -> Result<(), ClackSelectError> {
+fn main() -> Result<(), ClackError> {
 	println!();
 	intro(style(" less ").reverse());
 

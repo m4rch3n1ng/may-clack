@@ -1,5 +1,5 @@
 use crate::{
-	error::ClackSelectError,
+	error::ClackError,
 	style::{ansi, chars, IS_UNICODE},
 };
 use console::{style, Key, Term};
@@ -135,9 +135,9 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 
 	// todo error
 	// todo remove mut
-	pub fn interact(&self) -> Result<Vec<T>, ClackSelectError> {
+	pub fn interact(&self) -> Result<Vec<T>, ClackError> {
 		if self.options.is_empty() {
-			return Err(ClackSelectError::NoOptions);
+			return Err(ClackError::NoOptions);
 		}
 
 		let mut options = self.options.clone();

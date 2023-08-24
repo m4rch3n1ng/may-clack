@@ -1,7 +1,7 @@
 use console::style;
-use may_clack::{cancel, error::ClackInputError, input, intro, multi_input, outro};
+use may_clack::{cancel, error::ClackError, input, intro, multi_input, outro};
 
-fn main() -> Result<(), ClackInputError> {
+fn main() -> Result<(), ClackError> {
 	println!();
 	intro(style(" test ").reverse());
 
