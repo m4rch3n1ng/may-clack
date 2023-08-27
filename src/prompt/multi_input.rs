@@ -1,3 +1,4 @@
+//! Multiple text inputs
 use crate::{
 	error::ClackError,
 	style::{ansi, chars},
@@ -12,6 +13,7 @@ use std::{
 
 type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 
+/// `MultiInput` struct
 pub struct MultiInput<M: Display> {
 	message: M,
 	validate: Option<Box<ValidateFn>>,

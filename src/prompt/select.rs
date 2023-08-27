@@ -1,3 +1,4 @@
+//! Select option
 use crate::{
 	error::ClackError,
 	style::{ansi, chars},
@@ -10,6 +11,7 @@ use std::{
 };
 use unicode_truncate::UnicodeTruncateStr;
 
+/// `Select` `Opt` struct
 #[derive(Debug, Clone)]
 pub struct Opt<T: Clone, O: Display + Clone> {
 	value: T,
@@ -21,7 +23,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	/// Creates a new `Opt` struct.
 	///
 	/// # Examples
-	/// 
+	///
 	/// ```
 	/// use may_clack::select::Opt;
 	///
@@ -38,7 +40,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	/// Creates a new `Opt` struct without a hint
 	///
 	/// # Examples
-	/// 
+	///
 	/// ```
 	/// use may_clack::select::Opt;
 	///
@@ -51,7 +53,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	/// Creates a new `Opt` struct with a hint
 	///
 	/// # Examples
-	/// 
+	///
 	/// ```
 	/// use may_clack::select::Opt;
 	///
@@ -94,6 +96,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	}
 }
 
+/// `Select` struct.
 #[derive(Debug, Clone)]
 pub struct Select<M: Display, T: Clone, O: Display + Clone> {
 	message: M,
@@ -107,7 +110,7 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 	/// Has a shorthand version in [`select()`]
 	///
 	/// # Examples
-	/// 
+	///
 	/// ```no_run
 	/// use may_clack::{select, select::Select};
 	///
@@ -196,7 +199,7 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 	///
 	/// ```no_run
 	/// use may_clack::select;
-	/// 
+	///
 	/// let answer = select("message")
 	///     .option("val 1", "value 1")
 	///     .option("val 2", "value 2")
@@ -214,12 +217,12 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 	}
 
 	/// Wait for the user to submit an option.
-	/// 
+	///
 	/// # Examples
-	/// 
+	///
 	/// ```no_run
 	/// use may_clack::select;
-	/// 
+	///
 	/// let answer = select("select")
 	///     .option("val1", "value 1")
 	///     .option("val2", "value 2")

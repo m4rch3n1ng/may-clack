@@ -1,3 +1,4 @@
+//! Select multiple options
 use crate::{
 	error::ClackError,
 	style::{ansi, chars, IS_UNICODE},
@@ -10,6 +11,7 @@ use std::{
 };
 use unicode_truncate::UnicodeTruncateStr;
 
+/// `MultiSelect` `Opt` struct
 #[derive(Debug, Clone)]
 pub struct Opt<T: Clone, O: Display + Clone> {
 	value: T,
@@ -22,7 +24,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	/// Creates a new `Opt` struct.
 	///
 	/// # Examples
-	/// 
+	///
 	/// ```
 	/// use may_clack::multi_select::Opt;
 	///
@@ -40,7 +42,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	/// Creates a new `Opt` struct without a hint
 	///
 	/// # Examples
-	/// 
+	///
 	/// ```
 	/// use may_clack::multi_select::Opt;
 	///
@@ -51,7 +53,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	}
 
 	/// Creates a new `Opt` struct with a hint.
-	/// 
+	///
 	/// # Examples
 	///
 	/// ```
@@ -59,7 +61,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	///
 	/// let option = Opt::hint("value", "label", "hint");
 	/// ```
-	pub fn hint<S: Into<String>>(value: T, label: O, hint:S ) -> Self {
+	pub fn hint<S: Into<String>>(value: T, label: O, hint: S) -> Self {
 		Opt::new(value, label, Some(hint))
 	}
 
@@ -119,6 +121,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	}
 }
 
+/// `MultiSelect` struct
 #[derive(Debug, Clone)]
 pub struct MultiSelect<M: Display, T: Clone, O: Display + Clone> {
 	message: M,
@@ -132,7 +135,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// Has a shorthand version in [`multi_select()`]
 	///
 	/// # Examples
-	/// 
+	///
 	/// ```no_run
 	/// use may_clack::{multi_select, multi_select::MultiSelect};
 	///
@@ -222,7 +225,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	///
 	/// ```no_run
 	/// use may_clack::multi_select;
-	/// 
+	///
 	/// let answer = multi_select("message")
 	///     .option("val 1", "value 1")
 	///     .option("val 2", "value 2")
@@ -240,12 +243,12 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	}
 
 	/// Wait for the user to submit the selected options.
-	/// 
+	///
 	/// # Examples
-	/// 
+	///
 	/// ```no_run
 	/// use may_clack::multi_select;
-	/// 
+	///
 	/// let answer = multi_select("select")
 	///     .option("val1", "value 1")
 	///     .option("val2", "value 2")

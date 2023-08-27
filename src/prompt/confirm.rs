@@ -1,3 +1,4 @@
+//! Confirm
 use crate::{
 	error::ClackError,
 	style::{ansi, chars},
@@ -9,6 +10,7 @@ use std::{
 	io::{stdout, Write},
 };
 
+/// `Confirm` struct.
 #[derive(Debug, Clone)]
 pub struct Confirm<M: Display> {
 	message: M,
@@ -120,35 +122,39 @@ impl<M: Display> Confirm<M> {
 }
 
 impl<M: Display> Confirm<M> {
-	fn radio_pnt(&self, b: bool, w: &str) -> String {
-		if b {
-			format!("{} {}", style(*chars::RADIO_ACTIVE).green(), w)
+	/// Format a radio point.
+	fn radio_pnt(&self, is_active: bool, prompt: &str) -> String {
+		if is_active {
+			format!("{} {}", style(*chars::RADIO_ACTIVE).green(), prompt)
 		} else {
-			style(format!("{} {}", *chars::RADIO_INACTIVE, w))
+			style(format!("{} {}", *chars::RADIO_INACTIVE, prompt))
 				.dim()
 				.to_string()
 		}
 	}
 
-	fn radio(&self, b: bool) -> String {
-		let yes = self.radio_pnt(b, &self.prompts.0);
-		let no = self.radio_pnt(!b, &self.prompts.1);
+	/// Format the actual prompt.
+	fn radio(&self, value: bool) -> String {
+		let yes = self.radio_pnt(value, &self.prompts.0);
+		let no = self.radio_pnt(!value, &self.prompts.1);
 
 		format!("{} / {}", yes, no)
 	}
 
-	fn draw(&self, a: bool) {
+	/// Draw the prompt.
+	fn draw(&self, value: bool) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToColumn(0));
 		let _ = stdout.flush();
 
-		let r = self.radio(a);
+		let r = self.radio(value);
 		print!("{}  {}", style("│").cyan(), r);
 		let _ = stdout.flush();
 	}
 }
 
 impl<M: Display> Confirm<M> {
+	/// Write initial prompt.
 	fn w_init(&self) {
 		let mut stdout = stdout();
 
@@ -165,6 +171,7 @@ impl<M: Display> Confirm<M> {
 		let _ = stdout.flush();
 	}
 
+	/// Write outro prompt.
 	fn w_out(&self, value: bool) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));

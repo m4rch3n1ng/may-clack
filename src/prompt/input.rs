@@ -1,3 +1,4 @@
+//! Text input
 use crate::{
 	error::ClackError,
 	style::{ansi, chars},
@@ -12,6 +13,7 @@ use std::{
 
 type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 
+/// `Input` struct
 pub struct Input<M: Display> {
 	message: M,
 	default_value: Option<String>,
