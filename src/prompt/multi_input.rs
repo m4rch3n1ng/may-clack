@@ -22,6 +22,19 @@ pub struct MultiInput<M: Display> {
 }
 
 impl<M: Display> MultiInput<M> {
+	/// Creates a new `MultiInput` struct.
+	///
+	/// Has a shorthand version in [`multi_input()`]
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::{multi_input, multi_input::MultiInput};
+	///
+	/// // these two are equivalent
+	/// let question = MultiInput::new("message");
+	/// let question = multi_input("message");
+	/// ```
 	pub fn new(message: M) -> Self {
 		MultiInput {
 			message,
@@ -33,25 +46,70 @@ impl<M: Display> MultiInput<M> {
 		}
 	}
 
+	/// Todo
 	pub fn placeholder(&mut self) -> &mut Self {
 		todo!();
 	}
 
+	/// Specify the initial value.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::multi_input;
+	///
+	/// let answers = multi_input("message").initial_value("initial_value").interact();
+	/// println!("answers {:?}", answers);
+	/// ```
 	pub fn initial_value<S: Into<String>>(&mut self, initial_value: S) -> &mut Self {
 		self.initial_value = Some(initial_value.into());
 		self
 	}
 
+	/// Specify the minimum amount of answers.
+	///
+	/// ```no_run
+	/// use may_clack::multi_input;
+	///
+	/// let answers = multi_input("message").min(2).interact();
+	/// println!("answers {:?}", answers)
+	/// ```
 	pub fn min(&mut self, min: u16) -> &mut Self {
 		self.min = min;
 		self
 	}
 
+	/// Specify the maximum amount of answers.
+	/// Will automatically submit when that amount is reached.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::multi_input;
+	///
+	/// let answers = multi_input("message").max(4).interact();
+	/// println!("answers {:?}", answers);
+	/// ```
 	pub fn max(&mut self, max: u16) -> &mut Self {
 		self.max = max;
 		self
 	}
 
+	/// Specify a validation function.
+	///
+	/// On a successful validation, return a `None` from the closure,
+	/// and on an unsuccessful validation return a `Some<&'static str>` with the error message.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::multi_input;
+	///
+	/// let answers = multi_input("message")
+	///     .validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
+	///     .interact();
+	/// println!("answers {:?}", answers);
+	/// ```
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
 		F: Fn(&str) -> Option<&'static str> + 'static,
@@ -69,6 +127,20 @@ impl<M: Display> MultiInput<M> {
 		}
 	}
 
+	/// Specify function to call on cancel.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::{multi_input, cancel};
+	///
+	/// let answers = multi_input("message").cancel(do_cancel).interact();
+	/// println!("answers {:?}", answers);
+	///
+	/// fn do_cancel() {
+	///     cancel("operation cancelled");
+	///     panic!("operation cancelled");
+	/// }
 	pub fn cancel<F>(&mut self, cancel: F) -> &mut Self
 	where
 		F: Fn() + 'static,
@@ -126,6 +198,26 @@ impl<M: Display> MultiInput<M> {
 		}
 	}
 
+	/// Waits for the user to submit a line of text.
+	///
+	/// Returns [`None`] on an empty line and [`Some::<String>`] otherwise.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::{multi_input, cancel};
+	///
+	/// let answers = multi_input("message")
+	///     .validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
+	///     .cancel(do_cancel)
+	///     .interact();
+	/// println!("answers {:?}", answers);
+	///
+	/// fn do_cancel() {
+	///     cancel("operation cancelled");
+	///     std::process::exit(1);
+	/// }
+	/// ```
 	pub fn interact(&self) -> Result<Vec<String>, ClackError> {
 		self.w_init();
 
@@ -211,7 +303,7 @@ impl<M: Display> MultiInput<M> {
 
 		println!("{}  {}", style(*chars::STEP_ERROR).yellow(), self.message);
 
-		for _ in 0..(amt + 1) {
+		for _ in 0..=amt {
 			println!("{}", style(*chars::BAR).yellow());
 		}
 
@@ -278,7 +370,7 @@ impl<M: Display> MultiInput<M> {
 	}
 }
 
-// shorthand for [`MultiInput::new()`]
+/// Shorthand for [`MultiInput::new()`]
 pub fn multi_input<M: Display>(message: M) -> MultiInput<M> {
 	MultiInput::new(message)
 }

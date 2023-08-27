@@ -12,13 +12,22 @@ use unicode_truncate::UnicodeTruncateStr;
 
 #[derive(Debug, Clone)]
 pub struct Opt<T: Clone, O: Display + Clone> {
-	pub value: T,
-	pub label: O,
-	pub hint: Option<String>,
-	pub active: bool,
+	value: T,
+	label: O,
+	hint: Option<String>,
+	active: bool,
 }
 
 impl<T: Clone, O: Display + Clone> Opt<T, O> {
+	/// Creates a new `Opt` struct.
+	///
+	/// # Examples
+	/// 
+	/// ```
+	/// use may_clack::multi_select::Opt;
+	///
+	/// let option = Opt::new("value", "lavel", Some("hint"));
+	/// ```
 	pub fn new<S: Into<String>>(value: T, label: O, hint: Option<S>) -> Self {
 		Opt {
 			value,
@@ -28,8 +37,30 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 		}
 	}
 
+	/// Creates a new `Opt` struct without a hint
+	///
+	/// # Examples
+	/// 
+	/// ```
+	/// use may_clack::multi_select::Opt;
+	///
+	/// let option = Opt::simple("value", "label");
+	/// ```
 	pub fn simple(value: T, label: O) -> Self {
 		Opt::new(value, label, None::<String>)
+	}
+
+	/// Creates a new `Opt` struct with a hint.
+	/// 
+	/// # Examples
+	///
+	/// ```
+	/// use may_clack::multi_select::Opt;
+	///
+	/// let option = Opt::hint("value", "label", "hint");
+	/// ```
+	pub fn hint<S: Into<String>>(value: T, label: O, hint:S ) -> Self {
+		Opt::new(value, label, Some(hint))
 	}
 
 	fn toggle(&mut self) {
@@ -52,7 +83,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	}
 
 	fn focus(&self) -> String {
-		let hint_len = self.hint.as_deref().map(|hint| hint.len() + 3).unwrap_or(0);
+		let hint_len = self.hint.as_deref().map_or(0, |hint| hint.len() + 3);
 		let label = self.trunc(hint_len);
 
 		let fmt = if self.active {
@@ -96,6 +127,22 @@ pub struct MultiSelect<M: Display, T: Clone, O: Display + Clone> {
 }
 
 impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
+	/// Creates a new `MultiSelect` struct.
+	///
+	/// Has a shorthand version in [`multi_select()`]
+	///
+	/// # Examples
+	/// 
+	/// ```no_run
+	/// use may_clack::{multi_select, multi_select::MultiSelect};
+	///
+	/// // these two are equivalent
+	/// let mut question = MultiSelect::new("message");
+	/// question.option("value", "hint");
+	///
+	/// let mut question = multi_select("message");
+	/// question.option("value", "hint");
+	/// ```
 	pub fn new(message: M) -> Self {
 		MultiSelect {
 			message,
@@ -104,6 +151,19 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 		}
 	}
 
+	/// Add an option without a hint.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::multi_select;
+	///
+	/// let answer = multi_select("message")
+	///     .option("val1", "label 1")
+	///     .option("val2", "label 2")
+	///     .interact();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn option(&mut self, val: T, label: O) -> &mut Self {
 		// todo duplicate
 		let opt = Opt::new(val, label, None::<String>);
@@ -111,30 +171,88 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 		self
 	}
 
+	/// Add an option with a hint.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::multi_select;
+	///
+	/// let answer = multi_select("message")
+	///     .option("val1", "label 1")
+	///     .option_hint("val2", "label 2", "hint")
+	///     .option("val3", "label 3")
+	///     .interact();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn option_hint<S: Into<String>>(&mut self, val: T, label: O, hint: S) -> &mut Self {
 		let opt = Opt::new(val, label, Some(hint));
 		self.options.push(opt);
 		self
 	}
 
+	/// Add multiple options.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::{multi_select, multi_select::Opt};
+	///
+	/// let opts = vec![
+	///     Opt::simple("val1", "label 1"),
+	///     Opt::hint("val2", "label 2", "hint"),
+	///     Opt::simple("val3", "label 3")
+	/// ];
+	///
+	/// let answer = multi_select("message").options(opts).interact();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn options(&mut self, options: Vec<Opt<T, O>>) -> &mut Self {
 		self.options = options;
 		self
 	}
 
-	/// Enable paging.
+	/// Enable paging with the specified amount of lines.
 	///
 	/// # Panics
 	///
 	/// Panics when the given value is 0.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::multi_select;
+	/// 
+	/// let answer = multi_select("message")
+	///     .option("val 1", "value 1")
+	///     .option("val 2", "value 2")
+	///     .option_hint("val 3", "value 3", "hint")
+	///     .option("val 4", "value 4")
+	///     .option("val 5", "value 5")
+	///     .less(3)
+	///     .interact();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn less(&mut self, less: u16) -> &mut Self {
 		assert!(less > 0, "less value has to be greater than zero");
 		self.less = Some(less);
 		self
 	}
 
-	// todo error
-	// todo remove mut
+	/// Wait for the user to submit the selected options.
+	/// 
+	/// # Examples
+	/// 
+	/// ```no_run
+	/// use may_clack::multi_select;
+	/// 
+	/// let answer = multi_select("select")
+	///     .option("val1", "value 1")
+	///     .option("val2", "value 2")
+	///     .option_hint("val 3", "value 3", "hint")
+	///     .interact();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn interact(&self) -> Result<Vec<T>, ClackError> {
 		if self.options.is_empty() {
 			return Err(ClackError::NoOptions);
@@ -231,7 +349,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 							idx += less as usize;
 
 							if max - idx < (less - less_idx) as usize {
-								less_idx = less - (max - idx) as u16
+								less_idx = less - (max - idx) as u16;
 							}
 						}
 

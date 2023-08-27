@@ -16,16 +16,15 @@
 //!
 //! when the user cancels a question, you can use the [`cancel`] utility to provide a cancellation message.
 //!   
-//! when cancelled will return a [`error::ClackSimpleError::Cancelled`], a [`error::ClackInputError::Cancelled`]
-//! or a [`error::ClackSelectError::Cancelled`], depending on input type, Err in a Result.
+//! when cancelled will return a [`error::ClackError::Cancelled`].
 //!
 //! all input types that can return a `Cancelled` Err will also have the option to add a `.cancel` callback
 //!
 //! ```no_run
-//! use may_clack::{cancel, input, error::ClackInputError};
+//! use may_clack::{cancel, input, error::ClackError};
 //!
 //! let text = input("todo").interact();
-//! if let Err(ClackInputError::Cancelled) = text {
+//! if let Err(ClackError::Cancelled) = text {
 //!     cancel("operation cancelled")
 //! }
 //! ```

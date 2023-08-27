@@ -17,6 +17,19 @@ pub struct Confirm<M: Display> {
 }
 
 impl<M: Display> Confirm<M> {
+	/// Creates a new `Confirm` struct.
+	///
+	/// Has a shorthand in [`confirm()`].
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::{confirm, confirm::Confirm};
+	///
+	/// // these two are equivalent
+	/// let question = Confirm::new("message");
+	/// let question = confirm("message");
+	/// ```
 	pub fn new(message: M) -> Confirm<M> {
 		Confirm {
 			message,
@@ -25,16 +38,53 @@ impl<M: Display> Confirm<M> {
 		}
 	}
 
+	/// Specify the initial value.
+	///
+	/// Default: [`false`]
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::confirm;
+	///
+	/// let answer = confirm("message").initial_value(true).interact();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn initial_value(&mut self, b: bool) -> &mut Self {
 		self.initial_value = b;
 		self
 	}
 
+	/// Specify the prompts to display for [`true`] and [`false`].
+	///
+	/// Default: `"yes"`, `"no"`.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::confirm;
+	///
+	/// let answer = confirm("message").prompts("true", "false").interact();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn prompts<S: Into<String>>(&mut self, yes: S, no: S) -> &mut Self {
 		self.prompts = (yes.into(), no.into());
 		self
 	}
 
+	/// Wait for the user to submit an answer.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::confirm;
+	///
+	/// let answer = confirm("message")
+	///     .initial_value(true)
+	///     .prompts("true", "false")
+	///     .interact();
+	/// println!("answer {:?}", answer);
+	/// ```
 	pub fn interact(&self) -> Result<bool, ClackError> {
 		self.w_init();
 
@@ -120,17 +170,15 @@ impl<M: Display> Confirm<M> {
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
 
-		let answ = if value {
+		let answer = if value {
 			&self.prompts.0
 		} else {
 			&self.prompts.1
 		};
 
-		// let len = 2 + self.prompts.0.chars().count() + 3 + 2 + self.prompts.1.chars().count();
-
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 		print!("{}", ansi::CLEAR_LINE);
-		println!("{}  {}", *chars::BAR, style(answ).dim());
+		println!("{}  {}", *chars::BAR, style(answer).dim());
 	}
 }
 

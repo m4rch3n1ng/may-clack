@@ -1,8 +1,15 @@
 [package]
 name = "may-clack"
-version = "0.1.0"
+version = "0.0.0"
+authors = ["may"]
 edition = "2021"
+rust-version = "1.63.0"
+description = "stylish, interactive command line prompts "
+readme = "readme.md"
+repository = "https://github.com/m4rch3n1ng/may-clack"
 license = "GPL-3.0-only"
+keywords = ["clack", "cli", "input", "prompt", "prompts"]
+categories = ["command-line-interface", "command-line-utilities"]
 
 [dependencies]
 console = "0.15.7"
@@ -10,5 +17,5 @@ crossterm = "0.26.1"
 is-unicode-supported = "0.1.0"
 lazy_static = "1.4.0"
 rustyline = "12.0.0"
-thiserror = "1.0.44"
+thiserror = "1.0.47"
 unicode-truncate = "0.2.0"

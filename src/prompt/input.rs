@@ -21,18 +21,19 @@ pub struct Input<M: Display> {
 }
 
 impl<M: Display> Input<M> {
-	/// Creates a new Input struct.
+	/// Creates a new `Input` struct.
 	///
 	/// Has a shorthand version in [`input()`]
 	///
-	/// ```
+	/// # Examples
+	///
+	/// ```no_run
 	/// use may_clack::{input, input::Input};
 	///
 	/// // these two are equivalent
 	/// let question = Input::new("message");
 	/// let question = input("message");
 	/// ```
-	///
 	pub fn new(message: M) -> Self {
 		Input {
 			message,
@@ -43,9 +44,11 @@ impl<M: Display> Input<M> {
 		}
 	}
 
-	/// Specify the default value when no input is given
+	/// Specify the default value to use, when no input is given.
 	///
 	/// Useful in combination with [`Input::required()`]
+	///
+	/// # Examples
 	///
 	/// ```no_run
 	/// use may_clack::input;
@@ -63,7 +66,9 @@ impl<M: Display> Input<M> {
 		todo!();
 	}
 
-	/// Specify the initial value
+	/// Specify the initial value.
+	///
+	/// # Examples
 	///
 	/// ```no_run
 	/// use may_clack::input;
@@ -81,6 +86,8 @@ impl<M: Display> Input<M> {
 	/// On a successful validation, return a `None` from the closure,
 	/// and on an unsuccessful validation return a `Some<&'static str>` with the error message.
 	///
+	/// # Examples
+	///
 	/// ```no_run
 	/// use may_clack::input;
 	///
@@ -89,7 +96,6 @@ impl<M: Display> Input<M> {
 	///     .interact();
 	/// println!("answer {:?}", answer);
 	/// ```
-	///
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
 		F: Fn(&str) -> Option<&'static str> + 'static,
@@ -107,16 +113,19 @@ impl<M: Display> Input<M> {
 		}
 	}
 
-	/// Specify function to call on cancel
+	/// Specify function to call on cancel.
+	///
+	/// # Examples
 	///
 	/// ```no_run
 	/// use may_clack::{input, cancel};
 	///
 	/// let answer = input("message").cancel(do_cancel).interact();
+	/// println!("answer {:?}", answer);
 	///
 	/// fn do_cancel() {
 	///     cancel("operation cancelled");
-	///     std::process::exit(1);
+	///     panic!("operation cancelled");
 	/// }
 	pub fn cancel<F>(&mut self, cancel: F) -> &mut Self
 	where
@@ -176,7 +185,9 @@ impl<M: Display> Input<M> {
 	///
 	/// Useful when used with [`Input::default_value()`], as that means that there can be no empty value.
 	///
-	/// ```no_runf
+	/// # Examples
+	///
+	/// ```no_run
 	/// use may_clack::input;
 	///
 	/// let answer = input("message").default_value("default_value").required();
@@ -208,6 +219,8 @@ impl<M: Display> Input<M> {
 	///
 	/// Returns [`None`] on an empty line and [`Some::<String>`] otherwise.
 	///
+	/// # Examples
+	///
 	/// ```no_run
 	/// use may_clack::{input, cancel};
 	///
@@ -216,6 +229,7 @@ impl<M: Display> Input<M> {
 	///     .validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
 	///     .cancel(do_cancel)
 	///     .interact();
+	/// println!("answer {:?}", answer);
 	///
 	/// fn do_cancel() {
 	///     cancel("operation cancelled");
