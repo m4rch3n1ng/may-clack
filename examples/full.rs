@@ -1,11 +1,14 @@
 use console::style;
 use may_clack::{
-	cancel, confirm, error::ClackError, input, intro, multi_input, multi_select, outro, select,
+	cancel, confirm, error::ClackError, info, input, intro, multi_input, multi_select, outro,
+	select,
 };
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro(style(" full ").reverse());
+	intro!(style(" full ").reverse());
+
+	info!("visit the documentation at https://docs.rs/may-clack");
 
 	let do_input = input("input")
 		.default_value("default")
@@ -27,7 +30,7 @@ fn main() -> Result<(), ClackError> {
 		.option_hint("val 3", "value 3", "hint")
 		.interact()?;
 
-	outro("");
+	outro!();
 
 	println!("input {:?}", do_input);
 	println!("confirm {:?}", do_confirm);
@@ -39,6 +42,6 @@ fn main() -> Result<(), ClackError> {
 }
 
 fn do_cancel() {
-	cancel("demo cancelled");
+	cancel!("demo cancelled");
 	std::process::exit(1);
 }

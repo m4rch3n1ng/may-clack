@@ -1,10 +1,10 @@
 [package]
 name = "may-clack"
-version = "0.0.0"
+version = "0.1.0"
 authors = ["may"]
 edition = "2021"
 rust-version = "1.63.0"
-description = "stylish, interactive command line prompts "
+description = "stylish, interactive command line prompts"
 readme = "readme.md"
 repository = "https://github.com/m4rch3n1ng/may-clack"
 license = "GPL-3.0-only"

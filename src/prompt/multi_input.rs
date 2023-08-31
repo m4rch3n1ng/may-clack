@@ -140,7 +140,7 @@ impl<M: Display> MultiInput<M> {
 	/// println!("answers {:?}", answers);
 	///
 	/// fn do_cancel() {
-	///     cancel("operation cancelled");
+	///     cancel!("operation cancelled");
 	///     panic!("operation cancelled");
 	/// }
 	pub fn cancel<F>(&mut self, cancel: F) -> &mut Self
@@ -216,7 +216,7 @@ impl<M: Display> MultiInput<M> {
 	/// println!("answers {:?}", answers);
 	///
 	/// fn do_cancel() {
-	///     cancel("operation cancelled");
+	///     cancel!("operation cancelled");
 	///     std::process::exit(1);
 	/// }
 	/// ```

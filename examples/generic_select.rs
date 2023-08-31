@@ -21,7 +21,7 @@ impl Display for SelectEnum {
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro(style(" generic select ").reverse());
+	intro!(style(" generic select ").reverse());
 
 	let select_string = select("select string")
 		.option("val1", SelectEnum::One)
@@ -41,7 +41,7 @@ fn main() -> Result<(), ClackError> {
 		.option(SelectEnum::Three, "three")
 		.interact()?;
 
-	outro("");
+	outro!();
 
 	println!("select string, label enum {:?}", select_string);
 	println!("select enum, label enum {:?}", select_enum);

@@ -7,7 +7,7 @@ use may_clack::{error::ClackError, intro, multi_select, outro, select};
 /// you can decide the amount of options per page.
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro(style(" less ").reverse());
+	intro!(style(" less ").reverse());
 
 	let select_less = select("less")
 		.option("val 1", "value 1")
@@ -43,7 +43,7 @@ fn main() -> Result<(), ClackError> {
 
 	let page_up_down = page_up_down.interact()?;
 
-	outro("");
+	outro!();
 
 	println!("page_up_down {:?}", page_up_down);
 	println!("select_less {:?}", select_less);

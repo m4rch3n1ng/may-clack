@@ -1,43 +1,57 @@
-//! this is a rust port of <https://www.npmjs.com/package/@clack/prompts>
+//! This is a rust port of <https://www.npmjs.com/package/@clack/prompts>
 //!
 //! ## Setup
 //!
-//! you can setup the start and end of a prompt session with [`intro`] and [`outro`], respectively
+//! You can setup the start and end of a prompt session with the macros [`intro!`] and [`outro!`], respectively
 //!  
 //! ```
 //! use may_clack::{intro, outro};
 //!
-//! intro("intro");
+//! intro!("intro");
 //! // do stuff
-//! outro("outro");
+//! outro!("outro");
 //! ```
 //!
 //! ## Cancel
 //!
-//! when the user cancels a question, you can use the [`cancel`] utility to provide a cancellation message.
-//!   
-//! when cancelled will return a [`error::ClackError::Cancelled`].
+//! When the user cancels a question, you can use the [`cancel!`] utility to provide a cancellation message.
 //!
-//! all input types that can return a `Cancelled` Err will also have the option to add a `.cancel` callback
+//! When cancelled the will return a [`error::ClackError::Cancelled`].
+//!
+//! All input types that can return a `Cancelled` Err will also have the option to add a `.cancel` callback
 //!
 //! ```no_run
 //! use may_clack::{cancel, input, error::ClackError};
 //!
 //! let text = input("todo").interact();
 //! if let Err(ClackError::Cancelled) = text {
-//!     cancel("operation cancelled")
+//!     cancel!("operation cancelled")
 //! }
+//! ```
+//! 
+//! ## Info
+//! 
+//! If you want to write a message in a prompting session you can use the [`info!`] utility.
+//! 
+//! ```
+//! use may_clack::{info, intro, outro};
+//!
+//! intro!("intro");
+//! // do stuff
+//! info!("info");
+//! // do stuff
+//! outro!("outro");
 //! ```
 //!
 //! ## General
 //!
-//! there are 6 components: [`input`](#input), [`confirm`](#confirm),
+//! There are 6 components: [`input`](#input), [`confirm`](#confirm),
 //! [`select`](#select), [`multi_select`](#multi_select), [`multi_input`](#multi_input)
 //!
-//! each of the input types returns a struct, that allows you to setup the prompt.  
+//! Each of the input types returns a struct, that allows you to setup the prompt.  
 //! since every prompt needs a message the initial
 //!
-//! to actually prompt the user after setting up you have to call `.interact()`
+//! To actually prompt the user after setting up you have to call `.interact()`
 //!
 //! ```no_run
 //! use may_clack::confirm;
@@ -100,8 +114,8 @@
 //!
 //! let toppings = multi_select("Choose your toppings")
 //!     .option("fruits", "Dried fruits")
-//!     .option("chocolate", "Chocolate Chips")
-//!     .option_hint("idk", "idk", "idk")
+//!     .option("chocolate", "Chocolate chips")
+//!     .option_hint("sauce", "Chocolate sauce", "it's warm")
 //!     .interact();
 //! println!("toppings {:?}", toppings);
 //! ```

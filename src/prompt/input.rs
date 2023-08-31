@@ -126,7 +126,7 @@ impl<M: Display> Input<M> {
 	/// println!("answer {:?}", answer);
 	///
 	/// fn do_cancel() {
-	///     cancel("operation cancelled");
+	///     cancel!("operation cancelled");
 	///     panic!("operation cancelled");
 	/// }
 	pub fn cancel<F>(&mut self, cancel: F) -> &mut Self
@@ -234,7 +234,7 @@ impl<M: Display> Input<M> {
 	/// println!("answer {:?}", answer);
 	///
 	/// fn do_cancel() {
-	///     cancel("operation cancelled");
+	///     cancel!("operation cancelled");
 	///     std::process::exit(1);
 	/// }
 	/// ```
