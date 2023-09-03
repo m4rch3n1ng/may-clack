@@ -148,12 +148,12 @@ macro_rules! cancel {
 /// use may_clack::info;
 ///
 /// // empty
-/// cancel!();
+/// info!();
 /// // fmt string
-/// cancel!("fmt {:?}", "string");
+/// info!("fmt {:?}", "string");
 /// // impl Display
-/// cancel!("text");
-/// cancel!(4);
+/// info!("text");
+/// info!(4);
 /// ```
 #[macro_export]
 macro_rules! info {
@@ -165,6 +165,6 @@ macro_rules! info {
 	};
 	($($arg:tt)*) => {
 		let text = format!($($arg)*);
-		$crate::misc::wr_info
+		$crate::misc::wr_info(text);
 	}
 }

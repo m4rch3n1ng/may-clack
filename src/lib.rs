@@ -18,7 +18,7 @@
 //!
 //! When cancelled the will return a [`error::ClackError::Cancelled`].
 //!
-//! All input types that can return a `Cancelled` Err will also have the option to add a `.cancel` callback
+//! All input types that can return a `Cancelled` Err will also have the option to add a `.cancel` closure
 //!
 //! ```no_run
 //! use may_clack::{cancel, input, error::ClackError};
@@ -28,11 +28,11 @@
 //!     cancel!("operation cancelled")
 //! }
 //! ```
-//! 
+//!
 //! ## Info
-//! 
+//!
 //! If you want to write a message in a prompting session you can use the [`info!`] utility.
-//! 
+//!
 //! ```
 //! use may_clack::{info, intro, outro};
 //!
