@@ -245,7 +245,6 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 
 		if !is_less {
 			self.w_init();
-			self.draw_focus(0);
 		} else {
 			self.w_init_less();
 		}
@@ -460,6 +459,8 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(less + 1));
 		let _ = stdout.flush();
+
+		self.draw_focus(0);
 	}
 
 	fn w_init(&self) {
@@ -478,6 +479,8 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 		let len = self.options.len() as u16;
 		let _ = stdout.queue(cursor::MoveToPreviousLine(len));
 		let _ = stdout.flush();
+
+		self.draw_focus(0);
 	}
 
 	fn w_out(&self, idx: usize) {

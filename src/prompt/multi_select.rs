@@ -489,6 +489,8 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(less + 1));
 		let _ = stdout.flush();
+
+		self.draw_focus(&self.options, 0);
 	}
 
 	fn w_init(&self) {
