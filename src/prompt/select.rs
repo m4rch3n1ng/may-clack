@@ -100,8 +100,10 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 #[derive(Debug, Clone)]
 pub struct Select<M: Display, T: Clone, O: Display + Clone> {
 	message: M,
+	less: bool,
+	less_amt: Option<u16>,
+	less_max: Option<u16>,
 	options: Vec<Opt<T, O>>,
-	less: Option<u16>,
 }
 
 impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
@@ -124,7 +126,9 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 	pub fn new(message: M) -> Self {
 		Select {
 			message,
-			less: None,
+			less: false,
+			less_amt: None,
+			less_max: None,
 			options: vec![],
 		}
 	}
@@ -189,11 +193,7 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 		self
 	}
 
-	/// Enable paging with the specified amount of lines.
-	///
-	/// # Panics
-	///
-	/// Panics when the given value is 0.
+	/// Enable paging with using the amount of terminal rows.
 	///
 	/// # Examples
 	///
@@ -206,14 +206,99 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 	///     .option_hint("val 3", "value 3", "hint")
 	///     .option("val 4", "value 4")
 	///     .option("val 5", "value 5")
-	///     .less(3)
+	///     .less()
 	///     .interact();
 	/// println!("answer {:?}", answer);
 	/// ```
-	pub fn less(&mut self, less: u16) -> &mut Self {
-		assert!(less > 0, "less value has to be greater than zero");
-		self.less = Some(less);
+	pub fn less(&mut self) -> &mut Self {
+		self.less = true;
 		self
+	}
+
+	/// Enable paging with using the amount of terminal rows, additionally setting a maximum amount.
+	///
+	/// # Panics
+	///
+	/// Panics when the given value is 0.  
+	/// Panics when called after [`Select::less_amt`] has already been called.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::select;
+	///
+	/// let answer = select("message")
+	///     .option("val 1", "value 1")
+	///     .option("val 2", "value 2")
+	///     .option_hint("val 3", "value 3", "hint")
+	///     .option("val 4", "value 4")
+	///     .option("val 5", "value 5")
+	///     .less_max(3)
+	///     .interact();
+	/// println!("answer {:?}", answer);
+	/// ```
+	pub fn less_max(&mut self, max: u16) -> &mut Self {
+		assert!(max > 0, "less max value has to be greater than zero");
+		assert!(
+			self.less_amt.is_none(),
+			"cannot set both less_amt and less_max"
+		);
+		self.less = true;
+		self.less_max = Some(max);
+		self
+	}
+
+	/// Enable paging with the specified amount of lines.
+	///
+	/// # Panics
+	///
+	/// Panics when the given value is 0.  
+	/// Panics when called after [`Select::less_max`] has already been called.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::select;
+	///
+	/// let answer = select("message")
+	///     .option("val 1", "value 1")
+	///     .option("val 2", "value 2")
+	///     .option_hint("val 3", "value 3", "hint")
+	///     .option("val 4", "value 4")
+	///     .option("val 5", "value 5")
+	///     .less_amt(3)
+	///     .interact();
+	/// println!("answer {:?}", answer);
+	/// ```
+	pub fn less_amt(&mut self, less: u16) -> &mut Self {
+		assert!(less > 0, "less value has to be greater than zero");
+		assert!(
+			self.less_max.is_none(),
+			"cannot set both less_amt and less_max"
+		);
+		self.less = true;
+		self.less_amt = Some(less);
+		self
+	}
+
+	fn mk_less(&self) -> Option<u16> {
+		if !self.less {
+			return None;
+		}
+
+		if let Some(less) = self.less_amt {
+			let is_less = self.options.len() > less as usize;
+			is_less.then_some(less)
+		} else if let Ok((_, rows)) = crossterm::terminal::size() {
+			let len = self.options.len();
+			let rows = rows.saturating_sub(4);
+			let rows = self.less_max.map_or(rows, |max| u16::min(rows, max));
+
+			let is_less = rows > 0 && len > rows as usize;
+			is_less.then_some(rows)
+		} else {
+			None
+		}
 	}
 
 	/// Wait for the user to submit an option.
@@ -238,21 +323,33 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 		let term = Term::stdout();
 
 		let max = self.options.len();
-		let is_less = self.less.is_some() && self.options.len() as u16 > self.less.unwrap();
+		let is_less = self.mk_less();
 
 		let mut idx = 0;
 		let mut less_idx: u16 = 0;
 
-		if !is_less {
-			self.w_init();
+		if let Some(less) = is_less {
+			self.w_init_less(less);
 		} else {
-			self.w_init_less();
+			self.w_init();
 		}
 
 		loop {
 			match term.read_key()? {
 				Key::ArrowUp | Key::ArrowLeft => {
-					if !is_less {
+					if let Some(less) = is_less {
+						let prev_less = less_idx;
+
+						if idx > 0 {
+							idx -= 1;
+							less_idx = less_idx.saturating_sub(1);
+						} else {
+							idx = max - 1;
+							less_idx = less - 1;
+						}
+
+						self.draw_less(less, idx, less_idx, prev_less);
+					} else {
 						self.draw_unfocus(idx);
 						let mut stdout = stdout();
 
@@ -266,23 +363,24 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 
 						let _ = stdout.flush();
 						self.draw_focus(idx);
-					} else {
-						let prev_less = less_idx;
-
-						if idx > 0 {
-							idx -= 1;
-							less_idx = less_idx.saturating_sub(1);
-						} else {
-							let less = self.less.expect("less should unwrap if is_less");
-							idx = max - 1;
-							less_idx = less - 1;
-						}
-
-						self.draw_less(idx, less_idx, prev_less);
 					}
 				}
 				Key::ArrowDown | Key::ArrowRight => {
-					if !is_less {
+					if let Some(less) = is_less {
+						let prev_less = less_idx;
+
+						if idx < max - 1 {
+							idx += 1;
+							if less_idx < less - 1 {
+								less_idx += 1;
+							}
+						} else {
+							idx = 0;
+							less_idx = 0;
+						}
+
+						self.draw_less(less, idx, less_idx, prev_less);
+					} else {
 						self.draw_unfocus(idx);
 						let mut stdout = stdout();
 
@@ -296,27 +394,11 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 
 						let _ = stdout.flush();
 						self.draw_focus(idx);
-					} else {
-						let prev_less = less_idx;
-
-						if idx < max - 1 {
-							idx += 1;
-							let less = self.less.expect("less should unwrap if is_less");
-							if less_idx < less - 1 {
-								less_idx += 1;
-							}
-						} else {
-							idx = 0;
-							less_idx = 0;
-						}
-
-						self.draw_less(idx, less_idx, prev_less);
 					}
 				}
 				Key::PageDown => {
-					if is_less {
+					if let Some(less) = is_less {
 						let prev_less = less_idx;
-						let less = self.less.expect("less should unwrap if is_less");
 
 						if idx + less as usize >= max - 1 {
 							less_idx = less - 1;
@@ -329,13 +411,12 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 							}
 						}
 
-						self.draw_less(idx, less_idx, prev_less);
+						self.draw_less(less, idx, less_idx, prev_less);
 					}
 				}
 				Key::PageUp => {
-					if is_less {
+					if let Some(less) = is_less {
 						let prev_less = less_idx;
-						let less = self.less.expect("less should unwrap if is_less");
 
 						if idx <= less as usize {
 							less_idx = 0;
@@ -345,14 +426,14 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 							less_idx = prev_less.min(idx as u16);
 						}
 
-						self.draw_less(idx, less_idx, prev_less);
+						self.draw_less(less, idx, less_idx, prev_less);
 					}
 				}
 				Key::Enter => {
-					if !is_less {
-						self.w_out(idx);
+					if let Some(less) = is_less {
+						self.w_out_less(less, idx, less_idx);
 					} else {
-						self.w_out_less(idx, less_idx);
+						self.w_out(idx);
 					}
 
 					let opt = self
@@ -397,7 +478,7 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 		let _ = stdout.flush();
 	}
 
-	fn draw_less(&self, idx: usize, less_idx: u16, prev_less: u16) {
+	fn draw_less(&self, less: u16, idx: usize, less_idx: u16, prev_less: u16) {
 		let mut stdout = stdout();
 		if prev_less > 0 {
 			let _ = stdout.queue(cursor::MoveToPreviousLine(prev_less));
@@ -406,7 +487,6 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 		let _ = stdout.queue(cursor::MoveToColumn(0));
 		let _ = stdout.flush();
 
-		let less = self.less.expect("less should unwrap if is_less");
 		for i in 0..less.into() {
 			let _ = stdout.queue(cursor::MoveToColumn(0));
 			let _ = stdout.flush();
@@ -443,13 +523,12 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 }
 
 impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
-	fn w_init_less(&self) {
+	fn w_init_less(&self, less: u16) {
 		println!("{}", *chars::BAR);
 		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
 
-		self.draw_less(0, 0, 0);
+		self.draw_less(less, 0, 0, 0);
 
-		let less = self.less.expect("less should unwrap if is_less");
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToNextLine(less));
 		let _ = stdout.flush();
@@ -508,7 +587,7 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 		println!("{}  {}", *chars::BAR, style(label).dim());
 	}
 
-	fn w_out_less(&self, idx: usize, less_idx: u16) {
+	fn w_out_less(&self, less: u16, idx: usize, less_idx: u16) {
 		let mut stdout = stdout();
 		if less_idx > 0 {
 			let _ = stdout.queue(cursor::MoveToPreviousLine(less_idx));
@@ -519,7 +598,6 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 
 		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
 
-		let less = self.less.expect("less should unwrap if is_less");
 		for _ in 0..less.into() {
 			println!("{}", ansi::CLEAR_LINE);
 		}
