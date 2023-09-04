@@ -122,6 +122,19 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 }
 
 /// `MultiSelect` struct
+///
+/// # Examples
+///
+/// ```no_run
+/// use may_clack::multi_select;
+///
+/// let answer = multi_select("select")
+///     .option("val1", "value 1")
+///     .option("val2", "value 2")
+///     .option_hint("val 3", "value 3", "hint")
+///     .interact();
+/// println!("answer {:?}", answer);
+/// ```
 #[derive(Debug, Clone)]
 pub struct MultiSelect<M: Display, T: Clone, O: Display + Clone> {
 	message: M,

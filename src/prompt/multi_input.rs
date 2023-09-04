@@ -14,6 +14,23 @@ use std::{
 type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 
 /// `MultiInput` struct
+///
+/// # Examples
+///
+/// ```no_run
+/// use may_clack::{multi_input, cancel};
+///
+/// let answers = multi_input("message")
+///     .validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
+///     .cancel(do_cancel)
+///     .interact();
+/// println!("answers {:?}", answers);
+///
+/// fn do_cancel() {
+///     cancel!("operation cancelled");
+///     std::process::exit(1);
+/// }
+/// ```
 pub struct MultiInput<M: Display> {
 	message: M,
 	validate: Option<Box<ValidateFn>>,

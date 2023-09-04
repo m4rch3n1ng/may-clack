@@ -14,6 +14,23 @@ use std::{
 type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 
 /// `Input` struct
+///
+/// # Examples
+///
+/// ```no_run
+/// use may_clack::{input, cancel};
+///
+/// let answer = input("message")
+///     .initial_value("initial_value")
+///     .validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
+///     .cancel(do_cancel)
+///     .interact();
+/// println!("answer {:?}", answer);
+///
+/// fn do_cancel() {
+///     cancel!("operation cancelled");
+///     std::process::exit(1);
+/// }
 pub struct Input<M: Display> {
 	message: M,
 	default_value: Option<String>,

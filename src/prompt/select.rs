@@ -97,6 +97,22 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 }
 
 /// `Select` struct.
+///
+/// # Examples
+///
+/// ```no_run
+/// use may_clack::select;
+///
+/// let answer = select("message")
+///     .option("val 1", "value 1")
+///     .option("val 2", "value 2")
+///     .option_hint("val 3", "value 3", "hint")
+///     .option("val 4", "value 4")
+///     .option("val 5", "value 5")
+///     .less_amt(3)
+///     .interact();
+/// println!("answer {:?}", answer);
+/// ```
 #[derive(Debug, Clone)]
 pub struct Select<M: Display, T: Clone, O: Display + Clone> {
 	message: M,

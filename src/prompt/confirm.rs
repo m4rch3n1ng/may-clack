@@ -11,6 +11,18 @@ use std::{
 };
 
 /// `Confirm` struct.
+///
+/// # Examples
+///
+/// ```no_run
+/// use may_clack::confirm;
+///
+/// let answer = confirm("message")
+///     .initial_value(true)
+///     .prompts("true", "false")
+///     .interact();
+/// println!("answer {:?}", answer);
+/// ```
 #[derive(Debug, Clone)]
 pub struct Confirm<M: Display> {
 	message: M,
