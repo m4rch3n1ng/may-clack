@@ -43,5 +43,5 @@ fn main() -> Result<(), ClackError> {
 
 fn do_cancel() {
 	cancel!("demo cancelled");
-	std::process::exit(1);
+	panic!("demo cancelled");
 }

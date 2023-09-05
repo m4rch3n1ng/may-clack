@@ -160,7 +160,7 @@ impl<M: Display> Confirm<M> {
 		let _ = stdout.flush();
 
 		let r = self.radio(value);
-		print!("{}  {}", style("│").cyan(), r);
+		print!("{}  {}", style(*chars::BAR).cyan(), r);
 		let _ = stdout.flush();
 	}
 }

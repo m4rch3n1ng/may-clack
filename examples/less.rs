@@ -16,14 +16,14 @@ fn main() -> Result<(), ClackError> {
 		.option("val 4", "value 4")
 		.option("val 5", "value 5")
 		.less_amt(3)
-		.interact();
+		.interact()?;
 
 	let multi_less_noop = multi_select("less")
 		.option("val 1", "value 1")
 		.option("val 2", "value 2")
 		.option_hint("val 3", "value 3", "hint")
 		.less_amt(5)
-		.interact();
+		.interact()?;
 
 	let multi_less = multi_select("less")
 		.option("val 1", "value 1")
@@ -32,7 +32,7 @@ fn main() -> Result<(), ClackError> {
 		.option("val 4", "value 4")
 		.option("val 5", "value 5")
 		.less()
-		.interact();
+		.interact()?;
 
 	let mut page_up_down = select("page up / down");
 	page_up_down.less_max(25);

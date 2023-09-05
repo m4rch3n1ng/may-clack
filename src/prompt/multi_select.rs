@@ -185,7 +185,6 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// println!("answer {:?}", answer);
 	/// ```
 	pub fn option(&mut self, val: T, label: O) -> &mut Self {
-		// todo duplicate
 		let opt = Opt::new(val, label, None::<String>);
 		self.options.push(opt);
 		self
@@ -232,7 +231,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 		self
 	}
 
-	/// Enable paging with using the amount of terminal rows.
+	/// Enable paging with the amount of terminal rows.
 	///
 	/// # Examples
 	///
@@ -254,7 +253,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 		self
 	}
 
-	/// Enable paging with using the amount of terminal rows, additionally setting a maximum amount.
+	/// Enable paging with the amount of terminal rows, additionally setting a maximum amount.
 	///
 	/// # Panics
 	///
@@ -566,25 +565,6 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 }
 
 impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
-	fn w_init_less(&self, less: u16) {
-		println!("{}", *chars::BAR);
-		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
-
-		self.draw_less(&self.options, less, 0, 0, 0);
-
-		let mut stdout = stdout();
-		let _ = stdout.queue(cursor::MoveToNextLine(less));
-		let _ = stdout.flush();
-
-		println!("{}  .........", style(*chars::BAR).cyan());
-		print!("{}", style(*chars::BAR_END).cyan());
-
-		let _ = stdout.queue(cursor::MoveToPreviousLine(less + 1));
-		let _ = stdout.flush();
-
-		self.draw_focus(&self.options, 0);
-	}
-
 	fn w_init(&self) {
 		let mut stdout = stdout();
 
@@ -600,6 +580,25 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 
 		let len = self.options.len() as u16;
 		let _ = stdout.queue(cursor::MoveToPreviousLine(len));
+		let _ = stdout.flush();
+
+		self.draw_focus(&self.options, 0);
+	}
+
+	fn w_init_less(&self, less: u16) {
+		println!("{}", *chars::BAR);
+		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
+
+		self.draw_less(&self.options, less, 0, 0, 0);
+
+		let mut stdout = stdout();
+		let _ = stdout.queue(cursor::MoveToNextLine(less));
+		let _ = stdout.flush();
+
+		println!();
+		print!("{}", style(*chars::BAR_END).cyan());
+
+		let _ = stdout.queue(cursor::MoveToPreviousLine(less + 1));
 		let _ = stdout.flush();
 
 		self.draw_focus(&self.options, 0);

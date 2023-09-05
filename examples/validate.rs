@@ -3,7 +3,7 @@ use may_clack::{cancel, error::ClackError, input, intro, multi_input, outro};
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(style(" test ").reverse());
+	intro!(style(" validate ").reverse());
 
 	let do_validate_input = input("validate single")
 		.validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
@@ -24,5 +24,5 @@ fn main() -> Result<(), ClackError> {
 
 fn do_cancel() {
 	cancel!("demo cancelled");
-	std::process::exit(1);
+	panic!("demo cancelled");
 }
