@@ -1,5 +1,5 @@
 use crate::style::chars;
-use console::style;
+use owo_colors::OwoColorize;
 use std::fmt::Display;
 
 #[doc(hidden)]
@@ -17,14 +17,14 @@ pub fn wr_outro(display: impl Display) {
 #[doc(hidden)]
 pub fn wr_cancel(display: impl Display) {
 	println!("{}", *chars::BAR);
-	println!("{}  {}", *chars::BAR_END, style(display).red());
+	println!("{}  {}", *chars::BAR_END, display.red());
 	println!();
 }
 
 #[doc(hidden)]
 pub fn wr_info(display: impl Display) {
 	println!("{}", *chars::BAR);
-	println!("{}  {}", style(*chars::STEP_SUBMIT).cyan(), display);
+	println!("{}  {}", (*chars::STEP_SUBMIT).cyan(), display);
 }
 
 /// Intro message.

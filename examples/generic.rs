@@ -1,12 +1,12 @@
-use console::style;
 use may_clack::{cancel, confirm, error::ClackError, intro, multi_input, outro};
+use owo_colors::OwoColorize;
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(style(" generic messages ").reverse());
+	intro!(" generic messages ".reversed());
 
-	let number = confirm(20).interact()?;
-	let styled = multi_input(style("style").on_cyan())
+	let number = confirm(20).cancel(do_cancel).interact()?;
+	let styled = multi_input("style".on_cyan())
 		.cancel(do_cancel)
 		.interact()?;
 

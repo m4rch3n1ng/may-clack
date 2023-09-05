@@ -3,8 +3,12 @@ use crate::{
 	error::ClackError,
 	style::{ansi, chars, IS_UNICODE},
 };
-use console::{style, Key, Term};
-use crossterm::{cursor, QueueableCommand};
+use crossterm::{
+	cursor,
+	event::{self, Event, KeyCode, KeyModifiers},
+	execute, terminal,
+};
+use owo_colors::OwoColorize;
 use std::{
 	fmt::Display,
 	io::{stdout, Write},
@@ -89,14 +93,14 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 		let label = self.trunc(hint_len);
 
 		let fmt = if self.active {
-			format!("{} {}", style(*chars::CHECKBOX_SELECTED).green(), label)
+			format!("{} {}", (*chars::CHECKBOX_SELECTED).green(), label)
 		} else {
-			format!("{} {}", style(*chars::CHECKBOX_ACTIVE).cyan(), label)
+			format!("{} {}", (*chars::CHECKBOX_ACTIVE).cyan(), label)
 		};
 
 		if let Some(hint) = &self.hint {
 			let hint = format!("({})", hint);
-			format!("{} {}", fmt, style(hint).dim())
+			format!("{} {}", fmt, hint.dimmed())
 		} else {
 			fmt
 		}
@@ -106,16 +110,12 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 		let label = self.trunc(0);
 
 		if self.active {
-			format!(
-				"{} {}",
-				style(*chars::CHECKBOX_SELECTED).green(),
-				style(label).dim()
-			)
+			format!("{} {}", (*chars::CHECKBOX_SELECTED).green(), label.dimmed())
 		} else {
 			format!(
 				"{} {}",
-				style(*chars::CHECKBOX_INACTIVE).dim(),
-				style(label).dim()
+				(*chars::CHECKBOX_INACTIVE).dimmed(),
+				label.dimmed()
 			)
 		}
 	}
@@ -135,12 +135,12 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 ///     .interact();
 /// println!("answer {:?}", answer);
 /// ```
-#[derive(Debug, Clone)]
 pub struct MultiSelect<M: Display, T: Clone, O: Display + Clone> {
 	message: M,
 	less: bool,
 	less_amt: Option<u16>,
 	less_max: Option<u16>,
+	cancel: Option<Box<dyn Fn()>>,
 	options: Vec<Opt<T, O>>,
 }
 
@@ -167,6 +167,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 			less: false,
 			less_amt: None,
 			less_max: None,
+			cancel: None,
 			options: vec![],
 		}
 	}
@@ -319,6 +320,35 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 		self
 	}
 
+	/// Specify function to call on cancel.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::{multi_select, cancel};
+	///
+	/// let answer = multi_select("select")
+	///     .option("val1", "value 1")
+	///     .option("val2", "value 2")
+	///     .option_hint("val 3", "value 3", "hint")
+	///     .cancel(do_cancel)
+	///     .interact();
+	/// println!("answer {:?}", answer);
+	///
+	/// fn do_cancel() {
+	///     cancel!("operation cancelled");
+	///     panic!("operation cancelled");
+	/// }
+	pub fn cancel<F>(&mut self, cancel: F) -> &mut Self
+	where
+		F: Fn() + 'static,
+	{
+		let cancel = Box::new(cancel);
+		self.cancel = Some(cancel);
+
+		self
+	}
+
 	fn mk_less(&self) -> Option<u16> {
 		if !self.less {
 			return None;
@@ -372,126 +402,145 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 			self.w_init();
 		}
 
-		let term = Term::stdout();
+		terminal::enable_raw_mode()?;
+
 		loop {
-			match term.read_key()? {
-				Key::ArrowUp | Key::ArrowLeft => {
-					if let Some(less) = is_less {
-						let prev_less = less_idx;
+			if let Event::Key(key) = event::read()? {
+				match (key.code, key.modifiers) {
+					(KeyCode::Up | KeyCode::Left, _) => {
+						if let Some(less) = is_less {
+							let prev_less = less_idx;
 
-						if idx > 0 {
-							idx -= 1;
-							less_idx = less_idx.saturating_sub(1);
+							if idx > 0 {
+								idx -= 1;
+								less_idx = less_idx.saturating_sub(1);
+							} else {
+								idx = max - 1;
+								less_idx = less - 1;
+							}
+
+							self.draw_less(&options, less, idx, less_idx, prev_less);
 						} else {
-							idx = max - 1;
-							less_idx = less - 1;
+							self.draw_unfocus(&options, idx);
+							let mut stdout = stdout();
+
+							if idx > 0 {
+								idx -= 1;
+								let _ = execute!(stdout, cursor::MoveUp(1));
+							} else {
+								idx = max - 1;
+								let _ = execute!(stdout, cursor::MoveDown(max as u16 - 1));
+							}
+
+							self.draw_focus(&options, idx);
 						}
+					}
+					(KeyCode::Down | KeyCode::Right, _) => {
+						if let Some(less) = is_less {
+							let prev_less = less_idx;
 
-						self.draw_less(&options, less, idx, less_idx, prev_less);
-					} else {
-						self.draw_unfocus(&options, idx);
-						let mut stdout = stdout();
+							if idx < max - 1 {
+								idx += 1;
+								if less_idx < less - 1 {
+									less_idx += 1;
+								}
+							} else {
+								idx = 0;
+								less_idx = 0;
+							}
 
-						if idx > 0 {
-							idx -= 1;
-							let _ = stdout.queue(cursor::MoveUp(1));
+							self.draw_less(&options, less, idx, less_idx, prev_less);
 						} else {
-							idx = max - 1;
-							let _ = stdout.queue(cursor::MoveDown(max as u16 - 1));
-						}
+							self.draw_unfocus(&options, idx);
+							let mut stdout = stdout();
 
-						let _ = stdout.flush();
+							if idx < max - 1 {
+								idx += 1;
+								let _ = execute!(stdout, cursor::MoveDown(1));
+							} else {
+								idx = 0;
+								let _ = execute!(stdout, cursor::MoveUp(max as u16 - 1));
+							}
+
+							self.draw_focus(&options, idx);
+						}
+					}
+					(KeyCode::PageDown, _) => {
+						if let Some(less) = is_less {
+							let prev_less = less_idx;
+
+							if idx + less as usize >= max - 1 {
+								less_idx = less - 1;
+								idx = max - 1;
+							} else {
+								idx += less as usize;
+
+								if max - idx < (less - less_idx) as usize {
+									less_idx = less - (max - idx) as u16;
+								}
+							}
+
+							self.draw_less(&options, less, idx, less_idx, prev_less);
+						}
+					}
+					(KeyCode::PageUp, _) => {
+						if let Some(less) = is_less {
+							let prev_less = less_idx;
+
+							if idx <= less as usize {
+								less_idx = 0;
+								idx = 0;
+							} else {
+								idx -= less as usize;
+								less_idx = prev_less.min(idx as u16);
+							}
+
+							self.draw_less(&options, less, idx, less_idx, prev_less);
+						}
+					}
+					(KeyCode::Char(' '), _) => {
+						let opt = options.get_mut(idx).expect("idx should always be in bound");
+						opt.toggle();
 						self.draw_focus(&options, idx);
 					}
-				}
-				Key::ArrowDown | Key::ArrowRight => {
-					if let Some(less) = is_less {
-						let prev_less = less_idx;
+					(KeyCode::Enter, _) => {
+						terminal::disable_raw_mode()?;
 
-						if idx < max - 1 {
-							idx += 1;
-							if less_idx < less - 1 {
-								less_idx += 1;
-							}
+						let selected_opts =
+							options.iter().filter(|opt| opt.active).collect::<Vec<_>>();
+
+						if let Some(less) = is_less {
+							self.w_out_less(less, less_idx, &selected_opts);
 						} else {
-							idx = 0;
-							less_idx = 0;
+							self.w_out(idx, &selected_opts);
 						}
 
-						self.draw_less(&options, less, idx, less_idx, prev_less);
-					} else {
-						self.draw_unfocus(&options, idx);
-						let mut stdout = stdout();
+						let all = options
+							.iter()
+							.filter(|opt| opt.active)
+							.cloned()
+							.map(|opt| opt.value)
+							.collect();
 
-						if idx < max - 1 {
-							idx += 1;
-							let _ = stdout.queue(cursor::MoveDown(1));
+						return Ok(all);
+					}
+					(KeyCode::Char('c'), KeyModifiers::CONTROL) => {
+						terminal::disable_raw_mode()?;
+
+						if let Some(less) = is_less {
+							self.w_cancel_less(less, idx, less_idx);
 						} else {
-							idx = 0;
-							let _ = stdout.queue(cursor::MoveUp(max as u16 - 1));
+							self.w_cancel(idx);
 						}
 
-						let _ = stdout.flush();
-						self.draw_focus(&options, idx);
-					}
-				}
-				Key::PageDown => {
-					if let Some(less) = is_less {
-						let prev_less = less_idx;
-
-						if idx + less as usize >= max - 1 {
-							less_idx = less - 1;
-							idx = max - 1;
-						} else {
-							idx += less as usize;
-
-							if max - idx < (less - less_idx) as usize {
-								less_idx = less - (max - idx) as u16;
-							}
+						if let Some(cancel) = self.cancel.as_deref() {
+							cancel();
 						}
 
-						self.draw_less(&options, less, idx, less_idx, prev_less);
+						panic!();
 					}
+					_ => {}
 				}
-				Key::PageUp => {
-					if let Some(less) = is_less {
-						let prev_less = less_idx;
-
-						if idx <= less as usize {
-							less_idx = 0;
-							idx = 0;
-						} else {
-							idx -= less as usize;
-							less_idx = prev_less.min(idx as u16);
-						}
-
-						self.draw_less(&options, less, idx, less_idx, prev_less);
-					}
-				}
-				Key::Char(' ') => {
-					let opt = options.get_mut(idx).expect("idx should always be in bound");
-					opt.toggle();
-					self.draw_focus(&options, idx);
-				}
-				Key::Enter => {
-					let selected_opts = options.iter().filter(|opt| opt.active).collect::<Vec<_>>();
-
-					if let Some(less) = is_less {
-						self.w_out_less(less, less_idx, &selected_opts);
-					} else {
-						self.w_out(idx, &selected_opts);
-					}
-
-					let all = options
-						.iter()
-						.filter(|opt| opt.active)
-						.cloned()
-						.map(|opt| opt.value)
-						.collect();
-
-					return Ok(all);
-				}
-				_ => {}
 			}
 		}
 	}
@@ -512,33 +561,30 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 
 	fn draw(&self, line: &str) {
 		let mut stdout = stdout();
-		let _ = stdout.queue(cursor::MoveToColumn(0));
-		let _ = stdout.flush();
+		let _ = execute!(stdout, cursor::MoveToColumn(0));
 
 		print!("{}", ansi::CLEAR_LINE);
-		print!("{}  {}", style(*chars::BAR).cyan(), line);
+		print!("{}  {}", (*chars::BAR).cyan(), line);
 		let _ = stdout.flush();
 	}
 
 	fn draw_less(&self, opts: &[Opt<T, O>], less: u16, idx: usize, less_idx: u16, prev_less: u16) {
 		let mut stdout = stdout();
 		if prev_less > 0 {
-			let _ = stdout.queue(cursor::MoveToPreviousLine(prev_less));
+			let _ = execute!(stdout, cursor::MoveToPreviousLine(prev_less));
+		} else {
+			let _ = execute!(stdout, cursor::MoveToColumn(0));
 		}
 
-		let _ = stdout.queue(cursor::MoveToColumn(0));
-		let _ = stdout.flush();
-
 		for i in 0..less.into() {
-			let _ = stdout.queue(cursor::MoveToColumn(0));
-			let _ = stdout.flush();
-
 			let i_idx = idx + i - less_idx as usize;
 			let opt = opts.get(i_idx).unwrap();
 			let line = opt.unfocus();
 
 			print!("{}", ansi::CLEAR_LINE);
-			println!("{}  {}", style(*chars::BAR).cyan(), line);
+			println!("{}  {}\r", (*chars::BAR).cyan(), line);
+
+			let _ = execute!(stdout, cursor::MoveToColumn(0));
 		}
 
 		let max = self.options.len();
@@ -546,18 +592,15 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 		print!("{}", ansi::CLEAR_LINE);
 		println!(
 			"{}  ......... ({:#0amt$}/{})",
-			style(*chars::BAR).cyan(),
+			(*chars::BAR).cyan(),
 			idx + 1,
 			max,
 			amt = amt
 		);
 
-		let _ = stdout.queue(cursor::MoveToPreviousLine(less + 1));
-		let _ = stdout.flush();
-
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(less + 1));
 		if less_idx > 0 {
-			let _ = stdout.queue(cursor::MoveToNextLine(less_idx));
-			let _ = stdout.flush();
+			let _ = execute!(stdout, cursor::MoveToNextLine(less_idx));
 		}
 
 		self.draw_focus(opts, idx);
@@ -569,48 +612,93 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 		let mut stdout = stdout();
 
 		println!("{}", *chars::BAR);
-		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
+		println!("{}  {}", (*chars::STEP_ACTIVE).cyan(), self.message);
 
 		for opt in &self.options {
 			let line = opt.unfocus();
-			println!("{}  {}", style(*chars::BAR).cyan(), line);
+			println!("{}  {}", (*chars::BAR).cyan(), line);
 		}
 
-		print!("{}", style(*chars::BAR_END).cyan());
+		print!("{}", (*chars::BAR_END).cyan());
 
 		let len = self.options.len() as u16;
-		let _ = stdout.queue(cursor::MoveToPreviousLine(len));
-		let _ = stdout.flush();
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(len));
 
 		self.draw_focus(&self.options, 0);
 	}
 
 	fn w_init_less(&self, less: u16) {
 		println!("{}", *chars::BAR);
-		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
+		println!("{}  {}", (*chars::STEP_ACTIVE).cyan(), self.message);
 
 		self.draw_less(&self.options, less, 0, 0, 0);
 
 		let mut stdout = stdout();
-		let _ = stdout.queue(cursor::MoveToNextLine(less));
-		let _ = stdout.flush();
+		let _ = execute!(stdout, cursor::MoveToNextLine(less));
 
 		println!();
-		print!("{}", style(*chars::BAR_END).cyan());
+		print!("{}", (*chars::BAR_END).cyan());
 
-		let _ = stdout.queue(cursor::MoveToPreviousLine(less + 1));
-		let _ = stdout.flush();
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(less + 1));
 
 		self.draw_focus(&self.options, 0);
 	}
 
+	fn w_cancel(&self, idx: usize) {
+		let mut stdout = stdout();
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(idx as u16 + 1));
+
+		println!("{}  {}", (*chars::STEP_CANCEL).red(), self.message);
+
+		for _ in &self.options {
+			println!("{}", ansi::CLEAR_LINE);
+		}
+		print!("{}", ansi::CLEAR_LINE);
+
+		let len = self.options.len() as u16;
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(len));
+
+		let label = &self
+			.options
+			.get(idx)
+			.expect("idx should always be in bound")
+			.label;
+		println!("{}  {}", *chars::BAR, label.strikethrough().dimmed());
+	}
+
+	fn w_cancel_less(&self, less: u16, idx: usize, less_idx: u16) {
+		let mut stdout = stdout();
+		if less_idx > 0 {
+			let _ = execute!(stdout, cursor::MoveToPreviousLine(less_idx + 1));
+		} else {
+			let _ = execute!(stdout, cursor::MoveToPreviousLine(1));
+		}
+
+		println!("{}  {}", (*chars::STEP_CANCEL).red(), self.message);
+
+		for _ in 0..less.into() {
+			println!("{}", ansi::CLEAR_LINE);
+		}
+
+		println!("{}", ansi::CLEAR_LINE);
+		println!("{}", ansi::CLEAR_LINE);
+
+		let mv = less + 2;
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(mv));
+
+		let label = &self
+			.options
+			.get(idx)
+			.expect("idx should always be in bound")
+			.label;
+		println!("{}  {}", *chars::BAR, label.strikethrough().dimmed());
+	}
+
 	fn w_out(&self, idx: usize, selected: &[&Opt<T, O>]) {
 		let mut stdout = stdout();
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(idx as u16 + 1));
 
-		let _ = stdout.queue(cursor::MoveToPreviousLine(idx as u16 + 1));
-		let _ = stdout.flush();
-
-		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
+		println!("{}  {}", (*chars::STEP_SUBMIT).green(), self.message);
 
 		for _ in &self.options {
 			println!("{}", ansi::CLEAR_LINE);
@@ -618,31 +706,27 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 		println!("{}", ansi::CLEAR_LINE);
 
 		let mv = self.options.len() as u16 + 1;
-		let _ = stdout.queue(cursor::MoveToPreviousLine(mv));
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(mv));
 
-		let vals = selected
-			.iter()
-			.map(|&opt| opt.label.clone())
-			.collect::<Vec<_>>();
+		let vals = selected.iter().map(|&opt| &opt.label).collect::<Vec<_>>();
 
 		let val_string = if vals.is_empty() {
 			"none".into()
 		} else {
 			self.join(&vals)
 		};
-		println!("{}  {}", *chars::BAR, style(val_string).dim());
+		println!("{}  {}", *chars::BAR, val_string.dimmed());
 	}
 
 	fn w_out_less(&self, less: u16, less_idx: u16, selected: &[&Opt<T, O>]) {
 		let mut stdout = stdout();
 		if less_idx > 0 {
-			let _ = stdout.queue(cursor::MoveToPreviousLine(less_idx));
+			let _ = execute!(stdout, cursor::MoveToPreviousLine(less_idx + 1));
+		} else {
+			let _ = execute!(stdout, cursor::MoveToPreviousLine(1));
 		}
 
-		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
-		let _ = stdout.flush();
-
-		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
+		println!("{}  {}", (*chars::STEP_SUBMIT).green(), self.message);
 
 		for _ in 0..less.into() {
 			println!("{}", ansi::CLEAR_LINE);
@@ -651,22 +735,19 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 		println!("{}", ansi::CLEAR_LINE);
 
 		let mv = less + 2;
-		let _ = stdout.queue(cursor::MoveToPreviousLine(mv));
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(mv));
 
-		let vals = selected
-			.iter()
-			.map(|&opt| opt.label.clone())
-			.collect::<Vec<_>>();
+		let vals = selected.iter().map(|&opt| &opt.label).collect::<Vec<_>>();
 
 		let val_string = if vals.is_empty() {
 			"none".into()
 		} else {
 			self.join(&vals)
 		};
-		println!("{}  {}", *chars::BAR, style(val_string).dim());
+		println!("{}  {}", *chars::BAR, val_string.dimmed());
 	}
 
-	fn join(&self, v: &[O]) -> String {
+	fn join(&self, v: &[&O]) -> String {
 		v.iter()
 			.map(|val| format!("{}", val))
 			.collect::<Vec<_>>()

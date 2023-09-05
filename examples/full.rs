@@ -1,12 +1,12 @@
-use console::style;
 use may_clack::{
 	cancel, confirm, error::ClackError, info, input, intro, multi_input, multi_select, outro,
 	select,
 };
+use owo_colors::OwoColorize;
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(style(" full ").reverse());
+	intro!(" full ".reversed());
 
 	info!("visit the documentation at https://docs.rs/may-clack");
 
@@ -18,16 +18,21 @@ fn main() -> Result<(), ClackError> {
 		.max(4)
 		.cancel(do_cancel)
 		.interact()?;
-	let do_confirm = confirm("confirm").prompts("true", "false").interact()?;
+	let do_confirm = confirm("confirm")
+		.prompts("true", "false")
+		.cancel(do_cancel)
+		.interact()?;
 	let do_multi_select = multi_select("multi select")
 		.option("opt1", "option 1")
 		.option("opt2", "option 2")
 		.option_hint("opt3", "option 3", "hint")
+		.cancel(do_cancel)
 		.interact()?;
 	let do_select = select("select")
 		.option("val1", "value 1")
 		.option("val2", "value 2")
 		.option_hint("val 3", "value 3", "hint")
+		.cancel(do_cancel)
 		.interact()?;
 
 	outro!();

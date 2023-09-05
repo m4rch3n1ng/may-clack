@@ -3,8 +3,8 @@ use crate::{
 	error::ClackError,
 	style::{ansi, chars},
 };
-use console::style;
 use crossterm::{cursor, QueueableCommand};
+use owo_colors::OwoColorize;
 use rustyline::DefaultEditor;
 use std::{
 	fmt::Display,
@@ -156,8 +156,8 @@ impl<M: Display> Input<M> {
 	}
 
 	fn interact_once(&self, enforce_non_empty: bool) -> Result<Option<String>, ClackError> {
-		let default_prompt = format!("{}  ", style(*chars::BAR).cyan());
-		let val_prompt = format!("{}  ", style(*chars::BAR).yellow());
+		let default_prompt = format!("{}  ", (*chars::BAR).cyan());
+		let val_prompt = format!("{}  ", (*chars::BAR).yellow());
 
 		let mut editor = DefaultEditor::new()?;
 
@@ -283,14 +283,14 @@ impl<M: Display> Input<M> {
 		let mut stdout = stdout();
 
 		println!("{}", *chars::BAR);
-		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
-		println!("{}", style(*chars::BAR).cyan());
-		print!("{}", style(*chars::BAR_END).cyan());
+		println!("{}  {}", (*chars::STEP_ACTIVE).cyan(), self.message);
+		println!("{}", (*chars::BAR).cyan());
+		print!("{}", (*chars::BAR_END).cyan());
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
 
-		print!("{}  ", style(*chars::BAR).cyan());
+		print!("{}  ", (*chars::BAR).cyan());
 		let _ = stdout.flush();
 	}
 
@@ -299,15 +299,11 @@ impl<M: Display> Input<M> {
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
 		let _ = stdout.flush();
 
-		println!("{}  {}", style(*chars::STEP_ERROR).yellow(), self.message);
-		println!("{}", style(*chars::BAR).yellow());
+		println!("{}  {}", (*chars::STEP_ERROR).yellow(), self.message);
+		println!("{}", (*chars::BAR).yellow());
 
 		print!("{}", ansi::CLEAR_LINE);
-		print!(
-			"{}  {}",
-			style(*chars::BAR_END).yellow(),
-			style(text).yellow()
-		);
+		print!("{}  {}", (*chars::BAR_END).yellow(), text.yellow());
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
@@ -318,10 +314,10 @@ impl<M: Display> Input<M> {
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
 		let _ = stdout.flush();
 
-		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
-		println!("{}  {}", *chars::BAR, style(value).dim());
+		println!("{}  {}", (*chars::STEP_SUBMIT).green(), self.message);
+		println!("{}  {}", *chars::BAR, value.dimmed());
 
-		println!("{}", style(ansi::CLEAR_LINE));
+		println!("{}", ansi::CLEAR_LINE);
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();
@@ -332,16 +328,12 @@ impl<M: Display> Input<M> {
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
 		let _ = stdout.flush();
 
-		println!("{}  {}", style(*chars::STEP_CANCEL).red(), self.message);
+		println!("{}  {}", (*chars::STEP_CANCEL).red(), self.message);
 
-		print!("{}", style(ansi::CLEAR_LINE));
-		println!(
-			"{}  {}",
-			*chars::BAR,
-			style("cancelled").strikethrough().dim()
-		);
+		print!("{}", ansi::CLEAR_LINE);
+		println!("{}  {}", *chars::BAR, "cancelled".strikethrough().dimmed());
 
-		println!("{}", style(ansi::CLEAR_LINE));
+		println!("{}", ansi::CLEAR_LINE);
 
 		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
 		let _ = stdout.flush();

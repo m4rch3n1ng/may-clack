@@ -3,8 +3,12 @@ use crate::{
 	error::ClackError,
 	style::{ansi, chars},
 };
-use console::{style, Key, Term};
-use crossterm::{cursor, QueueableCommand};
+use crossterm::{
+	cursor,
+	event::{self, Event, KeyCode, KeyModifiers},
+	execute, terminal,
+};
+use owo_colors::OwoColorize;
 use std::{
 	fmt::Display,
 	io::{stdout, Write},
@@ -23,11 +27,11 @@ use std::{
 ///     .interact();
 /// println!("answer {:?}", answer);
 /// ```
-#[derive(Debug, Clone)]
 pub struct Confirm<M: Display> {
 	message: M,
 	initial_value: bool,
 	prompts: (String, String),
+	cancel: Option<Box<dyn Fn()>>,
 }
 
 impl<M: Display> Confirm<M> {
@@ -49,6 +53,7 @@ impl<M: Display> Confirm<M> {
 			message,
 			initial_value: false,
 			prompts: ("yes".into(), "no".into()),
+			cancel: None,
 		}
 	}
 
@@ -86,6 +91,29 @@ impl<M: Display> Confirm<M> {
 		self
 	}
 
+	/// Specify function to call on cancel.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::{confirm, cancel};
+	///
+	/// let answer = confirm("message").cancel(do_cancel).interact();
+	/// println!("answer {:?}", answer);
+	///
+	/// fn do_cancel() {
+	///     cancel!("operation cancelled");
+	///     panic!("operation cancelled");
+	/// }
+	pub fn cancel<F>(&mut self, cancel: F) -> &mut Self
+	where
+		F: Fn() + 'static,
+	{
+		let cancel = Box::new(cancel);
+		self.cancel = Some(cancel);
+		self
+	}
+
 	/// Wait for the user to submit an answer.
 	///
 	/// # Examples
@@ -102,32 +130,48 @@ impl<M: Display> Confirm<M> {
 	pub fn interact(&self) -> Result<bool, ClackError> {
 		self.w_init();
 
-		let term = Term::stdout();
-		// let _ = term.hide_cursor(); // todo
+		let mut stdout = stdout();
+		let _ = execute!(stdout, crossterm::cursor::Hide);
+		terminal::enable_raw_mode()?;
 
 		let mut val = self.initial_value;
 		loop {
-			match term.read_key()? {
-				Key::ArrowUp | Key::ArrowDown | Key::ArrowLeft | Key::ArrowRight => {
-					val = !val;
-					self.draw(val);
+			if let Event::Key(key) = event::read()? {
+				match (key.code, key.modifiers) {
+					(KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right, _) => {
+						val = !val;
+						self.draw(val);
+					}
+					(KeyCode::Char('y' | 'Y'), _) => {
+						let _ = execute!(stdout, crossterm::cursor::Show);
+						terminal::disable_raw_mode()?;
+						self.w_out(true);
+						return Ok(true);
+					}
+					(KeyCode::Char('n' | 'N'), _) => {
+						let _ = execute!(stdout, crossterm::cursor::Show);
+						terminal::disable_raw_mode()?;
+						self.w_out(false);
+						return Ok(false);
+					}
+					(KeyCode::Enter, _) => {
+						let _ = execute!(stdout, crossterm::cursor::Show);
+						terminal::disable_raw_mode()?;
+						self.w_out(val);
+						return Ok(val);
+					}
+					(KeyCode::Char('c'), KeyModifiers::CONTROL) => {
+						let _ = execute!(stdout, crossterm::cursor::Show);
+						terminal::disable_raw_mode()?;
+						self.w_cancel(val);
+						if let Some(cancel) = self.cancel.as_deref() {
+							cancel();
+						}
+
+						return Err(ClackError::Cancelled);
+					}
+					_ => {}
 				}
-				Key::Char('y' | 'Y') => {
-					let _ = term.show_cursor();
-					self.w_out(true);
-					return Ok(true);
-				}
-				Key::Char('n' | 'N') => {
-					let _ = term.show_cursor();
-					self.w_out(false);
-					return Ok(false);
-				}
-				Key::Enter => {
-					let _ = term.show_cursor();
-					self.w_out(val);
-					return Ok(val);
-				}
-				_ => {}
 			}
 		}
 	}
@@ -137,10 +181,10 @@ impl<M: Display> Confirm<M> {
 	/// Format a radio point.
 	fn radio_pnt(&self, is_active: bool, prompt: &str) -> String {
 		if is_active {
-			format!("{} {}", style(*chars::RADIO_ACTIVE).green(), prompt)
+			format!("{} {}", (*chars::RADIO_ACTIVE).green(), prompt)
 		} else {
-			style(format!("{} {}", *chars::RADIO_INACTIVE, prompt))
-				.dim()
+			format!("{} {}", *chars::RADIO_INACTIVE, prompt)
+				.dimmed()
 				.to_string()
 		}
 	}
@@ -156,11 +200,10 @@ impl<M: Display> Confirm<M> {
 	/// Draw the prompt.
 	fn draw(&self, value: bool) {
 		let mut stdout = stdout();
-		let _ = stdout.queue(cursor::MoveToColumn(0));
-		let _ = stdout.flush();
+		let _ = execute!(stdout, cursor::MoveToColumn(0));
 
 		let r = self.radio(value);
-		print!("{}  {}", style(*chars::BAR).cyan(), r);
+		print!("{}  {}", (*chars::BAR).cyan(), r);
 		let _ = stdout.flush();
 	}
 }
@@ -168,26 +211,21 @@ impl<M: Display> Confirm<M> {
 impl<M: Display> Confirm<M> {
 	/// Write initial prompt.
 	fn w_init(&self) {
-		let mut stdout = stdout();
-
 		println!("{}", *chars::BAR);
-		println!("{}  {}", style(*chars::STEP_ACTIVE).cyan(), self.message);
-		println!("{}", style(*chars::BAR).cyan());
-		print!("{}", style(*chars::BAR_END).cyan());
+		println!("{}  {}", (*chars::STEP_ACTIVE).cyan(), self.message);
+		println!("{}", (*chars::BAR).cyan());
+		print!("{}", (*chars::BAR_END).cyan());
 
-		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
-		let _ = stdout.flush();
+		let mut stdout = stdout();
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(1));
 
 		self.draw(self.initial_value);
-
-		let _ = stdout.flush();
 	}
 
 	/// Write outro prompt.
 	fn w_out(&self, value: bool) {
 		let mut stdout = stdout();
-		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
-		let _ = stdout.flush();
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(1));
 
 		let answer = if value {
 			&self.prompts.0
@@ -195,9 +233,24 @@ impl<M: Display> Confirm<M> {
 			&self.prompts.1
 		};
 
-		println!("{}  {}", style(*chars::STEP_SUBMIT).green(), self.message);
+		println!("{}  {}", (*chars::STEP_SUBMIT).green(), self.message);
 		print!("{}", ansi::CLEAR_LINE);
-		println!("{}  {}", *chars::BAR, style(answer).dim());
+		println!("{}  {}", *chars::BAR, answer.dimmed());
+	}
+
+	fn w_cancel(&self, value: bool) {
+		let mut stdout = stdout();
+		let _ = execute!(stdout, cursor::MoveToPreviousLine(1));
+
+		let answer = if value {
+			&self.prompts.0
+		} else {
+			&self.prompts.1
+		};
+
+		println!("{}  {}", (*chars::STEP_CANCEL).red(), self.message);
+		print!("{}", ansi::CLEAR_LINE);
+		println!("{}  {}", *chars::BAR, answer.strikethrough().dimmed());
 	}
 }
 
