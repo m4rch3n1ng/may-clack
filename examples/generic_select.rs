@@ -1,5 +1,5 @@
-use console::style;
 use may_clack::{cancel, error::ClackError, intro, multi_select, outro, select};
+use owo_colors::OwoColorize;
 use std::fmt::Display;
 
 #[derive(Debug, Clone)]
@@ -21,7 +21,7 @@ impl Display for SelectEnum {
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(style(" generic select ").reverse());
+	intro!(" generic select ".reversed());
 
 	let select_enum = select("select enum")
 		.option(SelectEnum::One, SelectEnum::One)

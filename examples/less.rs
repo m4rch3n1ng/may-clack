@@ -1,5 +1,5 @@
-use console::style;
 use may_clack::{cancel, error::ClackError, intro, multi_select, outro, select};
+use owo_colors::OwoColorize;
 
 /// Activating "less" mode activates a pager.
 ///
@@ -7,7 +7,7 @@ use may_clack::{cancel, error::ClackError, intro, multi_select, outro, select};
 /// you can decide the amount of options per page.
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(style(" less ").reverse());
+	intro!(" less ".reversed());
 
 	let select_less = select("less")
 		.option("val 1", "value 1")

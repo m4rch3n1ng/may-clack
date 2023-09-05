@@ -1,12 +1,12 @@
-use console::style;
 use may_clack::{
 	cancel, confirm, error::ClackError, info, input, intro, multi_input, multi_select, outro,
 	select,
 };
+use owo_colors::OwoColorize;
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(style(" full ").reverse());
+	intro!(" full ".reversed());
 
 	info!("visit the documentation at https://docs.rs/may-clack");
 

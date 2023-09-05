@@ -1,9 +1,9 @@
-use console::style;
 use may_clack::{cancel, error::ClackError, input, intro, multi_input, outro};
+use owo_colors::OwoColorize;
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(style(" validate ").reverse());
+	intro!(" validate ".reversed());
 
 	let do_validate_input = input("validate single")
 		.validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))

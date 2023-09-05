@@ -320,7 +320,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 		self
 	}
 
-/// Specify function to call on cancel.
+	/// Specify function to call on cancel.
 	///
 	/// # Examples
 	///
