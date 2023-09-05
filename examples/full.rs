@@ -26,6 +26,7 @@ fn main() -> Result<(), ClackError> {
 		.option("opt1", "option 1")
 		.option("opt2", "option 2")
 		.option_hint("opt3", "option 3", "hint")
+		.cancel(do_cancel)
 		.interact()?;
 	let do_select = select("select")
 		.option("val1", "value 1")

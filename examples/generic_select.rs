@@ -34,6 +34,7 @@ fn main() -> Result<(), ClackError> {
 		.option(SelectEnum::One, "one")
 		.option(SelectEnum::Two, "two")
 		.option(SelectEnum::Three, "three")
+		.cancel(do_cancel)
 		.interact()?;
 
 	outro!();

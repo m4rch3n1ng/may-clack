@@ -24,6 +24,7 @@ fn main() -> Result<(), ClackError> {
 		.option("val 2", "value 2")
 		.option_hint("val 3", "value 3", "hint")
 		.less_amt(5)
+		.cancel(do_cancel)
 		.interact()?;
 
 	let multi_less = multi_select("less")
@@ -33,6 +34,7 @@ fn main() -> Result<(), ClackError> {
 		.option("val 4", "value 4")
 		.option("val 5", "value 5")
 		.less()
+		.cancel(do_cancel)
 		.interact()?;
 
 	let mut page_up_down = select("page up / down");
