@@ -31,6 +31,7 @@ fn main() -> Result<(), ClackError> {
 		.option("val1", "value 1")
 		.option("val2", "value 2")
 		.option_hint("val 3", "value 3", "hint")
+		.cancel(do_cancel)
 		.interact()?;
 
 	outro!();

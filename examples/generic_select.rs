@@ -1,5 +1,5 @@
 use console::style;
-use may_clack::{error::ClackError, intro, multi_select, outro, select};
+use may_clack::{cancel, error::ClackError, intro, multi_select, outro, select};
 use std::fmt::Display;
 
 #[derive(Debug, Clone)]
@@ -23,16 +23,11 @@ fn main() -> Result<(), ClackError> {
 	println!();
 	intro!(style(" generic select ").reverse());
 
-	let select_string = select("select string")
-		.option("val1", SelectEnum::One)
-		.option("val2", SelectEnum::One)
-		.option("val3", SelectEnum::One)
-		.interact()?;
-
 	let select_enum = select("select enum")
 		.option(SelectEnum::One, SelectEnum::One)
 		.option(SelectEnum::Two, SelectEnum::Two)
 		.option(SelectEnum::Three, SelectEnum::Three)
+		.cancel(do_cancel)
 		.interact()?;
 
 	let multi_enum = multi_select("multi_select enum")
@@ -43,9 +38,13 @@ fn main() -> Result<(), ClackError> {
 
 	outro!();
 
-	println!("select string, label enum {:?}", select_string);
 	println!("select enum, label enum {:?}", select_enum);
 	println!("multi select enum, label string {:?}", multi_enum);
 
 	Ok(())
+}
+
+fn do_cancel() {
+	cancel!("demo cancelled");
+	panic!("demo cancelled");
 }
