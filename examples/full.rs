@@ -18,7 +18,10 @@ fn main() -> Result<(), ClackError> {
 		.max(4)
 		.cancel(do_cancel)
 		.interact()?;
-	let do_confirm = confirm("confirm").prompts("true", "false").interact()?;
+	let do_confirm = confirm("confirm")
+		.prompts("true", "false")
+		.cancel(do_cancel)
+		.interact()?;
 	let do_multi_select = multi_select("multi select")
 		.option("opt1", "option 1")
 		.option("opt2", "option 2")

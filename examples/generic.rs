@@ -5,7 +5,7 @@ fn main() -> Result<(), ClackError> {
 	println!();
 	intro!(style(" generic messages ").reverse());
 
-	let number = confirm(20).interact()?;
+	let number = confirm(20).cancel(do_cancel).interact()?;
 	let styled = multi_input(style("style").on_cyan())
 		.cancel(do_cancel)
 		.interact()?;
