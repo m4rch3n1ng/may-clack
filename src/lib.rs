@@ -135,6 +135,7 @@
 pub mod error;
 mod prompt;
 pub mod style;
+pub mod traits;
 
 pub use prompt::*;
 
