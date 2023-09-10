@@ -5,11 +5,29 @@ use crate::{
 };
 use crossterm::{cursor, QueueableCommand};
 use owo_colors::OwoColorize;
-use rustyline::DefaultEditor;
+use rustyline::{highlight::Highlighter, Completer, Editor, Helper, Hinter, Validator};
 use std::{
+	borrow::Cow,
 	fmt::Display,
 	io::{stdout, Write},
 };
+
+#[derive(Completer, Helper, Hinter, Validator)]
+pub(super) struct PlaceholderHightlighter(pub String);
+
+impl Highlighter for PlaceholderHightlighter {
+	fn highlight<'l>(&self, line: &'l str, _pos: usize) -> Cow<'l, str> {
+		if line.is_empty() {
+			Cow::Owned(self.0.dimmed().to_string())
+		} else {
+			Cow::Borrowed(line)
+		}
+	}
+
+	fn highlight_char(&self, _line: &str, _pos: usize) -> bool {
+		true
+	}
+}
 
 type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 
@@ -35,6 +53,7 @@ pub struct Input<M: Display> {
 	message: M,
 	default_value: Option<String>,
 	initial_value: Option<String>,
+	placeholder: Option<String>,
 	validate: Option<Box<ValidateFn>>,
 	cancel: Option<Box<dyn Fn()>>,
 }
@@ -58,6 +77,7 @@ impl<M: Display> Input<M> {
 			message,
 			default_value: None,
 			initial_value: None,
+			placeholder: None,
 			validate: None,
 			cancel: None,
 		}
@@ -75,14 +95,24 @@ impl<M: Display> Input<M> {
 	/// let answer = input("message").default_value("default_value").required();
 	/// println!("answer {:?}", answer);
 	/// ```
-	pub fn default_value<S: Into<String>>(&mut self, def: S) -> &mut Self {
-		self.default_value = Some(def.into());
+	pub fn default_value<S: Into<String>>(&mut self, default_value: S) -> &mut Self {
+		self.default_value = Some(default_value.into());
 		self
 	}
 
-	/// Todo
-	pub fn placeholder(&mut self) -> &mut Self {
-		todo!();
+	/// Specify a placeholder.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::input;
+	///
+	/// let answer = input("message").placeholder("placeholder").required();
+	/// println!("answer {:?}", answer);
+	/// ```
+	pub fn placeholder<S: Into<String>>(&mut self, placeholder: S) -> &mut Self {
+		self.placeholder = Some(placeholder.into());
+		self
 	}
 
 	/// Specify the initial value.
@@ -95,8 +125,8 @@ impl<M: Display> Input<M> {
 	/// let answer = input("message").initial_value("initial_value").interact();
 	/// println!("answer {:?}", answer);
 	/// ```
-	pub fn initial_value<S: Into<String>>(&mut self, init: S) -> &mut Self {
-		self.initial_value = Some(init.into());
+	pub fn initial_value<S: Into<String>>(&mut self, initial_value: S) -> &mut Self {
+		self.initial_value = Some(initial_value.into());
 		self
 	}
 
@@ -159,7 +189,12 @@ impl<M: Display> Input<M> {
 		let default_prompt = format!("{}  ", (*chars::BAR).cyan());
 		let val_prompt = format!("{}  ", (*chars::BAR).yellow());
 
-		let mut editor = DefaultEditor::new()?;
+		let mut editor = Editor::new()?;
+
+		if let Some(placeholder) = self.placeholder.clone() {
+			let highlighter = PlaceholderHightlighter(placeholder);
+			editor.set_helper(Some(highlighter));
+		}
 
 		let mut initial_value = self.initial_value.clone();
 		let mut is_val = false;
@@ -315,12 +350,10 @@ impl<M: Display> Input<M> {
 		let _ = stdout.flush();
 
 		println!("{}  {}", (*chars::STEP_SUBMIT).green(), self.message);
+		print!("{}", ansi::CLEAR_LINE);
 		println!("{}  {}", *chars::BAR, value.dimmed());
 
-		println!("{}", ansi::CLEAR_LINE);
-
-		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
-		let _ = stdout.flush();
+		print!("{}", ansi::CLEAR_LINE);
 	}
 
 	fn w_cancel(&self) {
@@ -333,10 +366,7 @@ impl<M: Display> Input<M> {
 		print!("{}", ansi::CLEAR_LINE);
 		println!("{}  {}", *chars::BAR, "cancelled".strikethrough().dimmed());
 
-		println!("{}", ansi::CLEAR_LINE);
-
-		let _ = stdout.queue(cursor::MoveToPreviousLine(1));
-		let _ = stdout.flush();
+		print!("{}", ansi::CLEAR_LINE);
 	}
 }
 

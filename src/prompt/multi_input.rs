@@ -1,11 +1,12 @@
 //! Multiple text inputs
+use super::input::PlaceholderHightlighter;
 use crate::{
 	error::ClackError,
 	style::{ansi, chars},
 };
 use crossterm::{cursor, QueueableCommand};
 use owo_colors::OwoColorize;
-use rustyline::DefaultEditor;
+use rustyline::Editor;
 use std::{
 	fmt::Display,
 	io::{stdout, Write},
@@ -33,9 +34,10 @@ type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 /// ```
 pub struct MultiInput<M: Display> {
 	message: M,
+	initial_value: Option<String>,
+	placeholder: Option<String>,
 	validate: Option<Box<ValidateFn>>,
 	cancel: Option<Box<dyn Fn()>>,
-	initial_value: Option<String>,
 	min: u16,
 	max: u16,
 }
@@ -59,15 +61,11 @@ impl<M: Display> MultiInput<M> {
 			message,
 			validate: None,
 			initial_value: None,
+			placeholder: None,
 			cancel: None,
 			min: 1,
 			max: u16::MAX,
 		}
-	}
-
-	/// Todo
-	pub fn placeholder(&mut self) -> &mut Self {
-		todo!();
 	}
 
 	/// Specify the initial value.
@@ -82,6 +80,21 @@ impl<M: Display> MultiInput<M> {
 	/// ```
 	pub fn initial_value<S: Into<String>>(&mut self, initial_value: S) -> &mut Self {
 		self.initial_value = Some(initial_value.into());
+		self
+	}
+
+	/// Specify a placeholder.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::multi_input;
+	///
+	/// let answers = multi_input("message").placeholder("placeholder").interact();
+	/// println!("answers {:?}", answers);
+	/// ```
+	pub fn placeholder<S: Into<String>>(&mut self, placeholder: S) -> &mut Self {
+		self.placeholder = Some(placeholder.into());
 		self
 	}
 
@@ -176,7 +189,12 @@ impl<M: Display> MultiInput<M> {
 	) -> Result<Option<String>, ClackError> {
 		let default_prompt = format!("{}  ", (*chars::BAR).cyan());
 		let val_prompt = format!("{}  ", (*chars::BAR).yellow());
-		let mut editor = DefaultEditor::new()?;
+		let mut editor = Editor::new()?;
+
+		if let Some(placeholder) = self.placeholder.clone() {
+			let highlighter = PlaceholderHightlighter(placeholder);
+			editor.set_helper(Some(highlighter));
+		}
 
 		let mut initial_value = self.initial_value.clone();
 		let mut is_val = false;

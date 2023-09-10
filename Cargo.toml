@@ -16,6 +16,6 @@ crossterm = "0.27.0"
 is-unicode-supported = "0.1.0"
 lazy_static = "1.4.0"
 owo-colors = "3.5.0"
-rustyline = "12.0.0"
+rustyline = { version = "12.0.0", features = ["derive"] }
 thiserror = "1.0.48"
 unicode-truncate = "0.2.0"

@@ -12,8 +12,9 @@ fn main() -> Result<(), ClackError> {
 
 	let do_input = input("input")
 		.default_value("default")
+		.placeholder("placeholder")
 		.cancel(do_cancel)
-		.interact()?;
+		.required()?;
 	let do_multi_input = multi_input("multi input")
 		.max(4)
 		.cancel(do_cancel)
