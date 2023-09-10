@@ -554,7 +554,10 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 
 		for i in 0..less.into() {
 			let i_idx = idx + i - less_idx as usize;
-			let opt = self.options.get(i_idx).unwrap();
+			let opt = self
+				.options
+				.get(i_idx)
+				.expect("i_idx should always be in bound");
 			let line = opt.unfocus();
 
 			print!("{}", ansi::CLEAR_LINE);

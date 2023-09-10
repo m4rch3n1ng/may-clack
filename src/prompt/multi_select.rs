@@ -578,7 +578,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 
 		for i in 0..less.into() {
 			let i_idx = idx + i - less_idx as usize;
-			let opt = opts.get(i_idx).unwrap();
+			let opt = opts.get(i_idx).expect("i_idx should always be in bound");
 			let line = opt.unfocus();
 
 			print!("{}", ansi::CLEAR_LINE);
@@ -710,12 +710,12 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 
 		let vals = selected.iter().map(|&opt| &opt.label).collect::<Vec<_>>();
 
-		let val_string = if vals.is_empty() {
-			"none".into()
+		if vals.is_empty() {
+			println!("{}  {}", *chars::BAR, "none".dimmed().italic());
 		} else {
-			self.join(&vals)
+			let vals = self.join(&vals);
+			println!("{}  {}", *chars::BAR, vals.dimmed());
 		};
-		println!("{}  {}", *chars::BAR, val_string.dimmed());
 	}
 
 	fn w_out_less(&self, less: u16, less_idx: u16, selected: &[&Opt<T, O>]) {
@@ -739,17 +739,17 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 
 		let vals = selected.iter().map(|&opt| &opt.label).collect::<Vec<_>>();
 
-		let val_string = if vals.is_empty() {
-			"none".into()
+		if vals.is_empty() {
+			println!("{}  {}", *chars::BAR, "none".dimmed().italic());
 		} else {
-			self.join(&vals)
+			let vals = self.join(&vals);
+			println!("{}  {}", *chars::BAR, vals.dimmed());
 		};
-		println!("{}  {}", *chars::BAR, val_string.dimmed());
 	}
 
 	fn join(&self, v: &[&O]) -> String {
 		v.iter()
-			.map(|val| format!("{}", val))
+			.map(|val| val.to_string())
 			.collect::<Vec<_>>()
 			.join(", ")
 	}
