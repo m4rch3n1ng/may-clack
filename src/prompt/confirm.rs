@@ -160,7 +160,7 @@ impl<M: Display> Confirm<M> {
 						self.w_out(val);
 						return Ok(val);
 					}
-					(KeyCode::Char('c'), KeyModifiers::CONTROL) => {
+					(KeyCode::Char('c' | 'd'), KeyModifiers::CONTROL) => {
 						let _ = execute!(stdout, crossterm::cursor::Show);
 						terminal::disable_raw_mode()?;
 						self.w_cancel(val);

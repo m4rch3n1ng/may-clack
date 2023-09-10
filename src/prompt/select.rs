@@ -494,7 +494,7 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 							.expect("idx should always be in bound");
 						return Ok(opt.value);
 					}
-					(KeyCode::Char('c'), KeyModifiers::CONTROL) => {
+					(KeyCode::Char('c' | 'd'), KeyModifiers::CONTROL) => {
 						terminal::disable_raw_mode()?;
 
 						if let Some(less) = is_less {

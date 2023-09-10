@@ -524,7 +524,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 
 						return Ok(all);
 					}
-					(KeyCode::Char('c'), KeyModifiers::CONTROL) => {
+					(KeyCode::Char('c' | 'd'), KeyModifiers::CONTROL) => {
 						terminal::disable_raw_mode()?;
 
 						if let Some(less) = is_less {
