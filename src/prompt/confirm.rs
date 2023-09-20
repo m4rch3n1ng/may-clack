@@ -5,7 +5,7 @@ use crate::{
 };
 use crossterm::{
 	cursor,
-	event::{self, Event, KeyCode, KeyModifiers},
+	event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
 	execute, terminal,
 };
 use owo_colors::OwoColorize;
@@ -137,40 +137,42 @@ impl<M: Display> Confirm<M> {
 		let mut val = self.initial_value;
 		loop {
 			if let Event::Key(key) = event::read()? {
-				match (key.code, key.modifiers) {
-					(KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right, _) => {
-						val = !val;
-						self.draw(val);
-					}
-					(KeyCode::Char('y' | 'Y'), _) => {
-						let _ = execute!(stdout, crossterm::cursor::Show);
-						terminal::disable_raw_mode()?;
-						self.w_out(true);
-						return Ok(true);
-					}
-					(KeyCode::Char('n' | 'N'), _) => {
-						let _ = execute!(stdout, crossterm::cursor::Show);
-						terminal::disable_raw_mode()?;
-						self.w_out(false);
-						return Ok(false);
-					}
-					(KeyCode::Enter, _) => {
-						let _ = execute!(stdout, crossterm::cursor::Show);
-						terminal::disable_raw_mode()?;
-						self.w_out(val);
-						return Ok(val);
-					}
-					(KeyCode::Char('c' | 'd'), KeyModifiers::CONTROL) => {
-						let _ = execute!(stdout, crossterm::cursor::Show);
-						terminal::disable_raw_mode()?;
-						self.w_cancel(val);
-						if let Some(cancel) = self.cancel.as_deref() {
-							cancel();
+				if key.kind == KeyEventKind::Press {
+					match (key.code, key.modifiers) {
+						(KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right, _) => {
+							val = !val;
+							self.draw(val);
 						}
+						(KeyCode::Char('y' | 'Y'), _) => {
+							let _ = execute!(stdout, crossterm::cursor::Show);
+							terminal::disable_raw_mode()?;
+							self.w_out(true);
+							return Ok(true);
+						}
+						(KeyCode::Char('n' | 'N'), _) => {
+							let _ = execute!(stdout, crossterm::cursor::Show);
+							terminal::disable_raw_mode()?;
+							self.w_out(false);
+							return Ok(false);
+						}
+						(KeyCode::Enter, _) => {
+							let _ = execute!(stdout, crossterm::cursor::Show);
+							terminal::disable_raw_mode()?;
+							self.w_out(val);
+							return Ok(val);
+						}
+						(KeyCode::Char('c' | 'd'), KeyModifiers::CONTROL) => {
+							let _ = execute!(stdout, crossterm::cursor::Show);
+							terminal::disable_raw_mode()?;
+							self.w_cancel(val);
+							if let Some(cancel) = self.cancel.as_deref() {
+								cancel();
+							}
 
-						return Err(ClackError::Cancelled);
+							return Err(ClackError::Cancelled);
+						}
+						_ => {}
 					}
-					_ => {}
 				}
 			}
 		}

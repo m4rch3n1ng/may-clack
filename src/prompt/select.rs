@@ -5,7 +5,7 @@ use crate::{
 };
 use crossterm::{
 	cursor,
-	event::{self, Event, KeyCode, KeyModifiers},
+	event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
 	execute, terminal,
 };
 use owo_colors::OwoColorize;
@@ -386,130 +386,132 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 
 		loop {
 			if let Event::Key(key) = event::read()? {
-				match (key.code, key.modifiers) {
-					(KeyCode::Up | KeyCode::Left, _) => {
-						if let Some(less) = is_less {
-							let prev_less = less_idx;
+				if key.kind == KeyEventKind::Press {
+					match (key.code, key.modifiers) {
+						(KeyCode::Up | KeyCode::Left, _) => {
+							if let Some(less) = is_less {
+								let prev_less = less_idx;
 
-							if idx > 0 {
-								idx -= 1;
-								less_idx = less_idx.saturating_sub(1);
-							} else {
-								idx = max - 1;
-								less_idx = less - 1;
-							}
-
-							self.draw_less(less, idx, less_idx, prev_less);
-						} else {
-							self.draw_unfocus(idx);
-							let mut stdout = stdout();
-
-							if idx > 0 {
-								idx -= 1;
-								let _ = execute!(stdout, cursor::MoveUp(1));
-							} else {
-								idx = max - 1;
-								let _ = execute!(stdout, cursor::MoveDown(max as u16 - 1));
-							}
-
-							self.draw_focus(idx);
-						}
-					}
-					(KeyCode::Down | KeyCode::Right, _) => {
-						if let Some(less) = is_less {
-							let prev_less = less_idx;
-
-							if idx < max - 1 {
-								idx += 1;
-								if less_idx < less - 1 {
-									less_idx += 1;
+								if idx > 0 {
+									idx -= 1;
+									less_idx = less_idx.saturating_sub(1);
+								} else {
+									idx = max - 1;
+									less_idx = less - 1;
 								}
+
+								self.draw_less(less, idx, less_idx, prev_less);
 							} else {
-								idx = 0;
-								less_idx = 0;
-							}
+								self.draw_unfocus(idx);
+								let mut stdout = stdout();
 
-							self.draw_less(less, idx, less_idx, prev_less);
-						} else {
-							self.draw_unfocus(idx);
-							let mut stdout = stdout();
-
-							if idx < max - 1 {
-								idx += 1;
-								let _ = execute!(stdout, cursor::MoveDown(1));
-							} else {
-								idx = 0;
-								let _ = execute!(stdout, cursor::MoveUp(max as u16 - 1));
-							}
-
-							self.draw_focus(idx);
-						}
-					}
-					(KeyCode::PageDown, _) => {
-						if let Some(less) = is_less {
-							let prev_less = less_idx;
-
-							if idx + less as usize >= max - 1 {
-								less_idx = less - 1;
-								idx = max - 1;
-							} else {
-								idx += less as usize;
-
-								if max - idx < (less - less_idx) as usize {
-									less_idx = less - (max - idx) as u16;
+								if idx > 0 {
+									idx -= 1;
+									let _ = execute!(stdout, cursor::MoveUp(1));
+								} else {
+									idx = max - 1;
+									let _ = execute!(stdout, cursor::MoveDown(max as u16 - 1));
 								}
+
+								self.draw_focus(idx);
 							}
-
-							self.draw_less(less, idx, less_idx, prev_less);
 						}
-					}
-					(KeyCode::PageUp, _) => {
-						if let Some(less) = is_less {
-							let prev_less = less_idx;
+						(KeyCode::Down | KeyCode::Right, _) => {
+							if let Some(less) = is_less {
+								let prev_less = less_idx;
 
-							if idx <= less as usize {
-								less_idx = 0;
-								idx = 0;
+								if idx < max - 1 {
+									idx += 1;
+									if less_idx < less - 1 {
+										less_idx += 1;
+									}
+								} else {
+									idx = 0;
+									less_idx = 0;
+								}
+
+								self.draw_less(less, idx, less_idx, prev_less);
 							} else {
-								idx -= less as usize;
-								less_idx = prev_less.min(idx as u16);
+								self.draw_unfocus(idx);
+								let mut stdout = stdout();
+
+								if idx < max - 1 {
+									idx += 1;
+									let _ = execute!(stdout, cursor::MoveDown(1));
+								} else {
+									idx = 0;
+									let _ = execute!(stdout, cursor::MoveUp(max as u16 - 1));
+								}
+
+								self.draw_focus(idx);
+							}
+						}
+						(KeyCode::PageDown, _) => {
+							if let Some(less) = is_less {
+								let prev_less = less_idx;
+
+								if idx + less as usize >= max - 1 {
+									less_idx = less - 1;
+									idx = max - 1;
+								} else {
+									idx += less as usize;
+
+									if max - idx < (less - less_idx) as usize {
+										less_idx = less - (max - idx) as u16;
+									}
+								}
+
+								self.draw_less(less, idx, less_idx, prev_less);
+							}
+						}
+						(KeyCode::PageUp, _) => {
+							if let Some(less) = is_less {
+								let prev_less = less_idx;
+
+								if idx <= less as usize {
+									less_idx = 0;
+									idx = 0;
+								} else {
+									idx -= less as usize;
+									less_idx = prev_less.min(idx as u16);
+								}
+
+								self.draw_less(less, idx, less_idx, prev_less);
+							}
+						}
+						(KeyCode::Enter, _) => {
+							terminal::disable_raw_mode()?;
+
+							if let Some(less) = is_less {
+								self.w_out_less(less, idx, less_idx);
+							} else {
+								self.w_out(idx);
 							}
 
-							self.draw_less(less, idx, less_idx, prev_less);
+							let opt = self
+								.options
+								.get(idx)
+								.cloned()
+								.expect("idx should always be in bound");
+							return Ok(opt.value);
 						}
+						(KeyCode::Char('c' | 'd'), KeyModifiers::CONTROL) => {
+							terminal::disable_raw_mode()?;
+
+							if let Some(less) = is_less {
+								self.w_cancel_less(less, idx, less_idx);
+							} else {
+								self.w_cancel(idx);
+							}
+
+							if let Some(cancel) = self.cancel.as_deref() {
+								cancel();
+							}
+
+							return Err(ClackError::Cancelled);
+						}
+						_ => {}
 					}
-					(KeyCode::Enter, _) => {
-						terminal::disable_raw_mode()?;
-
-						if let Some(less) = is_less {
-							self.w_out_less(less, idx, less_idx);
-						} else {
-							self.w_out(idx);
-						}
-
-						let opt = self
-							.options
-							.get(idx)
-							.cloned()
-							.expect("idx should always be in bound");
-						return Ok(opt.value);
-					}
-					(KeyCode::Char('c' | 'd'), KeyModifiers::CONTROL) => {
-						terminal::disable_raw_mode()?;
-
-						if let Some(less) = is_less {
-							self.w_cancel_less(less, idx, less_idx);
-						} else {
-							self.w_cancel(idx);
-						}
-
-						if let Some(cancel) = self.cancel.as_deref() {
-							cancel();
-						}
-
-						return Err(ClackError::Cancelled);
-					}
-					_ => {}
 				}
 			}
 		}

@@ -5,7 +5,7 @@ use crate::{
 };
 use crossterm::{
 	cursor,
-	event::{self, Event, KeyCode, KeyModifiers},
+	event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
 	execute, terminal,
 };
 use owo_colors::OwoColorize;
@@ -406,140 +406,142 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 
 		loop {
 			if let Event::Key(key) = event::read()? {
-				match (key.code, key.modifiers) {
-					(KeyCode::Up | KeyCode::Left, _) => {
-						if let Some(less) = is_less {
-							let prev_less = less_idx;
+				if key.kind == KeyEventKind::Press {
+					match (key.code, key.modifiers) {
+						(KeyCode::Up | KeyCode::Left, _) => {
+							if let Some(less) = is_less {
+								let prev_less = less_idx;
 
-							if idx > 0 {
-								idx -= 1;
-								less_idx = less_idx.saturating_sub(1);
+								if idx > 0 {
+									idx -= 1;
+									less_idx = less_idx.saturating_sub(1);
+								} else {
+									idx = max - 1;
+									less_idx = less - 1;
+								}
+
+								self.draw_less(&options, less, idx, less_idx, prev_less);
 							} else {
-								idx = max - 1;
-								less_idx = less - 1;
+								self.draw_unfocus(&options, idx);
+								let mut stdout = stdout();
+
+								if idx > 0 {
+									idx -= 1;
+									let _ = execute!(stdout, cursor::MoveUp(1));
+								} else {
+									idx = max - 1;
+									let _ = execute!(stdout, cursor::MoveDown(max as u16 - 1));
+								}
+
+								self.draw_focus(&options, idx);
 							}
+						}
+						(KeyCode::Down | KeyCode::Right, _) => {
+							if let Some(less) = is_less {
+								let prev_less = less_idx;
 
-							self.draw_less(&options, less, idx, less_idx, prev_less);
-						} else {
-							self.draw_unfocus(&options, idx);
-							let mut stdout = stdout();
+								if idx < max - 1 {
+									idx += 1;
+									if less_idx < less - 1 {
+										less_idx += 1;
+									}
+								} else {
+									idx = 0;
+									less_idx = 0;
+								}
 
-							if idx > 0 {
-								idx -= 1;
-								let _ = execute!(stdout, cursor::MoveUp(1));
+								self.draw_less(&options, less, idx, less_idx, prev_less);
 							} else {
-								idx = max - 1;
-								let _ = execute!(stdout, cursor::MoveDown(max as u16 - 1));
-							}
+								self.draw_unfocus(&options, idx);
+								let mut stdout = stdout();
 
+								if idx < max - 1 {
+									idx += 1;
+									let _ = execute!(stdout, cursor::MoveDown(1));
+								} else {
+									idx = 0;
+									let _ = execute!(stdout, cursor::MoveUp(max as u16 - 1));
+								}
+
+								self.draw_focus(&options, idx);
+							}
+						}
+						(KeyCode::PageDown, _) => {
+							if let Some(less) = is_less {
+								let prev_less = less_idx;
+
+								if idx + less as usize >= max - 1 {
+									less_idx = less - 1;
+									idx = max - 1;
+								} else {
+									idx += less as usize;
+
+									if max - idx < (less - less_idx) as usize {
+										less_idx = less - (max - idx) as u16;
+									}
+								}
+
+								self.draw_less(&options, less, idx, less_idx, prev_less);
+							}
+						}
+						(KeyCode::PageUp, _) => {
+							if let Some(less) = is_less {
+								let prev_less = less_idx;
+
+								if idx <= less as usize {
+									less_idx = 0;
+									idx = 0;
+								} else {
+									idx -= less as usize;
+									less_idx = prev_less.min(idx as u16);
+								}
+
+								self.draw_less(&options, less, idx, less_idx, prev_less);
+							}
+						}
+						(KeyCode::Char(' '), _) => {
+							let opt = options.get_mut(idx).expect("idx should always be in bound");
+							opt.toggle();
 							self.draw_focus(&options, idx);
 						}
-					}
-					(KeyCode::Down | KeyCode::Right, _) => {
-						if let Some(less) = is_less {
-							let prev_less = less_idx;
+						(KeyCode::Enter, _) => {
+							terminal::disable_raw_mode()?;
 
-							if idx < max - 1 {
-								idx += 1;
-								if less_idx < less - 1 {
-									less_idx += 1;
-								}
+							let selected_opts =
+								options.iter().filter(|opt| opt.active).collect::<Vec<_>>();
+
+							if let Some(less) = is_less {
+								self.w_out_less(less, less_idx, &selected_opts);
 							} else {
-								idx = 0;
-								less_idx = 0;
+								self.w_out(idx, &selected_opts);
 							}
 
-							self.draw_less(&options, less, idx, less_idx, prev_less);
-						} else {
-							self.draw_unfocus(&options, idx);
-							let mut stdout = stdout();
+							let all = options
+								.iter()
+								.filter(|opt| opt.active)
+								.cloned()
+								.map(|opt| opt.value)
+								.collect();
 
-							if idx < max - 1 {
-								idx += 1;
-								let _ = execute!(stdout, cursor::MoveDown(1));
+							return Ok(all);
+						}
+						(KeyCode::Char('c' | 'd'), KeyModifiers::CONTROL) => {
+							terminal::disable_raw_mode()?;
+
+							if let Some(less) = is_less {
+								self.w_cancel_less(less, idx, less_idx);
 							} else {
-								idx = 0;
-								let _ = execute!(stdout, cursor::MoveUp(max as u16 - 1));
+								self.w_cancel(idx);
 							}
 
-							self.draw_focus(&options, idx);
-						}
-					}
-					(KeyCode::PageDown, _) => {
-						if let Some(less) = is_less {
-							let prev_less = less_idx;
-
-							if idx + less as usize >= max - 1 {
-								less_idx = less - 1;
-								idx = max - 1;
-							} else {
-								idx += less as usize;
-
-								if max - idx < (less - less_idx) as usize {
-									less_idx = less - (max - idx) as u16;
-								}
+							if let Some(cancel) = self.cancel.as_deref() {
+								cancel();
 							}
 
-							self.draw_less(&options, less, idx, less_idx, prev_less);
+							panic!();
 						}
+						_ => {}
 					}
-					(KeyCode::PageUp, _) => {
-						if let Some(less) = is_less {
-							let prev_less = less_idx;
-
-							if idx <= less as usize {
-								less_idx = 0;
-								idx = 0;
-							} else {
-								idx -= less as usize;
-								less_idx = prev_less.min(idx as u16);
-							}
-
-							self.draw_less(&options, less, idx, less_idx, prev_less);
-						}
-					}
-					(KeyCode::Char(' '), _) => {
-						let opt = options.get_mut(idx).expect("idx should always be in bound");
-						opt.toggle();
-						self.draw_focus(&options, idx);
-					}
-					(KeyCode::Enter, _) => {
-						terminal::disable_raw_mode()?;
-
-						let selected_opts =
-							options.iter().filter(|opt| opt.active).collect::<Vec<_>>();
-
-						if let Some(less) = is_less {
-							self.w_out_less(less, less_idx, &selected_opts);
-						} else {
-							self.w_out(idx, &selected_opts);
-						}
-
-						let all = options
-							.iter()
-							.filter(|opt| opt.active)
-							.cloned()
-							.map(|opt| opt.value)
-							.collect();
-
-						return Ok(all);
-					}
-					(KeyCode::Char('c' | 'd'), KeyModifiers::CONTROL) => {
-						terminal::disable_raw_mode()?;
-
-						if let Some(less) = is_less {
-							self.w_cancel_less(less, idx, less_idx);
-						} else {
-							self.w_cancel(idx);
-						}
-
-						if let Some(cancel) = self.cancel.as_deref() {
-							cancel();
-						}
-
-						panic!();
-					}
-					_ => {}
 				}
 			}
 		}
