@@ -13,12 +13,28 @@ use std::{
 };
 
 #[derive(Completer, Helper, Hinter, Validator)]
-pub(super) struct PlaceholderHightlighter(pub String);
+pub(super) struct PlaceholderHightlighter<'a> {
+	placeholder: Option<&'a str>,
+	pub is_val: bool,
+}
 
-impl Highlighter for PlaceholderHightlighter {
+impl<'a> PlaceholderHightlighter<'a> {
+	pub fn new(placeholder: Option<&'a str>) -> Self {
+		PlaceholderHightlighter {
+			placeholder,
+			is_val: false,
+		}
+	}
+}
+
+impl Highlighter for PlaceholderHightlighter<'_> {
 	fn highlight<'l>(&self, line: &'l str, _pos: usize) -> Cow<'l, str> {
-		if line.is_empty() {
-			Cow::Owned(self.0.dimmed().to_string())
+		if let Some(placeholder) = self.placeholder {
+			if line.is_empty() {
+				Cow::Owned(placeholder.dimmed().to_string())
+			} else {
+				Cow::Borrowed(line)
+			}
 		} else {
 			Cow::Borrowed(line)
 		}
@@ -26,6 +42,20 @@ impl Highlighter for PlaceholderHightlighter {
 
 	fn highlight_char(&self, _line: &str, _pos: usize) -> bool {
 		true
+	}
+
+	fn highlight_prompt<'b, 's: 'b, 'p: 'b>(
+		&'s self,
+		prompt: &'p str,
+		default: bool,
+	) -> Cow<'b, str> {
+		if !default {
+			Cow::Owned(format!("aa {}", prompt))
+		} else if self.is_val {
+			Cow::Owned(prompt.yellow().to_string())
+		} else {
+			Cow::Owned(prompt.cyan().to_string())
+		}
 	}
 }
 
@@ -186,26 +216,18 @@ impl<M: Display> Input<M> {
 	}
 
 	fn interact_once(&self, enforce_non_empty: bool) -> Result<Option<String>, ClackError> {
-		let default_prompt = format!("{}  ", (*chars::BAR).cyan());
-		let val_prompt = format!("{}  ", (*chars::BAR).yellow());
+		let prompt = format!("{}  ", *chars::BAR);
 
 		let mut editor = Editor::new()?;
-
-		if let Some(placeholder) = self.placeholder.clone() {
-			let highlighter = PlaceholderHightlighter(placeholder);
-			editor.set_helper(Some(highlighter));
-		}
+		let helper = PlaceholderHightlighter::new(self.placeholder.as_deref());
+		editor.set_helper(Some(helper));
 
 		let mut initial_value = self.initial_value.clone();
-		let mut is_val = false;
-
 		loop {
-			let prompt = if is_val { &val_prompt } else { &default_prompt };
-
 			let line = if let Some(ref init) = initial_value {
-				editor.readline_with_initial(prompt, (init, ""))
+				editor.readline_with_initial(&prompt, (init, ""))
 			} else {
-				editor.readline(prompt)
+				editor.readline(&prompt)
 			};
 
 			// todo this looks refactor-able
@@ -216,7 +238,10 @@ impl<M: Display> Input<M> {
 					} else if enforce_non_empty {
 						initial_value = None;
 
-						is_val = true;
+						if let Some(helper) = editor.helper_mut() {
+							helper.is_val = true;
+						}
+
 						self.w_val("value is required");
 					} else {
 						break Ok(None);
@@ -224,7 +249,10 @@ impl<M: Display> Input<M> {
 				} else if let Some(text) = self.do_validate(&value) {
 					initial_value = Some(value.clone());
 
-					is_val = true;
+					if let Some(helper) = editor.helper_mut() {
+						helper.is_val = true;
+					}
+
 					self.w_val(text);
 				} else {
 					break Ok(Some(value));
