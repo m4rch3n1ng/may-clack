@@ -187,25 +187,18 @@ impl<M: Display> MultiInput<M> {
 		enforce_non_empty: bool,
 		amt: u16,
 	) -> Result<Option<String>, ClackError> {
-		let default_prompt = format!("{}  ", (*chars::BAR).cyan());
-		let val_prompt = format!("{}  ", (*chars::BAR).yellow());
+		let prompt = format!("{}  ", *chars::BAR);
 		let mut editor = Editor::new()?;
 
-		if let Some(placeholder) = self.placeholder.clone() {
-			let highlighter = PlaceholderHightlighter(placeholder);
-			editor.set_helper(Some(highlighter));
-		}
+		let highlighter = PlaceholderHightlighter::new(self.placeholder.as_deref());
+		editor.set_helper(Some(highlighter));
 
 		let mut initial_value = self.initial_value.clone();
-		let mut is_val = false;
-
 		loop {
-			let prompt = if is_val { &val_prompt } else { &default_prompt };
-
 			let line = if let Some(ref init) = initial_value {
-				editor.readline_with_initial(prompt, (init, ""))
+				editor.readline_with_initial(&prompt, (init, ""))
 			} else {
-				editor.readline(prompt)
+				editor.readline(&prompt)
 			};
 
 			// todo this looks refactor-able
@@ -214,7 +207,10 @@ impl<M: Display> MultiInput<M> {
 					if enforce_non_empty {
 						initial_value = None;
 
-						is_val = true;
+						// is_val = true;
+						if let Some(helper) = editor.helper_mut() {
+							helper.is_val = true;
+						}
 
 						let text = format!("minimum {}", self.min);
 						self.w_val(&text, amt);
@@ -224,7 +220,10 @@ impl<M: Display> MultiInput<M> {
 				} else if let Some(text) = self.do_validate(&value) {
 					initial_value = Some(value);
 
-					is_val = true;
+					if let Some(helper) = editor.helper_mut() {
+						helper.is_val = true;
+					}
+
 					self.w_val(text, amt);
 				} else {
 					break Ok(Some(value));
