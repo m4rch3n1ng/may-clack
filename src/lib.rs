@@ -25,7 +25,7 @@
 //!
 //! let text = input("todo").interact();
 //! if let Err(ClackError::Cancelled) = text {
-//!     cancel!("operation cancelled")
+//!     cancel!("operation cancelled");
 //! }
 //! ```
 //!
@@ -56,7 +56,10 @@
 //! ```no_run
 //! use may_clack::confirm;
 //!
-//! let answer = confirm("Yes or No?").interact();
+//! # fn main() -> Result<(), may_clack::error::ClackError> {
+//! let answer = confirm("Yes or No?").interact()?;
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! # Components
@@ -68,8 +71,11 @@
 //! ```no_run
 //! use may_clack::input;
 //!
-//! let answer = input("what is the meaning of life?").initial_value("42").interact();
+//! # fn main() -> Result<(), may_clack::error::ClackError> {
+//! let answer = input("what is the meaning of life?").initial_value("42").interact()?;
 //! println!("{:?}", answer);
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! ## Confirm
@@ -79,8 +85,11 @@
 //! ```no_run
 //! use may_clack::confirm;
 //!
-//! let answer = confirm("do you want to continue?").interact();
+//! # fn main() -> Result<(), may_clack::error::ClackError> {
+//! let answer = confirm("do you want to continue?").interact()?;
 //! println!("answer {:?}", answer);
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! ## `Select`
@@ -97,12 +106,15 @@
 //!     PassionFruit,
 //! }
 //!
+//! # fn main() -> Result<(), may_clack::error::ClackError> {
 //! let fruit = select("pick a fruit")
 //!     .option_hint(Fruit::Mango, "Mango", "The best one")
 //!     .option(Fruit::Peach, "Peach")
 //!     .option(Fruit::PassionFruit, "Passion fruit")
-//!     .interact();
+//!     .interact()?;
 //! println!("fruit {:?}", fruit);
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! ## `MultiSelect`
@@ -112,12 +124,15 @@
 //! ```no_run
 //! use may_clack::multi_select;
 //!
+//! # fn main() -> Result<(), may_clack::error::ClackError> {
 //! let toppings = multi_select("Choose your toppings")
 //!     .option("fruits", "Dried fruits")
 //!     .option("chocolate", "Chocolate chips")
 //!     .option_hint("sauce", "Chocolate sauce", "it's warm")
-//!     .interact();
+//!     .interact()?;
 //! println!("toppings {:?}", toppings);
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! ## `MultiInput`
@@ -127,8 +142,11 @@
 //! ```no_run
 //! use may_clack::multi_input;
 //!
-//! let lines = multi_input("idk").interact();
+//! # fn main() -> Result<(), may_clack::error::ClackError> {
+//! let lines = multi_input("idk").interact()?;
 //! println!("lines {:?}", lines);
+//! # Ok(())
+//! # }
 //! ```
 //!
 

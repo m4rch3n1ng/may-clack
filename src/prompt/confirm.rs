@@ -21,11 +21,14 @@ use std::{
 /// ```no_run
 /// use may_clack::confirm;
 ///
+/// # fn main() -> Result<(), may_clack::error::ClackError> {
 /// let answer = confirm("message")
 ///     .initial_value(true)
 ///     .prompts("true", "false")
-///     .interact();
+///     .interact()?;
 /// println!("answer {:?}", answer);
+/// # Ok(())
+/// # }
 /// ```
 pub struct Confirm<M: Display> {
 	message: M,
@@ -66,8 +69,11 @@ impl<M: Display> Confirm<M> {
 	/// ```no_run
 	/// use may_clack::confirm;
 	///
-	/// let answer = confirm("message").initial_value(true).interact();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answer = confirm("message").initial_value(true).interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn initial_value(&mut self, b: bool) -> &mut Self {
 		self.initial_value = b;
@@ -83,8 +89,11 @@ impl<M: Display> Confirm<M> {
 	/// ```no_run
 	/// use may_clack::confirm;
 	///
-	/// let answer = confirm("message").prompts("true", "false").interact();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answer = confirm("message").prompts("true", "false").interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn prompts<S: Into<String>>(&mut self, yes: S, no: S) -> &mut Self {
 		self.prompts = (yes.into(), no.into());
@@ -98,8 +107,11 @@ impl<M: Display> Confirm<M> {
 	/// ```no_run
 	/// use may_clack::{confirm, cancel};
 	///
-	/// let answer = confirm("message").cancel(do_cancel).interact();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answer = confirm("message").cancel(do_cancel).interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	///
 	/// fn do_cancel() {
 	///     cancel!("operation cancelled");
@@ -121,11 +133,14 @@ impl<M: Display> Confirm<M> {
 	/// ```no_run
 	/// use may_clack::confirm;
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = confirm("message")
 	///     .initial_value(true)
 	///     .prompts("true", "false")
-	///     .interact();
+	///     .interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn interact(&self) -> Result<bool, ClackError> {
 		self.w_init();

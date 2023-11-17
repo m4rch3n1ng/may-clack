@@ -22,11 +22,14 @@ type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 /// ```no_run
 /// use may_clack::{multi_input, cancel};
 ///
+/// # fn main() -> Result<(), may_clack::error::ClackError> {
 /// let answers = multi_input("message")
-///     .validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
+///     .validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
 ///     .cancel(do_cancel)
-///     .interact();
+///     .interact()?;
 /// println!("answers {:?}", answers);
+/// # Ok(())
+/// # }
 ///
 /// fn do_cancel() {
 ///     cancel!("operation cancelled");
@@ -76,8 +79,11 @@ impl<M: Display> MultiInput<M> {
 	/// ```no_run
 	/// use may_clack::multi_input;
 	///
-	/// let answers = multi_input("message").initial_value("initial_value").interact();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answers = multi_input("message").initial_value("initial_value").interact()?;
 	/// println!("answers {:?}", answers);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn initial_value<S: Into<String>>(&mut self, initial_value: S) -> &mut Self {
 		self.initial_value = Some(initial_value.into());
@@ -91,8 +97,11 @@ impl<M: Display> MultiInput<M> {
 	/// ```no_run
 	/// use may_clack::multi_input;
 	///
-	/// let answers = multi_input("message").placeholder("placeholder").interact();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answers = multi_input("message").placeholder("placeholder").interact()?;
 	/// println!("answers {:?}", answers);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn placeholder<S: Into<String>>(&mut self, placeholder: S) -> &mut Self {
 		self.placeholder = Some(placeholder.into());
@@ -104,8 +113,11 @@ impl<M: Display> MultiInput<M> {
 	/// ```no_run
 	/// use may_clack::multi_input;
 	///
-	/// let answers = multi_input("message").min(2).interact();
-	/// println!("answers {:?}", answers)
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answers = multi_input("message").min(2).interact()?;
+	/// println!("answers {:?}", answers);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn min(&mut self, min: u16) -> &mut Self {
 		self.min = min;
@@ -120,8 +132,11 @@ impl<M: Display> MultiInput<M> {
 	/// ```no_run
 	/// use may_clack::multi_input;
 	///
-	/// let answers = multi_input("message").max(4).interact();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answers = multi_input("message").max(4).interact()?;
 	/// println!("answers {:?}", answers);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn max(&mut self, max: u16) -> &mut Self {
 		self.max = max;
@@ -138,10 +153,13 @@ impl<M: Display> MultiInput<M> {
 	/// ```no_run
 	/// use may_clack::multi_input;
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answers = multi_input("message")
-	///     .validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
-	///     .interact();
+	///     .validate(|x| x.find(char::is_whitespace).map(|_| "whitespace is disallowed"))
+	///     .interact()?;
 	/// println!("answers {:?}", answers);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
@@ -167,8 +185,11 @@ impl<M: Display> MultiInput<M> {
 	/// ```no_run
 	/// use may_clack::{multi_input, cancel};
 	///
-	/// let answers = multi_input("message").cancel(do_cancel).interact();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answers = multi_input("message").cancel(do_cancel).interact()?;
 	/// println!("answers {:?}", answers);
+	/// # Ok(())
+	/// # }
 	///
 	/// fn do_cancel() {
 	///     cancel!("operation cancelled");
@@ -318,11 +339,14 @@ impl<M: Display> MultiInput<M> {
 	/// ```no_run
 	/// use may_clack::{multi_input, cancel};
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answers = multi_input("message")
-	///     .validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
+	///     .validate(|x| x.contains('\0').then_some("contains nul byte"))
 	///     .cancel(do_cancel)
-	///     .interact();
+	///     .interact()?;
 	/// println!("answers {:?}", answers);
+	/// # Ok(())
+	/// # }
 	///
 	/// fn do_cancel() {
 	///     cancel!("operation cancelled");

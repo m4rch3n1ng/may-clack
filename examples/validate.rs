@@ -1,5 +1,6 @@
 use may_clack::{cancel, error::ClackError, input, intro, multi_input, outro};
 use owo_colors::OwoColorize;
+use std::net::Ipv4Addr;
 
 fn main() -> Result<(), ClackError> {
 	println!();
@@ -10,11 +11,14 @@ fn main() -> Result<(), ClackError> {
 		.cancel(do_cancel)
 		.required()?;
 	let do_validate_multi_input = multi_input("validate multi")
-		.validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
+		.validate(|x| {
+			x.find(char::is_uppercase)
+				.map(|_| "only use lowercase characters")
+		})
 		.cancel(do_cancel)
 		.interact()?;
 	let do_parse_input = input("parse to u8").cancel(do_cancel).parse::<u8>()?;
-	let do_maybe_parse = input("maybe parse to u8").maybe_parse::<u8>()?;
+	let do_maybe_parse = input("maybe parse to ipv4 addr").maybe_parse::<Ipv4Addr>()?;
 	let do_parse_multi = multi_input("parse multiple to u8")
 		.cancel(do_cancel)
 		.parse::<u8>()?;

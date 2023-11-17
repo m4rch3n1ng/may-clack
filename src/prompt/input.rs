@@ -69,17 +69,21 @@ type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 /// ```no_run
 /// use may_clack::{input, cancel};
 ///
+/// # fn main() -> Result<(), may_clack::error::ClackError> {
 /// let answer = input("message")
 ///     .initial_value("initial_value")
-///     .validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
+///     .validate(|x| x.find(char::is_uppercase).map(|_| "only use lowercase characters"))
 ///     .cancel(do_cancel)
-///     .interact();
+///     .interact()?;
 /// println!("answer {:?}", answer);
+/// # Ok(())
+/// # }
 ///
 /// fn do_cancel() {
 ///     cancel!("operation cancelled");
 ///     std::process::exit(1);
 /// }
+/// ````
 pub struct Input<M: Display> {
 	message: M,
 	initial_value: Option<String>,
@@ -119,8 +123,11 @@ impl<M: Display> Input<M> {
 	/// ```no_run
 	/// use may_clack::input;
 	///
-	/// let answer = input("message").placeholder("placeholder").required();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answer = input("message").placeholder("placeholder").required()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn placeholder<S: Into<String>>(&mut self, placeholder: S) -> &mut Self {
 		self.placeholder = Some(placeholder.into());
@@ -134,8 +141,11 @@ impl<M: Display> Input<M> {
 	/// ```no_run
 	/// use may_clack::input;
 	///
-	/// let answer = input("message").initial_value("initial_value").interact();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answer = input("message").initial_value("initial_value").interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn initial_value<S: Into<String>>(&mut self, initial_value: S) -> &mut Self {
 		self.initial_value = Some(initial_value.into());
@@ -152,10 +162,13 @@ impl<M: Display> Input<M> {
 	/// ```no_run
 	/// use may_clack::input;
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = input("message")
 	///     .validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
-	///     .interact();
+	///     .interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
@@ -181,8 +194,11 @@ impl<M: Display> Input<M> {
 	/// ```no_run
 	/// use may_clack::{input, cancel};
 	///
-	/// let answer = input("message").cancel(do_cancel).interact();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answer = input("message").cancel(do_cancel).interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	///
 	/// fn do_cancel() {
 	///     cancel!("operation cancelled");
@@ -297,7 +313,18 @@ impl<M: Display> Input<M> {
 		}
 	}
 
-	/// Like [`Input::parse()`]
+	/// Like [`Input::parse()`], but it also allows empty line submits like [`Input::interact()`].
+	///
+	/// ```no_run
+	/// use may_clack::input;
+	/// use std::net::Ipv4Addr;
+	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answer = input("message").maybe_parse::<Ipv4Addr>()?;
+	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
+	/// ```
 	pub fn maybe_parse<T: FromStr + Display>(&self) -> Result<Option<T>, ClackError>
 	where
 		T::Err: Display,
@@ -330,8 +357,11 @@ impl<M: Display> Input<M> {
 	/// ```no_run
 	/// use may_clack::input;
 	///
-	/// let answer = input("message").required();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answer = input("message").required()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn required(&self) -> Result<String, ClackError> {
 		self.w_init();
@@ -364,12 +394,15 @@ impl<M: Display> Input<M> {
 	/// ```no_run
 	/// use may_clack::{input, cancel};
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = input("message")
 	///     .initial_value("initial_value")
 	///     .validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
 	///     .cancel(do_cancel)
-	///     .interact();
+	///     .interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	///
 	/// fn do_cancel() {
 	///     cancel!("operation cancelled");

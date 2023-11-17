@@ -128,12 +128,15 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 /// ```no_run
 /// use may_clack::multi_select;
 ///
+/// # fn main() -> Result<(), may_clack::error::ClackError> {
 /// let answer = multi_select("select")
 ///     .option("val1", "value 1")
 ///     .option("val2", "value 2")
 ///     .option_hint("val 3", "value 3", "hint")
-///     .interact();
+///     .interact()?;
 /// println!("answer {:?}", answer);
+/// # Ok(())
+/// # }
 /// ```
 pub struct MultiSelect<M: Display, T: Clone, O: Display + Clone> {
 	message: M,
@@ -179,11 +182,14 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// ```no_run
 	/// use may_clack::multi_select;
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = multi_select("message")
 	///     .option("val1", "label 1")
 	///     .option("val2", "label 2")
-	///     .interact();
+	///     .interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn option(&mut self, val: T, label: O) -> &mut Self {
 		let opt = Opt::new(val, label, None::<String>);
@@ -198,12 +204,15 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// ```no_run
 	/// use may_clack::multi_select;
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = multi_select("message")
 	///     .option("val1", "label 1")
 	///     .option_hint("val2", "label 2", "hint")
 	///     .option("val3", "label 3")
-	///     .interact();
+	///     .interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn option_hint<S: Into<String>>(&mut self, val: T, label: O, hint: S) -> &mut Self {
 		let opt = Opt::new(val, label, Some(hint));
@@ -218,14 +227,17 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// ```no_run
 	/// use may_clack::{multi_select, multi_select::Opt};
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let opts = vec![
 	///     Opt::simple("val1", "label 1"),
 	///     Opt::hint("val2", "label 2", "hint"),
 	///     Opt::simple("val3", "label 3")
 	/// ];
 	///
-	/// let answer = multi_select("message").options(opts).interact();
+	/// let answer = multi_select("message").options(opts).interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn options(&mut self, options: Vec<Opt<T, O>>) -> &mut Self {
 		self.options = options;
@@ -239,6 +251,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// ```no_run
 	/// use may_clack::multi_select;
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = multi_select("message")
 	///     .option("val 1", "value 1")
 	///     .option("val 2", "value 2")
@@ -246,8 +259,10 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	///     .option("val 4", "value 4")
 	///     .option("val 5", "value 5")
 	///     .less()
-	///     .interact();
+	///     .interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn less(&mut self) -> &mut Self {
 		self.less = true;
@@ -266,6 +281,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// ```no_run
 	/// use may_clack::multi_select;
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = multi_select("message")
 	///     .option("val 1", "value 1")
 	///     .option("val 2", "value 2")
@@ -273,8 +289,10 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	///     .option("val 4", "value 4")
 	///     .option("val 5", "value 5")
 	///     .less_max(3)
-	///     .interact();
+	///     .interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn less_max(&mut self, max: u16) -> &mut Self {
 		assert!(max > 0, "less max value has to be greater than zero");
@@ -299,6 +317,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// ```no_run
 	/// use may_clack::multi_select;
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = multi_select("message")
 	///     .option("val 1", "value 1")
 	///     .option("val 2", "value 2")
@@ -306,8 +325,10 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	///     .option("val 4", "value 4")
 	///     .option("val 5", "value 5")
 	///     .less_amt(3)
-	///     .interact();
+	///     .interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn less_amt(&mut self, less: u16) -> &mut Self {
 		assert!(less > 0, "less value has to be greater than zero");
@@ -327,13 +348,16 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// ```no_run
 	/// use may_clack::{multi_select, cancel};
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = multi_select("select")
 	///     .option("val1", "value 1")
 	///     .option("val2", "value 2")
 	///     .option_hint("val 3", "value 3", "hint")
 	///     .cancel(do_cancel)
-	///     .interact();
+	///     .interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	///
 	/// fn do_cancel() {
 	///     cancel!("operation cancelled");
@@ -376,12 +400,15 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// ```no_run
 	/// use may_clack::multi_select;
 	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = multi_select("select")
 	///     .option("val1", "value 1")
 	///     .option("val2", "value 2")
 	///     .option_hint("val 3", "value 3", "hint")
-	///     .interact();
+	///     .interact()?;
 	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
 	/// ```
 	pub fn interact(&self) -> Result<Vec<T>, ClackError> {
 		if self.options.is_empty() {
