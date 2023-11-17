@@ -230,7 +230,7 @@ impl<M: Display> Input<M> {
 						break Ok(None);
 					}
 				} else if let Some(text) = self.do_validate(&value) {
-					initial_value = Some(value.clone());
+					initial_value = Some(value);
 
 					if let Some(helper) = editor.helper_mut() {
 						helper.is_val = true;
@@ -242,6 +242,11 @@ impl<M: Display> Input<M> {
 						Ok(val) => break Ok(Some(val)),
 						Err(err) => {
 							initial_value = Some(value);
+
+							if let Some(helper) = editor.helper_mut() {
+								helper.is_val = true;
+							}
+
 							self.w_val(&err.to_string());
 						}
 					}
@@ -280,6 +285,32 @@ impl<M: Display> Input<M> {
 				Ok(value)
 			}
 			Ok(None) => unreachable!(),
+			Err(ClackError::Cancelled) => {
+				self.w_cancel();
+				if let Some(cancel) = self.cancel.as_deref() {
+					cancel();
+				}
+
+				Err(ClackError::Cancelled)
+			}
+			Err(err) => Err(err),
+		}
+	}
+
+	/// Like [`Input::parse()`]
+	pub fn maybe_parse<T: FromStr + Display>(&self) -> Result<Option<T>, ClackError>
+	where
+		T::Err: Display,
+	{
+		self.w_init();
+
+		let interact = self.interact_once::<T>(false);
+		match interact {
+			Ok(val) => {
+				let v = val.as_ref().map_or(String::new(), ToString::to_string);
+				self.w_out(&v);
+				Ok(val)
+			}
 			Err(ClackError::Cancelled) => {
 				self.w_cancel();
 				if let Some(cancel) = self.cancel.as_deref() {
@@ -351,8 +382,8 @@ impl<M: Display> Input<M> {
 		let interact = self.interact_once(false);
 		match interact {
 			Ok(val) => {
-				let v = val.clone().unwrap_or(String::new());
-				self.w_out(&v);
+				let v = val.as_deref().unwrap_or("");
+				self.w_out(v);
 				Ok(val)
 			}
 			Err(ClackError::Cancelled) => {

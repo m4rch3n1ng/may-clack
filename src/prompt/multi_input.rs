@@ -234,6 +234,11 @@ impl<M: Display> MultiInput<M> {
 						Ok(value) => break Ok(Some(value)),
 						Err(err) => {
 							initial_value = Some(value);
+
+							if let Some(helper) = editor.helper_mut() {
+								helper.is_val = true;
+							}
+
 							self.w_val(&err.to_string(), amt);
 						}
 					}
