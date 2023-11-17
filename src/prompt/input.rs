@@ -10,6 +10,7 @@ use std::{
 	borrow::Cow,
 	fmt::Display,
 	io::{stdout, Write},
+	str::FromStr,
 };
 
 #[derive(Completer, Helper, Hinter, Validator)]
@@ -81,7 +82,6 @@ type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
 /// }
 pub struct Input<M: Display> {
 	message: M,
-	default_value: Option<String>,
 	initial_value: Option<String>,
 	placeholder: Option<String>,
 	validate: Option<Box<ValidateFn>>,
@@ -105,29 +105,11 @@ impl<M: Display> Input<M> {
 	pub fn new(message: M) -> Self {
 		Input {
 			message,
-			default_value: None,
 			initial_value: None,
 			placeholder: None,
 			validate: None,
 			cancel: None,
 		}
-	}
-
-	/// Specify the default value to use, when no input is given.
-	///
-	/// Useful in combination with [`Input::required()`]
-	///
-	/// # Examples
-	///
-	/// ```no_run
-	/// use may_clack::input;
-	///
-	/// let answer = input("message").default_value("default_value").required();
-	/// println!("answer {:?}", answer);
-	/// ```
-	pub fn default_value<S: Into<String>>(&mut self, default_value: S) -> &mut Self {
-		self.default_value = Some(default_value.into());
-		self
 	}
 
 	/// Specify a placeholder.
@@ -215,7 +197,10 @@ impl<M: Display> Input<M> {
 		self
 	}
 
-	fn interact_once(&self, enforce_non_empty: bool) -> Result<Option<String>, ClackError> {
+	fn interact_once<T: FromStr>(&self, enforce_non_empty: bool) -> Result<Option<T>, ClackError>
+	where
+		T::Err: Display,
+	{
 		let prompt = format!("{}  ", *chars::BAR);
 
 		let mut editor = Editor::new()?;
@@ -233,9 +218,7 @@ impl<M: Display> Input<M> {
 			// todo this looks refactor-able
 			if let Ok(value) = line {
 				if value.is_empty() {
-					if let Some(default_value) = self.default_value.clone() {
-						break Ok(Some(default_value));
-					} else if enforce_non_empty {
+					if enforce_non_empty {
 						initial_value = None;
 
 						if let Some(helper) = editor.helper_mut() {
@@ -255,7 +238,13 @@ impl<M: Display> Input<M> {
 
 					self.w_val(text);
 				} else {
-					break Ok(Some(value));
+					match value.parse::<T>() {
+						Ok(val) => break Ok(Some(val)),
+						Err(err) => {
+							initial_value = Some(value);
+							self.w_val(&err.to_string());
+						}
+					}
 				}
 			} else {
 				break Err(ClackError::Cancelled);
@@ -263,22 +252,60 @@ impl<M: Display> Input<M> {
 		}
 	}
 
-	/// Like [`Input::interact()`], but does not return an empty line.
+	/// Like [`Input::required()`], but parses the value before returning.
 	///
-	/// Useful when used with [`Input::default_value()`], as that means that there can be no empty value.
+	/// Useful for getting number inputs.
 	///
 	/// # Examples
 	///
 	/// ```no_run
 	/// use may_clack::input;
 	///
-	/// let answer = input("message").default_value("default_value").required();
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answer: i32 = input("message").parse::<i32>()?;
+	/// println!("answer {:?}", answer);
+	/// # Ok(())
+	/// # }
+	/// ```
+	pub fn parse<T: FromStr + Display>(&self) -> Result<T, ClackError>
+	where
+		T::Err: Display,
+	{
+		self.w_init();
+
+		let interact = self.interact_once::<T>(true);
+		match interact {
+			Ok(Some(value)) => {
+				self.w_out(&value.to_string());
+				Ok(value)
+			}
+			Ok(None) => unreachable!(),
+			Err(ClackError::Cancelled) => {
+				self.w_cancel();
+				if let Some(cancel) = self.cancel.as_deref() {
+					cancel();
+				}
+
+				Err(ClackError::Cancelled)
+			}
+			Err(err) => Err(err),
+		}
+	}
+
+	/// Like [`Input::interact()`], but does not return an empty line.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::input;
+	///
+	/// let answer = input("message").required();
 	/// println!("answer {:?}", answer);
 	/// ```
 	pub fn required(&self) -> Result<String, ClackError> {
 		self.w_init();
 
-		let interact = self.interact_once(true);
+		let interact = self.interact_once::<String>(true);
 		match interact {
 			Ok(Some(value)) => {
 				self.w_out(&value);

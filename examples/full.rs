@@ -11,7 +11,6 @@ fn main() -> Result<(), ClackError> {
 	info!("visit the documentation at https://docs.rs/may-clack");
 
 	let do_input = input("input")
-		.default_value("default")
 		.placeholder("placeholder")
 		.cancel(do_cancel)
 		.required()?;

@@ -10,6 +10,7 @@ use rustyline::Editor;
 use std::{
 	fmt::Display,
 	io::{stdout, Write},
+	str::FromStr,
 };
 
 type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
@@ -182,11 +183,14 @@ impl<M: Display> MultiInput<M> {
 		self
 	}
 
-	fn interact_once(
+	fn interact_once<T: FromStr + Display>(
 		&self,
 		enforce_non_empty: bool,
 		amt: u16,
-	) -> Result<Option<String>, ClackError> {
+	) -> Result<Option<T>, ClackError>
+	where
+		T::Err: Display,
+	{
 		let prompt = format!("{}  ", *chars::BAR);
 		let mut editor = Editor::new()?;
 
@@ -226,12 +230,78 @@ impl<M: Display> MultiInput<M> {
 
 					self.w_val(text, amt);
 				} else {
-					break Ok(Some(value));
+					match value.parse::<T>() {
+						Ok(value) => break Ok(Some(value)),
+						Err(err) => {
+							initial_value = Some(value);
+							self.w_val(&err.to_string(), amt);
+						}
+					}
+					// break Ok(Some(value));
 				}
 			} else {
 				break Err(ClackError::Cancelled);
 			}
 		}
+	}
+
+	/// Like [`MultiInput::interact()`], but parses the value before returning.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::multi_input;
+	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answers: Vec<i32> = multi_input("message")
+	///     .min(2)
+	///     .parse::<i32>()?;
+	/// println!("answers {:?}", answers);
+	///
+	/// # Ok(())
+	/// # }
+	/// ```
+	pub fn parse<T: FromStr + Clone + Display>(&self) -> Result<Vec<T>, ClackError>
+	where
+		T::Err: Display,
+	{
+		self.w_init();
+
+		let mut v = vec![];
+		loop {
+			let amt = v.len() as u16;
+
+			let enforce_non_empty = amt < self.min;
+			let once = self.interact_once::<T>(enforce_non_empty, amt);
+
+			match once {
+				Ok(Some(value)) => {
+					self.w_line(&value, amt);
+					v.push(value);
+
+					if v.len() as u16 == self.max {
+						println!();
+						self.w_out(&v);
+						break;
+					}
+				}
+				Ok(None) => {
+					self.w_out(&v);
+					break;
+				}
+				Err(ClackError::Cancelled) => {
+					self.w_cancel(v.len());
+					if let Some(cancel) = self.cancel.as_deref() {
+						cancel();
+					}
+
+					return Err(ClackError::Cancelled);
+				}
+				Err(err) => return Err(err),
+			}
+		}
+
+		Ok(v)
 	}
 
 	/// Waits for the user to submit a line of text.
@@ -262,7 +332,7 @@ impl<M: Display> MultiInput<M> {
 			let amt = v.len() as u16;
 
 			let enforce_non_empty = amt < self.min;
-			let once = self.interact_once(enforce_non_empty, amt);
+			let once = self.interact_once::<String>(enforce_non_empty, amt);
 
 			match once {
 				Ok(Some(value)) => {
@@ -311,7 +381,7 @@ impl<M: Display> MultiInput<M> {
 		let _ = stdout.flush();
 	}
 
-	fn w_line(&self, value: &str, amt: u16) {
+	fn w_line<V: Display>(&self, value: V, amt: u16) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(amt + 2));
 		let _ = stdout.flush();
@@ -350,7 +420,7 @@ impl<M: Display> MultiInput<M> {
 		let _ = stdout.flush();
 	}
 
-	fn w_out(&self, values: &[String]) {
+	fn w_out<V: Display>(&self, values: &[V]) {
 		let amt = values.len();
 
 		let mut stdout = stdout();
