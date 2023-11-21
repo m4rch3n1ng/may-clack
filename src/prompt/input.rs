@@ -10,7 +10,7 @@ use std::{
 	borrow::Cow,
 	fmt::Display,
 	io::{stdout, Write},
-	str::FromStr,
+	str::FromStr, error::Error,
 };
 
 #[derive(Completer, Helper, Hinter, Validator)]
@@ -215,7 +215,7 @@ impl<M: Display> Input<M> {
 
 	fn interact_once<T: FromStr>(&self, enforce_non_empty: bool) -> Result<Option<T>, ClackError>
 	where
-		T::Err: Display,
+		T::Err: Error,
 	{
 		let prompt = format!("{}  ", *chars::BAR);
 
@@ -290,7 +290,7 @@ impl<M: Display> Input<M> {
 	/// ```
 	pub fn parse<T: FromStr + Display>(&self) -> Result<T, ClackError>
 	where
-		T::Err: Display,
+		T::Err: Error,
 	{
 		self.w_init();
 
@@ -327,7 +327,7 @@ impl<M: Display> Input<M> {
 	/// ```
 	pub fn maybe_parse<T: FromStr + Display>(&self) -> Result<Option<T>, ClackError>
 	where
-		T::Err: Display,
+		T::Err: Error,
 	{
 		self.w_init();
 

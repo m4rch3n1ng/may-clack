@@ -10,7 +10,7 @@ use rustyline::Editor;
 use std::{
 	fmt::Display,
 	io::{stdout, Write},
-	str::FromStr,
+	str::FromStr, error::Error,
 };
 
 type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
@@ -210,7 +210,7 @@ impl<M: Display> MultiInput<M> {
 		amt: u16,
 	) -> Result<Option<T>, ClackError>
 	where
-		T::Err: Display,
+		T::Err: Error,
 	{
 		let prompt = format!("{}  ", *chars::BAR);
 		let mut editor = Editor::new()?;
@@ -289,7 +289,7 @@ impl<M: Display> MultiInput<M> {
 	/// ```
 	pub fn parse<T: FromStr + Clone + Display>(&self) -> Result<Vec<T>, ClackError>
 	where
-		T::Err: Display,
+		T::Err: Error,
 	{
 		self.w_init();
 
