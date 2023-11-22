@@ -8,9 +8,11 @@ use crossterm::{cursor, QueueableCommand};
 use owo_colors::OwoColorize;
 use rustyline::Editor;
 use std::{
+	borrow::Cow,
+	error::Error,
 	fmt::Display,
 	io::{stdout, Write},
-	str::FromStr, error::Error,
+	str::FromStr,
 };
 
 type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
@@ -218,7 +220,7 @@ impl<M: Display> MultiInput<M> {
 		let highlighter = PlaceholderHightlighter::new(self.placeholder.as_deref());
 		editor.set_helper(Some(highlighter));
 
-		let mut initial_value = self.initial_value.clone();
+		let mut initial_value = self.initial_value.as_deref().map(Cow::Borrowed);
 		loop {
 			let line = if let Some(ref init) = initial_value {
 				editor.readline_with_initial(&prompt, (init, ""))
@@ -243,7 +245,7 @@ impl<M: Display> MultiInput<M> {
 						break Ok(None);
 					}
 				} else if let Some(text) = self.do_validate(&value) {
-					initial_value = Some(value);
+					initial_value = Some(Cow::Owned(value));
 
 					if let Some(helper) = editor.helper_mut() {
 						helper.is_val = true;
@@ -254,7 +256,7 @@ impl<M: Display> MultiInput<M> {
 					match value.parse::<T>() {
 						Ok(value) => break Ok(Some(value)),
 						Err(err) => {
-							initial_value = Some(value);
+							initial_value = Some(Cow::Owned(value));
 
 							if let Some(helper) = editor.helper_mut() {
 								helper.is_val = true;

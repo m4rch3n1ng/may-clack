@@ -544,9 +544,8 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 							}
 
 							let all = options
-								.iter()
+								.into_iter()
 								.filter(|opt| opt.active)
-								.cloned()
 								.map(|opt| opt.value)
 								.collect();
 

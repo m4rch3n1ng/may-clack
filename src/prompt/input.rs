@@ -8,9 +8,10 @@ use owo_colors::OwoColorize;
 use rustyline::{highlight::Highlighter, Completer, Editor, Helper, Hinter, Validator};
 use std::{
 	borrow::Cow,
+	error::Error,
 	fmt::Display,
 	io::{stdout, Write},
-	str::FromStr, error::Error,
+	str::FromStr,
 };
 
 #[derive(Completer, Helper, Hinter, Validator)]
@@ -223,7 +224,7 @@ impl<M: Display> Input<M> {
 		let helper = PlaceholderHightlighter::new(self.placeholder.as_deref());
 		editor.set_helper(Some(helper));
 
-		let mut initial_value = self.initial_value.clone();
+		let mut initial_value = self.initial_value.as_deref().map(Cow::Borrowed);
 		loop {
 			let line = if let Some(ref init) = initial_value {
 				editor.readline_with_initial(&prompt, (init, ""))
@@ -246,7 +247,7 @@ impl<M: Display> Input<M> {
 						break Ok(None);
 					}
 				} else if let Some(text) = self.do_validate(&value) {
-					initial_value = Some(value);
+					initial_value = Some(Cow::Owned(value));
 
 					if let Some(helper) = editor.helper_mut() {
 						helper.is_val = true;
@@ -257,7 +258,7 @@ impl<M: Display> Input<M> {
 					match value.parse::<T>() {
 						Ok(val) => break Ok(Some(val)),
 						Err(err) => {
-							initial_value = Some(value);
+							initial_value = Some(Cow::Owned(value));
 
 							if let Some(helper) = editor.helper_mut() {
 								helper.is_val = true;
