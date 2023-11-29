@@ -754,6 +754,6 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 }
 
 /// Shorthand for [`Select::new()`]
-pub fn select<M: Display, T: Clone, O: Display + Clone>(message: M) -> Select<M, T, O> {
+pub fn select<M: Display, T: Clone, O: Display>(message: M) -> Select<M, T, O> {
 	Select::new(message)
 }
