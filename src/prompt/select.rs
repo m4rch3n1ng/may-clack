@@ -16,14 +16,14 @@ use std::{
 use unicode_truncate::UnicodeTruncateStr;
 
 /// `Select` `Opt` struct
-#[derive(Debug, Clone)]
-pub struct Opt<T: Clone, O: Display + Clone> {
+#[derive(Debug)]
+pub struct Opt<T: Clone, O: Display> {
 	value: T,
 	label: O,
 	hint: Option<String>,
 }
 
-impl<T: Clone, O: Display + Clone> Opt<T, O> {
+impl<T: Clone, O: Display> Opt<T, O> {
 	/// Creates a new `Opt` struct.
 	///
 	/// # Examples
@@ -120,7 +120,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 /// # Ok(())
 /// # }
 /// ```
-pub struct Select<M: Display, T: Clone, O: Display + Clone> {
+pub struct Select<M: Display, T: Clone, O: Display> {
 	message: M,
 	less: bool,
 	less_amt: Option<u16>,
@@ -129,7 +129,7 @@ pub struct Select<M: Display, T: Clone, O: Display + Clone> {
 	options: Vec<Opt<T, O>>,
 }
 
-impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
+impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 	/// Creates a new `Select` struct.
 	///
 	/// Has a shorthand version in [`select()`]
@@ -518,9 +518,9 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 							let opt = self
 								.options
 								.get(idx)
-								.cloned()
 								.expect("idx should always be in bound");
-							return Ok(opt.value);
+							let value = opt.value.clone();
+							return Ok(value);
 						}
 						(KeyCode::Char('c' | 'd'), KeyModifiers::CONTROL) => {
 							terminal::disable_raw_mode()?;
@@ -545,7 +545,7 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 	}
 }
 
-impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
+impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 	fn draw_focus(&self, idx: usize) {
 		let opt = self
 			.options
@@ -615,7 +615,7 @@ impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
 	}
 }
 
-impl<M: Display, T: Clone, O: Display + Clone> Select<M, T, O> {
+impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 	fn w_init(&self) {
 		let mut stdout = stdout();
 
