@@ -435,7 +435,7 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 								if idx > 0 {
 									idx -= 1;
 									let _ = execute!(stdout, cursor::MoveUp(1));
-								} else {
+								} else if max > 1 {
 									idx = max - 1;
 									let _ = execute!(stdout, cursor::MoveDown(max as u16 - 1));
 								}
@@ -465,7 +465,7 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 								if idx < max - 1 {
 									idx += 1;
 									let _ = execute!(stdout, cursor::MoveDown(1));
-								} else {
+								} else if idx > 0 {
 									idx = 0;
 									let _ = execute!(stdout, cursor::MoveUp(max as u16 - 1));
 								}
