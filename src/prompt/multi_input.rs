@@ -1,4 +1,5 @@
 //! Multiple text inputs
+
 use super::input::PlaceholderHightlighter;
 use crate::{
 	error::ClackError,

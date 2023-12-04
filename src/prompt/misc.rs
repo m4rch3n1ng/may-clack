@@ -3,26 +3,26 @@ use owo_colors::OwoColorize;
 use std::fmt::Display;
 
 #[doc(hidden)]
-pub fn wr_intro(display: impl Display) {
+pub fn wr_intro<D: Display>(display: D) {
 	println!("{}  {}", *chars::BAR_START, display);
 }
 
 #[doc(hidden)]
-pub fn wr_outro(display: impl Display) {
+pub fn wr_outro<D: Display>(display: D) {
 	println!("{}", *chars::BAR);
 	println!("{}  {}", *chars::BAR_END, display);
 	println!();
 }
 
 #[doc(hidden)]
-pub fn wr_cancel(display: impl Display) {
+pub fn wr_cancel<D: Display>(display: D) {
 	println!("{}", *chars::BAR);
 	println!("{}  {}", *chars::BAR_END, display.red());
 	println!();
 }
 
 #[doc(hidden)]
-pub fn wr_info(display: impl Display) {
+pub fn wr_info<D: Display>(display: D) {
 	println!("{}", *chars::BAR);
 	println!("{}  {}", (*chars::STEP_SUBMIT).cyan(), display);
 }

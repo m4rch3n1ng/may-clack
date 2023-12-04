@@ -1,4 +1,5 @@
 //! Confirm
+
 use crate::{
 	error::ClackError,
 	style::{ansi, chars},

@@ -148,7 +148,6 @@
 //! # Ok(())
 //! # }
 //! ```
-//!
 
 pub mod error;
 mod prompt;

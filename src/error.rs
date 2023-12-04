@@ -1,4 +1,5 @@
 //! Error
+
 use rustyline::error::ReadlineError;
 use thiserror::Error;
 

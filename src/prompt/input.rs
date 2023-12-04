@@ -1,4 +1,5 @@
 //! Text input
+
 use crate::{
 	error::ClackError,
 	style::{ansi, chars},

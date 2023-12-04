@@ -1,8 +1,9 @@
 //! Style utility
+
 use is_unicode_supported::is_unicode_supported;
 use once_cell::sync::Lazy;
 
-pub static IS_UNICODE: Lazy<bool> = Lazy::new(is_unicode_supported);
+pub(crate) static IS_UNICODE: Lazy<bool> = Lazy::new(is_unicode_supported);
 
 fn is_unicode(unicode: &'static str, non_unicode: &'static str) -> &'static str {
 	if *IS_UNICODE {

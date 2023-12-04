@@ -1,4 +1,5 @@
 //! Select multiple options
+
 use crate::{
 	error::ClackError,
 	style::{ansi, chars, IS_UNICODE},
