@@ -14,8 +14,8 @@ categories = ["command-line-interface", "command-line-utilities"]
 [dependencies]
 crossterm = "0.27.0"
 is-unicode-supported = "0.1.0"
-once_cell = "1.18.0"
-owo-colors = "3.5.0"
-rustyline = { version = "12.0.0", features = ["derive"] }
-thiserror = "1.0.50"
+once_cell = "1.19.0"
+owo-colors = "4.0.0"
+rustyline = { version = "13.0.0", features = ["derive"] }
+thiserror = "1.0.52"
 unicode-truncate = "0.2.0"

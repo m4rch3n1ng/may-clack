@@ -6,11 +6,11 @@ fn main() -> Result<(), ClackError> {
 	println!();
 	intro!(" validate ".reversed());
 
-	let do_validate_input = input("validate single")
+	let do_validate_input = input("validate single (only use ascii)")
 		.validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
 		.cancel(do_cancel)
 		.required()?;
-	let do_validate_multi_input = multi_input("validate multi")
+	let do_validate_multi_input = multi_input("validate multi (only use lowercase)")
 		.validate(|x| {
 			x.find(char::is_uppercase)
 				.map(|_| "only use lowercase characters")

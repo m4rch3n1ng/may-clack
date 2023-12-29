@@ -43,7 +43,7 @@ impl Highlighter for PlaceholderHightlighter<'_> {
 		}
 	}
 
-	fn highlight_char(&self, _line: &str, _pos: usize) -> bool {
+	fn highlight_char(&self, _line: &str, _pos: usize, _forced: bool) -> bool {
 		true
 	}
 
@@ -53,7 +53,8 @@ impl Highlighter for PlaceholderHightlighter<'_> {
 		default: bool,
 	) -> Cow<'b, str> {
 		if !default {
-			Cow::Owned(format!("aa {}", prompt))
+			// i honestly don't know what this even does
+			Cow::Borrowed(prompt)
 		} else if self.is_val {
 			Cow::Owned(prompt.yellow().to_string())
 		} else {
