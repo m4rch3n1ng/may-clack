@@ -512,7 +512,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 								self.draw_less(&options, less, idx, less_idx, prev_less);
 							}
 						}
-						(KeyCode::PageUp, _) => {
+						(KeyCode::PageUp, _) if idx != 0 => {
 							if let Some(less) = is_less {
 								let prev_less = less_idx;
 
@@ -525,6 +525,44 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 								}
 
 								self.draw_less(&options, less, idx, less_idx, prev_less);
+							}
+						}
+						(KeyCode::Home, _) if idx != 0 => {
+							if let Some(less) = is_less {
+								let prev_less = less_idx;
+
+								idx = 0;
+								less_idx = 0;
+
+								self.draw_less(&options, less, idx, less_idx, prev_less)
+							} else {
+								self.draw_unfocus(&options, idx);
+
+								let mut stdout = stdout();
+								let _ = execute!(stdout, cursor::MoveUp(idx as u16));
+
+								idx = 0;
+								self.draw_focus(&options, 0);
+							}
+						}
+						(KeyCode::End, _) if idx != max - 1 => {
+							if let Some(less) = is_less {
+								let prev_less = less_idx;
+
+								idx = max - 1;
+								less_idx = less - 1;
+
+								self.draw_less(&options, less, idx, less_idx, prev_less)
+							} else {
+								self.draw_unfocus(&options, idx);
+
+								let mut stdout = stdout();
+								let diff = max - idx - 1;
+								let _ = execute!(stdout, cursor::MoveDown(diff as u16));
+
+								idx = max - 1;
+
+								self.draw_focus(&options, idx);
 							}
 						}
 						(KeyCode::Char(' '), _) => {
