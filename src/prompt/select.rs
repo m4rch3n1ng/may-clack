@@ -514,7 +514,7 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 								idx = 0;
 								less_idx = 0;
 
-								self.draw_less(less, idx, less_idx, prev_less)
+								self.draw_less(less, idx, less_idx, prev_less);
 							} else {
 								self.draw_unfocus(idx);
 
@@ -532,7 +532,7 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 								idx = max - 1;
 								less_idx = less - 1;
 
-								self.draw_less(less, idx, less_idx, prev_less)
+								self.draw_less(less, idx, less_idx, prev_less);
 							} else {
 								self.draw_unfocus(idx);
 

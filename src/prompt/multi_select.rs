@@ -534,7 +534,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 								idx = 0;
 								less_idx = 0;
 
-								self.draw_less(&options, less, idx, less_idx, prev_less)
+								self.draw_less(&options, less, idx, less_idx, prev_less);
 							} else {
 								self.draw_unfocus(&options, idx);
 
@@ -552,7 +552,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 								idx = max - 1;
 								less_idx = less - 1;
 
-								self.draw_less(&options, less, idx, less_idx, prev_less)
+								self.draw_less(&options, less, idx, less_idx, prev_less);
 							} else {
 								self.draw_unfocus(&options, idx);
 

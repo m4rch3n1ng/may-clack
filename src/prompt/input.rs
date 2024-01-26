@@ -300,7 +300,7 @@ impl<M: Display> Input<M> {
 		let interact = self.interact_once::<T>(true);
 		match interact {
 			Ok(Some(value)) => {
-				self.w_out(&value.to_string());
+				self.w_out(&value);
 				Ok(value)
 			}
 			Ok(None) => unreachable!(),
@@ -337,8 +337,12 @@ impl<M: Display> Input<M> {
 		let interact = self.interact_once::<T>(false);
 		match interact {
 			Ok(val) => {
-				let v = val.as_ref().map_or(String::new(), ToString::to_string);
-				self.w_out(&v);
+				if let Some(val) = &val {
+					self.w_out(val);
+				} else {
+					self.w_out("");
+				}
+
 				Ok(val)
 			}
 			Err(ClackError::Cancelled) => {
@@ -466,7 +470,7 @@ impl<M: Display> Input<M> {
 		let _ = stdout.flush();
 	}
 
-	fn w_out(&self, value: &str) {
+	fn w_out<D: Display>(&self, value: D) {
 		let mut stdout = stdout();
 		let _ = stdout.queue(cursor::MoveToPreviousLine(2));
 		let _ = stdout.flush();

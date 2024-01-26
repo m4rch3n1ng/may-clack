@@ -207,7 +207,7 @@ impl<M: Display> MultiInput<M> {
 		self
 	}
 
-	fn interact_once<T: FromStr + Display>(
+	fn interact_once<T: FromStr>(
 		&self,
 		enforce_non_empty: bool,
 		amt: u16,
@@ -235,7 +235,6 @@ impl<M: Display> MultiInput<M> {
 					if enforce_non_empty {
 						initial_value = None;
 
-						// is_val = true;
 						if let Some(helper) = editor.helper_mut() {
 							helper.is_val = true;
 						}
@@ -290,7 +289,7 @@ impl<M: Display> MultiInput<M> {
 	/// # Ok(())
 	/// # }
 	/// ```
-	pub fn parse<T: FromStr + Clone + Display>(&self) -> Result<Vec<T>, ClackError>
+	pub fn parse<T: FromStr + Display>(&self) -> Result<Vec<T>, ClackError>
 	where
 		T::Err: Error,
 	{
