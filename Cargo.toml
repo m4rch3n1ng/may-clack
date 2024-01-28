@@ -7,7 +7,7 @@ rust-version = "1.63.0"
 description = "stylish, interactive command line prompts"
 readme = "readme.md"
 repository = "https://github.com/m4rch3n1ng/may-clack"
-license = "GPL-3.0-only"
+license = "MPL-2.0"
 keywords = ["clack", "cli", "input", "prompt", "prompts"]
 categories = ["command-line-interface", "command-line-utilities"]
 
