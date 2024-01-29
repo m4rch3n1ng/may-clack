@@ -8,7 +8,7 @@ use crossterm::{cursor, QueueableCommand};
 use owo_colors::OwoColorize;
 use rustyline::{highlight::Highlighter, Completer, Editor, Helper, Hinter, Validator};
 use std::{
-	borrow::Cow,
+	borrow::{Borrow, Cow},
 	error::Error,
 	fmt::Display,
 	io::{stdout, Write},
@@ -132,8 +132,29 @@ impl<M: Display> Input<M> {
 	/// # Ok(())
 	/// # }
 	/// ```
-	pub fn placeholder<S: Into<String>>(&mut self, placeholder: S) -> &mut Self {
-		self.placeholder = Some(placeholder.into());
+	pub fn placeholder<S: ToString>(&mut self, placeholder: S) -> &mut Self {
+		self.placeholder = Some(placeholder.to_string());
+		self
+	}
+
+	/// Maybe specify an initial value.
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::input;
+	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let answer = input("message").maybe_initial(Some("initial")).required()?;
+	/// let answer = input("message").maybe_initial(None::<&str>).required()?;
+	/// # Ok(())
+	/// # }
+	/// ```
+	pub fn maybe_initial<T: Borrow<Option<S>>, S: ToString>(&mut self, initial: T) -> &mut Self {
+		if let Some(initial) = initial.borrow() {
+			self.initial_value = Some(initial.to_string());
+		}
+
 		self
 	}
 
@@ -150,8 +171,8 @@ impl<M: Display> Input<M> {
 	/// # Ok(())
 	/// # }
 	/// ```
-	pub fn initial_value<S: Into<String>>(&mut self, initial_value: S) -> &mut Self {
-		self.initial_value = Some(initial_value.into());
+	pub fn initial_value<S: ToString>(&mut self, initial_value: S) -> &mut Self {
+		self.initial_value = Some(initial_value.to_string());
 		self
 	}
 

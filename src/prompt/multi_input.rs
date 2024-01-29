@@ -88,8 +88,8 @@ impl<M: Display> MultiInput<M> {
 	/// # Ok(())
 	/// # }
 	/// ```
-	pub fn initial_value<S: Into<String>>(&mut self, initial_value: S) -> &mut Self {
-		self.initial_value = Some(initial_value.into());
+	pub fn initial_value<S: ToString>(&mut self, initial_value: S) -> &mut Self {
+		self.initial_value = Some(initial_value.to_string());
 		self
 	}
 
@@ -106,8 +106,8 @@ impl<M: Display> MultiInput<M> {
 	/// # Ok(())
 	/// # }
 	/// ```
-	pub fn placeholder<S: Into<String>>(&mut self, placeholder: S) -> &mut Self {
-		self.placeholder = Some(placeholder.into());
+	pub fn placeholder<S: ToString>(&mut self, placeholder: S) -> &mut Self {
+		self.placeholder = Some(placeholder.to_string());
 		self
 	}
 

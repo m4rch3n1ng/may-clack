@@ -35,11 +35,11 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	///
 	/// let option = Opt::new("value", "lavel", Some("hint"));
 	/// ```
-	pub fn new<S: Into<String>>(value: T, label: O, hint: Option<S>) -> Self {
+	pub fn new<S: ToString>(value: T, label: O, hint: Option<S>) -> Self {
 		Opt {
 			value,
 			label,
-			hint: hint.map(|st| st.into()),
+			hint: hint.map(|hint| hint.to_string()),
 			active: false,
 		}
 	}
@@ -66,7 +66,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 	///
 	/// let option = Opt::hint("value", "label", "hint");
 	/// ```
-	pub fn hint<S: Into<String>>(value: T, label: O, hint: S) -> Self {
+	pub fn hint<S: ToString>(value: T, label: O, hint: S) -> Self {
 		Opt::new(value, label, Some(hint))
 	}
 
@@ -215,7 +215,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 	/// # Ok(())
 	/// # }
 	/// ```
-	pub fn option_hint<S: Into<String>>(&mut self, val: T, label: O, hint: S) -> &mut Self {
+	pub fn option_hint<S: ToString>(&mut self, val: T, label: O, hint: S) -> &mut Self {
 		let opt = Opt::new(val, label, Some(hint));
 		self.options.push(opt);
 		self

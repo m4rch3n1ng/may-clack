@@ -96,8 +96,8 @@ impl<M: Display> Confirm<M> {
 	/// # Ok(())
 	/// # }
 	/// ```
-	pub fn prompts<S: Into<String>>(&mut self, yes: S, no: S) -> &mut Self {
-		self.prompts = (yes.into(), no.into());
+	pub fn prompts<S: ToString>(&mut self, yes: S, no: S) -> &mut Self {
+		self.prompts = (yes.to_string(), no.to_string());
 		self
 	}
 
