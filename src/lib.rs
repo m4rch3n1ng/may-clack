@@ -16,7 +16,8 @@
 //!
 //! When the user cancels a question, you can use the [`cancel!`] utility to provide a cancellation message.
 //!
-//! When cancelled the will return a [`error::ClackError::Cancelled`].
+//! When cancelled the will return a [`error::ClackError::Cancelled`],
+//! or you can check if it was cancelled using the [`traits::IsCancel`] trait extension.
 //!
 //! All input types that can return a `Cancelled` Err will also have the option to add a `.cancel` closure
 //!
@@ -29,16 +30,28 @@
 //! }
 //! ```
 //!
+//! ```
+//! use may_clack::{cancel, input, traits::IsCancel};
+//! let text = input("todo").interact();
+//! if text.is_cancel() {
+//!     cancel!("operation cancelled");
+//! }
+//! ```
+//!
 //! ## Info
 //!
-//! If you want to write a message in a prompting session you can use the [`info!`] utility.
+//! If you want to write a message in a prompting session you can use the [`info!`], [`warn!`] or [`err!`] utility.
 //!
 //! ```
-//! use may_clack::{info, intro, outro};
+//! use may_clack::{err, info, intro, outro, warn};
 //!
 //! intro!("intro");
 //! // do stuff
 //! info!("info");
+//! // do stuff
+//! warn!("warn");
+//! // do stuff
+//! err!("err");
 //! // do stuff
 //! outro!("outro");
 //! ```

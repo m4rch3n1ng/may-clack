@@ -1,37 +1,8 @@
-use crate::style::chars;
-use owo_colors::OwoColorize;
-use std::fmt::Display;
-
-#[doc(hidden)]
-pub fn wr_intro<D: Display>(display: D) {
-	println!("{}  {}", *chars::BAR_START, display);
-}
-
-#[doc(hidden)]
-pub fn wr_outro<D: Display>(display: D) {
-	println!("{}", *chars::BAR);
-	println!("{}  {}", *chars::BAR_END, display);
-	println!();
-}
-
-#[doc(hidden)]
-pub fn wr_cancel<D: Display>(display: D) {
-	println!("{}", *chars::BAR);
-	println!("{}  {}", *chars::BAR_END, display.red());
-	println!();
-}
-
-#[doc(hidden)]
-pub fn wr_info<D: Display>(display: D) {
-	println!("{}", *chars::BAR);
-	println!("{}  {}", (*chars::STEP_SUBMIT).cyan(), display);
-}
-
 /// Intro message.
 ///
 /// Write a message to start a prompt session.
 ///
-/// Can take either a [fmt](std::fmt) string like [`format!`], a type that implements [`Display`], or nothing.
+/// Can take either a [fmt](std::fmt) string like [`format!`], a type that implements [`std::fmt::Display`], or nothing.
 ///
 /// # Examples
 ///
@@ -49,22 +20,22 @@ pub fn wr_info<D: Display>(display: D) {
 #[macro_export]
 macro_rules! intro {
 	() => {
-		$crate::misc::wr_intro("");
+		println!("{}", *$crate::style::chars::BAR_START);
 	};
 	($arg:expr) => {
-		$crate::misc::wr_intro($arg);
+		$crate::intro!("{}", $arg);
 	};
-	($($arg:tt)*) => {
-		let text = format!($($arg)*);
-		$crate::misc::wr_intro(text);
-	}
+	($($arg:tt)*) => {{
+		print!("{}  ", *$crate::style::chars::BAR_START);
+		println!($($arg)*);
+	}}
 }
 
 /// Setup outro
 ///
 /// Write a message to start a prompt session.
 ///
-/// Can take either a [fmt](std::fmt) string like [`format!`], a type that implements [`Display`], or nothing.
+/// Can take either a [fmt](std::fmt) string like [`format!`], a type that implements [`std::fmt::Display`], or nothing.
 ///
 /// # Examples
 ///
@@ -81,56 +52,48 @@ macro_rules! intro {
 /// ```
 #[macro_export]
 macro_rules! outro {
-	() => {
-		$crate::misc::wr_outro("");
-	};
+	() => {{
+		println!("{}", *$crate::style::chars::BAR);
+		println!("{}", *$crate::style::chars::BAR_END);
+		println!();
+	}};
 	($arg:expr) => {
-		$crate::misc::wr_outro($arg);
+		$crate::outro!("{}", $arg);
 	};
-	($($arg:tt)*) => {
-		let text = format!($($arg)*);
-		$crate::misc::wr_outro(text);
-	};
+	($($arg:tt)*) => {{
+		println!("{}", *$crate::style::chars::BAR);
+		print!("{}  ", *$crate::style::chars::BAR_END);
+		println!($($arg)*);
+		println!();
+	}};
 }
 
 /// Cancel message.
 ///
 /// Write a message when cancelled.
 ///
-/// Can take either a [fmt](std::fmt) string like [`format!`], a type that implements [`Display`], or nothing.
+/// Is the same as calling the [`outro!`] macro with `outro!("{}", message.red())`
 ///
 /// # Examples
 ///
 /// ```
 /// use may_clack::cancel;
 ///
-/// // empty
-/// cancel!();
-/// // fmt string
-/// cancel!("fmt {:?}", "string");
-/// // impl Display
-/// cancel!("text");
-/// cancel!(4);
+/// cancel!("cancel");
 /// ```
 #[macro_export]
 macro_rules! cancel {
-	() => {
-		$crate::misc::wr_cancel("");
-	};
-	($arg:expr) => {
-		$crate::misc::wr_cancel($arg);
-	};
-	($($arg:tt)*) => {
-		let text = format!($($arg)*);
-		$crate::misc::wr_cancel(text);
-	}
+	($arg:expr) => {{
+		use owo_colors::OwoColorize;
+		$crate::outro!("{}", ($arg).red());
+	}};
 }
 
 /// Info message.
 ///
 /// Write an info message while in a prompt session.
 ///
-/// Can take either a [fmt](std::fmt) string like [`format!`], a type that implements [`Display`], or nothing.
+/// Can take either a [fmt](std::fmt) string like [`format!`], a type that implements [`std::fmt::Display`], or nothing.
 ///
 /// # Examples
 ///
@@ -157,14 +120,118 @@ macro_rules! cancel {
 /// ```
 #[macro_export]
 macro_rules! info {
-	() => {
-		$crate::misc::wr_info("");
-	};
+	() => {{
+		use owo_colors::OwoColorize;
+		println!("{}", *$crate::style::chars::BAR);
+		println!("{}", (*$crate::style::chars::STEP_SUBMIT).cyan());
+	}};
 	($arg:expr) => {
-		$crate::misc::wr_info($arg);
+		$crate::info!("{}", $arg);
 	};
-	($($arg:tt)*) => {
-		let text = format!($($arg)*);
-		$crate::misc::wr_info(text);
-	}
+	($($arg:tt)*) => {{
+		{
+			use owo_colors::OwoColorize;
+			println!("{}", *$crate::style::chars::BAR);
+			print!("{}  ", (*$crate::style::chars::STEP_SUBMIT).cyan());
+		}
+		println!($($arg)*);
+	}}
+}
+
+/// Warn message.
+///
+/// Write a warning while in a prompt session.
+///
+/// Can take either a [fmt](std::fmt) string like [`format!`], a type that implements [`std::fmt::Display`], or nothing.
+///
+/// # Examples
+///
+/// ```
+/// use may_clack::{intro, outro, warn};
+///
+/// intro!("intro");
+/// // do stuff
+/// warn!("warn");
+/// // do stuff
+/// outro!();
+/// ```
+///
+/// ```
+/// use may_clack::warn;
+///
+/// // empty
+/// warn!();
+/// // fmt string
+/// warn!("fmt {:?}", "string");
+/// // impl Display
+/// warn!("text");
+/// warn!(4);
+/// ```
+#[macro_export]
+macro_rules! warn {
+	() => {{
+		use owo_colors::OwoColorize;
+		println!("{}", *$crate::style::chars::BAR);
+		println!("{}", (*$crate::style::chars::STEP_ERROR).yellow());
+	}};
+	($arg:expr) => {
+		$crate::warn!("{}", $arg);
+	};
+	($($arg:tt)*) => {{
+		{
+			use owo_colors::OwoColorize;
+			println!("{}", *$crate::style::chars::BAR);
+			print!("{}  ", (*$crate::style::chars::STEP_ERROR).yellow());
+		}
+		println!($($arg)*);
+	}};
+}
+
+/// Error message.
+///
+/// Write an error while in a prompt session.
+///
+/// Can take either a [fmt](std::fmt) string like [`format!`], a type that implements [`std::fmt::Display`], or nothing.
+///
+/// # Examples
+///
+/// ```
+/// use may_clack::{intro, err, outro};
+///
+/// intro!("intro");
+/// // do stuff
+/// err!("err");
+/// // do stuff
+/// outro!();
+/// ```
+///
+/// ```
+/// use may_clack::err;
+///
+/// // empty
+/// err!();
+/// // fmt string
+/// err!("fmt {:?}", "string");
+/// // impl Display
+/// err!("text");
+/// err!(4);
+/// ```
+#[macro_export]
+macro_rules! err {
+	() => {{
+		use owo_colors::OwoColorize;
+		println!("{}", *$crate::style::chars::BAR);
+		println!("{}", (*$crate::style::chars::STEP_CANCEL).red());
+	}};
+	($arg:expr) => {
+		$crate::err!("{}", $arg);
+	};
+	($($arg:tt)*) => {{
+		{
+			use owo_colors::OwoColorize;
+			println!("{}", *$crate::style::chars::BAR);
+			print!("{}  ", (*$crate::style::chars::STEP_CANCEL).red());
+		}
+		println!($($arg)*);
+	}};
 }
