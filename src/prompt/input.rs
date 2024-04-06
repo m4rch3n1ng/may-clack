@@ -16,21 +16,21 @@ use std::{
 };
 
 #[derive(Completer, Helper, Hinter, Validator)]
-pub(super) struct PlaceholderHightlighter<'a> {
+pub(super) struct PlaceholderHighlighter<'a> {
 	placeholder: Option<&'a str>,
 	pub is_val: bool,
 }
 
-impl<'a> PlaceholderHightlighter<'a> {
+impl<'a> PlaceholderHighlighter<'a> {
 	pub fn new(placeholder: Option<&'a str>) -> Self {
-		PlaceholderHightlighter {
+		PlaceholderHighlighter {
 			placeholder,
 			is_val: false,
 		}
 	}
 }
 
-impl Highlighter for PlaceholderHightlighter<'_> {
+impl Highlighter for PlaceholderHighlighter<'_> {
 	fn highlight<'l>(&self, line: &'l str, _pos: usize) -> Cow<'l, str> {
 		if let Some(placeholder) = self.placeholder {
 			if line.is_empty() {
@@ -244,7 +244,7 @@ impl<M: Display> Input<M> {
 		let prompt = format!("{}  ", *chars::BAR);
 
 		let mut editor = Editor::new()?;
-		let helper = PlaceholderHightlighter::new(self.placeholder.as_deref());
+		let helper = PlaceholderHighlighter::new(self.placeholder.as_deref());
 		editor.set_helper(Some(helper));
 
 		let mut initial_value = self.initial_value.as_deref().map(Cow::Borrowed);

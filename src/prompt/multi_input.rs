@@ -1,6 +1,6 @@
 //! Multiple text inputs
 
-use super::input::PlaceholderHightlighter;
+use super::input::PlaceholderHighlighter;
 use crate::{
 	error::ClackError,
 	style::{ansi, chars},
@@ -218,7 +218,7 @@ impl<M: Display> MultiInput<M> {
 		let prompt = format!("{}  ", *chars::BAR);
 		let mut editor = Editor::new()?;
 
-		let highlighter = PlaceholderHightlighter::new(self.placeholder.as_deref());
+		let highlighter = PlaceholderHighlighter::new(self.placeholder.as_deref());
 		editor.set_helper(Some(highlighter));
 
 		let mut initial_value = self.initial_value.as_deref().map(Cow::Borrowed);
