@@ -11,10 +11,10 @@ keywords = ["clack", "cli", "input", "prompt", "prompts"]
 categories = ["command-line-interface", "command-line-utilities"]
 
 [dependencies]
-crossterm = "0.27.0"
+crossterm = "0.28.1"
 is-unicode-supported = "0.1.0"
 once_cell = "1.19.0"
 owo-colors = "4.0.0"
 rustyline = { version = "14.0.0", features = ["derive"] }
-thiserror = "1.0.58"
-unicode-truncate = "0.2.0"
+thiserror = "1.0.63"
+unicode-truncate = "1.1.0"
