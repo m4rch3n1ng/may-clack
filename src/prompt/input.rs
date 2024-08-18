@@ -63,7 +63,7 @@ impl Highlighter for PlaceholderHighlighter<'_> {
 	}
 }
 
-type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
+type ValidateFn = dyn Fn(&str) -> Result<(), Cow<'static, str>>;
 
 /// `Input` struct
 ///
@@ -196,18 +196,18 @@ impl<M: Display> Input<M> {
 	/// ```
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
-		F: Fn(&str) -> Option<&'static str> + 'static,
+		F: Fn(&str) -> Result<(), Cow<'static, str>> + 'static,
 	{
 		let validate = Box::new(validate);
 		self.validate = Some(validate);
 		self
 	}
 
-	fn do_validate(&self, input: &str) -> Option<&'static str> {
+	fn do_validate(&self, input: &str) -> Result<(), Cow<'static, str>> {
 		if let Some(validate) = self.validate.as_deref() {
 			validate(input)
 		} else {
-			None
+			Ok(())
 		}
 	}
 
@@ -269,14 +269,14 @@ impl<M: Display> Input<M> {
 					} else {
 						break Ok(None);
 					}
-				} else if let Some(text) = self.do_validate(&value) {
+				} else if let Err(text) = self.do_validate(&value) {
 					initial_value = Some(Cow::Owned(value));
 
 					if let Some(helper) = editor.helper_mut() {
 						helper.is_val = true;
 					}
 
-					self.w_val(text);
+					self.w_val(&text);
 				} else {
 					match value.parse::<T>() {
 						Ok(val) => break Ok(Some(val)),

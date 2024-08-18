@@ -1,13 +1,19 @@
 use may_clack::{cancel, error::ClackError, input, intro, multi_input, outro};
 use owo_colors::OwoColorize;
-use std::net::Ipv4Addr;
+use std::{borrow::Cow, net::Ipv4Addr};
 
 fn main() -> Result<(), ClackError> {
 	println!();
 	intro!(" validate ".reversed());
 
 	let do_validate_input = input("validate single (only use ascii)")
-		.validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
+		.validate(|x| {
+			if x.is_ascii() {
+				Ok(())
+			} else {
+				Err(Cow::Borrowed("only use ascii characters"))
+			}
+		})
 		.cancel(do_cancel)
 		.required()?;
 	let do_validate_multi_input = multi_input("validate multi (only use lowercase)")
