@@ -18,8 +18,11 @@ fn main() -> Result<(), ClackError> {
 		.required()?;
 	let do_validate_multi_input = multi_input("validate multi (only use lowercase)")
 		.validate(|x| {
-			x.find(char::is_uppercase)
-				.map(|_| "only use lowercase characters")
+			if x.find(char::is_uppercase).is_some() {
+				Err(Cow::Borrowed("only use lowercase characters"))
+			} else {
+				Ok(())
+			}
 		})
 		.cancel(do_cancel)
 		.interact()?;

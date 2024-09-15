@@ -22,7 +22,7 @@
 //! All input types that can return a `Cancelled` Err will also have the option to add a `.cancel` closure
 //!
 //! ```no_run
-//! use may_clack::{cancel, input, error::ClackError};
+//! use may_clack::{cancel, error::ClackError, input};
 //!
 //! let text = input("todo").interact();
 //! if let Err(ClackError::Cancelled) = text {
@@ -85,7 +85,9 @@
 //! use may_clack::input;
 //!
 //! # fn main() -> Result<(), may_clack::error::ClackError> {
-//! let answer = input("what is the meaning of life?").initial_value("42").interact()?;
+//! let answer = input("what is the meaning of life?")
+//!     .initial_value("42")
+//!     .interact()?;
 //! println!("{:?}", answer);
 //! # Ok(())
 //! # }

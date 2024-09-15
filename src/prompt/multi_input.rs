@@ -1,6 +1,6 @@
 //! Multiple text inputs
 
-use super::input::PlaceholderHighlighter;
+use super::input::{PlaceholderHighlighter, ValidateFn};
 use crate::{
 	error::ClackError,
 	style::{ansi, chars},
@@ -16,18 +16,23 @@ use std::{
 	str::FromStr,
 };
 
-type ValidateFn = dyn Fn(&str) -> Option<&'static str>;
-
 /// `MultiInput` struct
 ///
 /// # Examples
 ///
 /// ```no_run
-/// use may_clack::{multi_input, cancel};
+/// use may_clack::{cancel, multi_input};
+/// # use std::borrow::Cow;
 ///
 /// # fn main() -> Result<(), may_clack::error::ClackError> {
 /// let answers = multi_input("message")
-///     .validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
+///     .validate(|x| {
+///         if x.is_ascii() {
+///             Ok(())
+///         } else {
+///             Err(Cow::Borrowed("only use ascii characters"))
+///         }
+///     })
 ///     .cancel(do_cancel)
 ///     .interact()?;
 /// println!("answers {:?}", answers);
@@ -83,7 +88,9 @@ impl<M: Display> MultiInput<M> {
 	/// use may_clack::multi_input;
 	///
 	/// # fn main() -> Result<(), may_clack::error::ClackError> {
-	/// let answers = multi_input("message").initial_value("initial_value").interact()?;
+	/// let answers = multi_input("message")
+	///     .initial_value("initial_value")
+	///     .interact()?;
 	/// println!("answers {:?}", answers);
 	/// # Ok(())
 	/// # }
@@ -101,7 +108,9 @@ impl<M: Display> MultiInput<M> {
 	/// use may_clack::multi_input;
 	///
 	/// # fn main() -> Result<(), may_clack::error::ClackError> {
-	/// let answers = multi_input("message").placeholder("placeholder").interact()?;
+	/// let answers = multi_input("message")
+	///     .placeholder("placeholder")
+	///     .interact()?;
 	/// println!("answers {:?}", answers);
 	/// # Ok(())
 	/// # }
@@ -155,10 +164,17 @@ impl<M: Display> MultiInput<M> {
 	///
 	/// ```no_run
 	/// use may_clack::multi_input;
+	/// # use std::borrow::Cow;
 	///
 	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answers = multi_input("message")
-	///     .validate(|x| x.find(char::is_whitespace).map(|_| "whitespace is disallowed"))
+	///     .validate(|x| {
+	///         if x.find(char::is_whitespace).is_some() {
+	///             Err(Cow::Borrowed("whitespace is disallowed"))
+	///         } else {
+	///             Ok(())
+	///         }
+	///     })
 	///     .interact()?;
 	/// println!("answers {:?}", answers);
 	/// # Ok(())
@@ -166,18 +182,18 @@ impl<M: Display> MultiInput<M> {
 	/// ```
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
-		F: Fn(&str) -> Option<&'static str> + 'static,
+		F: Fn(&str) -> Result<(), Cow<'static, str>> + 'static,
 	{
 		let validate = Box::new(validate);
 		self.validate = Some(validate);
 		self
 	}
 
-	fn do_validate(&self, input: &str) -> Option<&'static str> {
+	fn do_validate(&self, input: &str) -> Result<(), Cow<'static, str>> {
 		if let Some(validate) = self.validate.as_deref() {
 			validate(input)
 		} else {
-			None
+			Ok(())
 		}
 	}
 
@@ -244,14 +260,14 @@ impl<M: Display> MultiInput<M> {
 					} else {
 						break Ok(None);
 					}
-				} else if let Some(text) = self.do_validate(&value) {
+				} else if let Err(text) = self.do_validate(&value) {
 					initial_value = Some(Cow::Owned(value));
 
 					if let Some(helper) = editor.helper_mut() {
 						helper.is_val = true;
 					}
 
-					self.w_val(text, amt);
+					self.w_val(&text, amt);
 				} else {
 					match value.parse::<T>() {
 						Ok(value) => break Ok(Some(value)),
@@ -281,9 +297,7 @@ impl<M: Display> MultiInput<M> {
 	/// use may_clack::multi_input;
 	///
 	/// # fn main() -> Result<(), may_clack::error::ClackError> {
-	/// let answers: Vec<i32> = multi_input("message")
-	///     .min(2)
-	///     .parse::<i32>()?;
+	/// let answers: Vec<i32> = multi_input("message").min(2).parse::<i32>()?;
 	/// println!("answers {:?}", answers);
 	///
 	/// # Ok(())
@@ -339,11 +353,18 @@ impl<M: Display> MultiInput<M> {
 	/// # Examples
 	///
 	/// ```no_run
-	/// use may_clack::{multi_input, cancel};
+	/// use may_clack::{cancel, multi_input};
+	/// # use std::borrow::Cow;
 	///
 	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answers = multi_input("message")
-	///     .validate(|x| x.contains('\0').then_some("contains nul byte"))
+	///     .validate(|x| {
+	///         if x.contains('\0') {
+	///             Err(Cow::Borrowed("contains nul byte"))
+	///         } else {
+	///             Ok(())
+	///         }
+	///     })
 	///     .cancel(do_cancel)
 	///     .interact()?;
 	/// println!("answers {:?}", answers);

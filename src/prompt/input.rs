@@ -63,19 +63,26 @@ impl Highlighter for PlaceholderHighlighter<'_> {
 	}
 }
 
-type ValidateFn = dyn Fn(&str) -> Result<(), Cow<'static, str>>;
+pub(super) type ValidateFn = dyn Fn(&str) -> Result<(), Cow<'static, str>>;
 
 /// `Input` struct
 ///
 /// # Examples
 ///
 /// ```no_run
-/// use may_clack::{input, cancel};
+/// use may_clack::{cancel, input};
+/// # use std::borrow::Cow;
 ///
 /// # fn main() -> Result<(), may_clack::error::ClackError> {
 /// let answer = input("message")
 ///     .initial_value("initial_value")
-///     .validate(|x| x.find(char::is_uppercase).map(|_| "only use lowercase characters"))
+///     .validate(|x| {
+///         if x.find(char::is_uppercase).is_some() {
+///             Err(Cow::Borrowed("only use lowercase characters"))
+///         } else {
+///             Ok(())
+///         }
+///     })
 ///     .cancel(do_cancel)
 ///     .interact()?;
 /// println!("answer {:?}", answer);
@@ -185,14 +192,19 @@ impl<M: Display> Input<M> {
 	///
 	/// ```no_run
 	/// use may_clack::input;
+	/// # use std::borrow::Cow;
 	///
-	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = input("message")
-	///     .validate(|x| (!x.is_ascii()).then_some("only use ascii characters"))
+	///     .validate(|x| {
+	///         if x.is_ascii() {
+	///             Ok(())
+	///         } else {
+	///             Err(Cow::Borrowed("only use ascii characters"))
+	///         }
+	///     })
 	///     .interact()?;
 	/// println!("answer {:?}", answer);
-	/// # Ok(())
-	/// # }
+	/// # Ok::<(), may_clack::error::ClackError>(())
 	/// ```
 	pub fn validate<F>(&mut self, validate: F) -> &mut Self
 	where
@@ -420,12 +432,17 @@ impl<M: Display> Input<M> {
 	/// # Examples
 	///
 	/// ```no_run
-	/// use may_clack::{input, cancel};
+	/// use may_clack::{cancel, input};
+	/// # use std::borrow::Cow;
 	///
 	/// # fn main() -> Result<(), may_clack::error::ClackError> {
 	/// let answer = input("message")
 	///     .initial_value("initial_value")
-	///     .validate(|x| x.parse::<u32>().err().map(|_| "invalid u32"))
+	///     .validate(|x| {
+	///         x.parse::<u32>()
+	///             .map(|_| ())
+	///             .map_err(|_| Cow::Borrowed("invalid u32"))
+	///     })
 	///     .cancel(do_cancel)
 	///     .interact()?;
 	/// println!("answer {:?}", answer);

@@ -214,7 +214,7 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 	/// let opts = vec![
 	///     Opt::simple("val1", "label 1"),
 	///     Opt::hint("val2", "label 2", "hint"),
-	///     Opt::simple("val3", "label 3")
+	///     Opt::simple("val3", "label 3"),
 	/// ];
 	///
 	/// let answer = select("message").options(opts).interact()?;

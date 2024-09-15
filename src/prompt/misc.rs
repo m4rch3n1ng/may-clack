@@ -196,7 +196,7 @@ macro_rules! warn {
 /// # Examples
 ///
 /// ```
-/// use may_clack::{intro, err, outro};
+/// use may_clack::{err, intro, outro};
 ///
 /// intro!("intro");
 /// // do stuff
