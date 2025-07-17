@@ -6,7 +6,7 @@ use owo_colors::OwoColorize;
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(" full ".reversed());
+	intro!("{}", " full ".reversed());
 
 	info!("visit the documentation at https://docs.rs/may-clack");
 

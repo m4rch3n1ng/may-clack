@@ -3,7 +3,7 @@ use owo_colors::OwoColorize;
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(" maybe_initial ".reversed());
+	intro!("{}", " maybe_initial ".reversed());
 
 	let opt = Some("test");
 

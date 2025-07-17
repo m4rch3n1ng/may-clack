@@ -3,7 +3,7 @@ use owo_colors::OwoColorize;
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(" single ".reversed());
+	intro!("{}", " single ".reversed());
 	let do_single_select = select("single")
 		.option("one", "one")
 		.cancel(do_cancel)

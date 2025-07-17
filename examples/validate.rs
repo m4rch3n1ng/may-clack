@@ -4,7 +4,7 @@ use std::{borrow::Cow, net::Ipv4Addr};
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(" validate ".reversed());
+	intro!("{}", " validate ".reversed());
 
 	let do_validate_input = input("validate single (only use ascii)")
 		.validate(|x| {

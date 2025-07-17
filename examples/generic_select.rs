@@ -21,7 +21,7 @@ impl Display for SelectEnum {
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(" generic select ".reversed());
+	intro!("{}", " generic select ".reversed());
 
 	let select_enum = select("select enum")
 		.option(SelectEnum::One, SelectEnum::One)

@@ -7,7 +7,7 @@ use owo_colors::OwoColorize;
 /// you can decide the amount of options per page.
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(" less ".reversed());
+	intro!("{}", " less ".reversed());
 
 	let select_less = select("less")
 		.option("val 1", "value 1")

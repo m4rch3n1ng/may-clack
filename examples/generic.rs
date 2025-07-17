@@ -3,7 +3,7 @@ use owo_colors::OwoColorize;
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(" generic messages ".reversed());
+	intro!("{}", " generic messages ".reversed());
 
 	let number = confirm(20).cancel(do_cancel).interact()?;
 	let styled = multi_input("style".on_cyan())

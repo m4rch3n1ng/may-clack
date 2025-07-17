@@ -12,7 +12,7 @@ impl Display for Name {
 
 fn main() -> Result<(), ClackError> {
 	println!();
-	intro!(" to_string ".reversed());
+	intro!("{}", " to_string ".reversed());
 
 	let int = input("int").initial_value(23).parse::<i32>()?;
 	let unit = input("struct").placeholder(Name).required()?;
