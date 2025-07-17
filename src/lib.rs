@@ -167,17 +167,23 @@
 #![warn(missing_docs)]
 
 pub mod error;
-mod prompt;
 pub mod style;
 pub mod traits;
 
-pub use prompt::*;
+pub mod confirm;
+pub mod input;
+pub mod multi_input;
+pub mod multi_select;
+pub mod select;
 
-pub use prompt::confirm::confirm;
-pub use prompt::input::input;
-pub use prompt::multi_input::multi_input;
-pub use prompt::multi_select::multi_select;
-pub use prompt::select::select;
+mod macros;
 
+pub use confirm::confirm;
+pub use input::input;
+pub use multi_input::multi_input;
+pub use multi_select::multi_select;
+pub use select::select;
+
+// for the macros - don't use
 #[doc(hidden)]
 pub use owo_colors;
