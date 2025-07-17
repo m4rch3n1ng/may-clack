@@ -84,8 +84,7 @@ macro_rules! outro {
 #[macro_export]
 macro_rules! cancel {
 	($arg:expr) => {{
-		use owo_colors::OwoColorize;
-		$crate::outro!("{}", ($arg).red());
+		$crate::outro!("{}", $crate::owo_colors::OwoColorize::red(&$arg));
 	}};
 }
 
@@ -121,19 +120,15 @@ macro_rules! cancel {
 #[macro_export]
 macro_rules! info {
 	() => {{
-		use owo_colors::OwoColorize;
 		println!("{}", *$crate::style::chars::BAR);
-		println!("{}", (*$crate::style::chars::STEP_SUBMIT).cyan());
+		println!("{}", $crate::owo_colors::OwoColorize::cyan(&*$crate::style::chars::STEP_SUBMIT));
 	}};
 	($arg:expr) => {
 		$crate::info!("{}", $arg);
 	};
 	($($arg:tt)*) => {{
-		{
-			use owo_colors::OwoColorize;
-			println!("{}", *$crate::style::chars::BAR);
-			print!("{}  ", (*$crate::style::chars::STEP_SUBMIT).cyan());
-		}
+		println!("{}", *$crate::style::chars::BAR);
+		print!("{}  ", $crate::owo_colors::OwoColorize::cyan(&*$crate::style::chars::STEP_SUBMIT));
 		println!($($arg)*);
 	}}
 }
@@ -170,19 +165,15 @@ macro_rules! info {
 #[macro_export]
 macro_rules! warn {
 	() => {{
-		use owo_colors::OwoColorize;
 		println!("{}", *$crate::style::chars::BAR);
-		println!("{}", (*$crate::style::chars::STEP_ERROR).yellow());
+		println!("{}", $crate::owo_colors::OwoColorize::yellow(&*$crate::style::chars::STEP_ERROR));
 	}};
 	($arg:expr) => {
 		$crate::warn!("{}", $arg);
 	};
 	($($arg:tt)*) => {{
-		{
-			use owo_colors::OwoColorize;
-			println!("{}", *$crate::style::chars::BAR);
-			print!("{}  ", (*$crate::style::chars::STEP_ERROR).yellow());
-		}
+		println!("{}", *$crate::style::chars::BAR);
+		print!("{}  ", $crate::owo_colors::OwoColorize::yellow(&*$crate::style::chars::STEP_ERROR));
 		println!($($arg)*);
 	}};
 }
@@ -219,19 +210,15 @@ macro_rules! warn {
 #[macro_export]
 macro_rules! err {
 	() => {{
-		use owo_colors::OwoColorize;
 		println!("{}", *$crate::style::chars::BAR);
-		println!("{}", (*$crate::style::chars::STEP_CANCEL).red());
+		println!("{}", $crate::owo_colors::OwoColorize::red(&*$crate::style::chars::STEP_CANCEL));
 	}};
 	($arg:expr) => {
 		$crate::err!("{}", $arg);
 	};
 	($($arg:tt)*) => {{
-		{
-			use owo_colors::OwoColorize;
-			println!("{}", *$crate::style::chars::BAR);
-			print!("{}  ", (*$crate::style::chars::STEP_CANCEL).red());
-		}
+		println!("{}", *$crate::style::chars::BAR);
+		print!("{}  ", $crate::owo_colors::OwoColorize::red(&*$crate::style::chars::STEP_CANCEL));
 		println!($($arg)*);
 	}};
 }

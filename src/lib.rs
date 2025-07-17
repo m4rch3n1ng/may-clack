@@ -178,3 +178,6 @@ pub use prompt::input::input;
 pub use prompt::multi_input::multi_input;
 pub use prompt::multi_select::multi_select;
 pub use prompt::select::select;
+
+#[doc(hidden)]
+pub use owo_colors;
