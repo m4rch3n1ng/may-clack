@@ -212,7 +212,7 @@ impl<M: Display> Confirm<M> {
 		let yes = self.radio_pnt(value, &self.prompts.0);
 		let no = self.radio_pnt(!value, &self.prompts.1);
 
-		format!("{} / {}", yes, no)
+		format!("{yes} / {no}")
 	}
 
 	/// Draw the prompt.

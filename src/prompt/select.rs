@@ -88,7 +88,7 @@ impl<T: Clone, O: Display> Opt<T, O> {
 		let fmt = format!("{} {}", (*chars::RADIO_ACTIVE).green(), label);
 
 		if let Some(hint) = &self.hint {
-			let hint = format!("({})", hint);
+			let hint = format!("({hint})");
 			format!("{} {}", fmt, hint.dimmed())
 		} else {
 			fmt

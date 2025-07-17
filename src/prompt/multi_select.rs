@@ -100,7 +100,7 @@ impl<T: Clone, O: Display + Clone> Opt<T, O> {
 		};
 
 		if let Some(hint) = &self.hint {
-			let hint = format!("({})", hint);
+			let hint = format!("({hint})");
 			format!("{} {}", fmt, hint.dimmed())
 		} else {
 			fmt
