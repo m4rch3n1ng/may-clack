@@ -34,11 +34,11 @@ fn main() -> Result<(), ClackError> {
 
 	outro!();
 
-	println!("single {:?}", do_validate_input);
-	println!("multi {:?}", do_validate_multi_input);
-	println!("parse single {:?}", do_parse_input);
-	println!("maybe parse single {:?}", do_maybe_parse);
-	println!("parse multi {:?}", do_parse_multi);
+	println!("single {do_validate_input:?}");
+	println!("multi {do_validate_multi_input:?}");
+	println!("parse single {do_parse_input:?}");
+	println!("maybe parse single {do_maybe_parse:?}");
+	println!("parse multi {do_parse_multi:?}");
 
 	Ok(())
 }

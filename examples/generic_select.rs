@@ -39,8 +39,8 @@ fn main() -> Result<(), ClackError> {
 
 	outro!();
 
-	println!("select enum, label enum {:?}", select_enum);
-	println!("multi select enum, label string {:?}", multi_enum);
+	println!("select enum, label enum {select_enum:?}");
+	println!("multi select enum, label string {multi_enum:?}");
 
 	Ok(())
 }

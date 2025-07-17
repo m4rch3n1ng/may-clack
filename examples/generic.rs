@@ -12,8 +12,8 @@ fn main() -> Result<(), ClackError> {
 
 	outro!();
 
-	println!("number {:?}", number);
-	println!("styled {:?}", styled);
+	println!("number {number:?}");
+	println!("styled {styled:?}");
 
 	Ok(())
 }

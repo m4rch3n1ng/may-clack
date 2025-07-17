@@ -19,8 +19,8 @@ fn main() -> Result<(), ClackError> {
 
 	outro!();
 
-	println!("int {:?}", int);
-	println!("unit {:?}", unit);
+	println!("int {int:?}");
+	println!("unit {unit:?}");
 
 	Ok(())
 }

@@ -15,8 +15,8 @@ fn main() -> Result<(), ClackError> {
 
 	outro!();
 
-	println!("select {:?}", do_single_select);
-	println!("multi {:?}", do_single_multi);
+	println!("select {do_single_select:?}");
+	println!("multi {do_single_multi:?}");
 
 	Ok(())
 }

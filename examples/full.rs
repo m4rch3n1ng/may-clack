@@ -37,11 +37,11 @@ fn main() -> Result<(), ClackError> {
 
 	outro!();
 
-	println!("input {:?}", do_input);
-	println!("confirm {:?}", do_confirm);
-	println!("multi_input {:?}", do_multi_input);
-	println!("multi_select {:?}", do_multi_select);
-	println!("select {:?}", do_select);
+	println!("input {do_input:?}");
+	println!("confirm {do_confirm:?}");
+	println!("multi_input {do_multi_input:?}");
+	println!("multi_select {do_multi_select:?}");
+	println!("select {do_select:?}");
 
 	Ok(())
 }

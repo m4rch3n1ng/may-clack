@@ -49,10 +49,10 @@ fn main() -> Result<(), ClackError> {
 
 	outro!();
 
-	println!("page_up_down {:?}", page_up_down);
-	println!("select_less {:?}", select_less);
-	println!("multi_less_noop {:?}", multi_less_noop);
-	println!("multi_less {:?}", multi_less);
+	println!("page_up_down {page_up_down:?}");
+	println!("select_less {select_less:?}");
+	println!("multi_less_noop {multi_less_noop:?}");
+	println!("multi_less {multi_less:?}");
 
 	Ok(())
 }
