@@ -3,6 +3,7 @@
 use super::input::{PlaceholderHighlighter, ValidateFn};
 use crate::{
 	error::ClackError,
+	outro,
 	style::{ansi, chars},
 };
 use crossterm::{QueueableCommand, cursor};
@@ -335,6 +336,8 @@ impl<M: Display> MultiInput<M> {
 					self.w_cancel(v.len());
 					if let Some(cancel) = self.cancel.as_deref() {
 						cancel();
+					} else {
+						outro!();
 					}
 
 					return Err(ClackError::Cancelled);
@@ -405,6 +408,8 @@ impl<M: Display> MultiInput<M> {
 					self.w_cancel(v.len());
 					if let Some(cancel) = self.cancel.as_deref() {
 						cancel();
+					} else {
+						outro!();
 					}
 
 					return Err(ClackError::Cancelled);

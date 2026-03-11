@@ -2,6 +2,7 @@
 
 use crate::{
 	error::ClackError,
+	outro,
 	style::{IS_UNICODE, ansi, chars},
 };
 use crossterm::{
@@ -602,6 +603,8 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 
 						if let Some(cancel) = self.cancel.as_deref() {
 							cancel();
+						} else {
+							outro!();
 						}
 
 						return Err(ClackError::Cancelled);

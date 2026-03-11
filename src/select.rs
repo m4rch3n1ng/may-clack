@@ -2,6 +2,7 @@
 
 use crate::{
 	error::ClackError,
+	outro,
 	style::{ansi, chars},
 };
 use crossterm::{
@@ -573,6 +574,8 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 
 						if let Some(cancel) = self.cancel.as_deref() {
 							cancel();
+						} else {
+							outro!();
 						}
 
 						return Err(ClackError::Cancelled);

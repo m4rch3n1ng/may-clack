@@ -2,6 +2,7 @@
 
 use crate::{
 	error::ClackError,
+	outro,
 	style::{ansi, chars},
 };
 use crossterm::{
@@ -184,6 +185,8 @@ impl<M: Display> Confirm<M> {
 						self.w_cancel(val);
 						if let Some(cancel) = self.cancel.as_deref() {
 							cancel();
+						} else {
+							outro!();
 						}
 
 						return Err(ClackError::Cancelled);

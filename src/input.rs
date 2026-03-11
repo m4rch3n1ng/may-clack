@@ -2,6 +2,7 @@
 
 use crate::{
 	error::ClackError,
+	outro,
 	style::{ansi, chars},
 };
 use crossterm::{QueueableCommand, cursor};
@@ -344,6 +345,8 @@ impl<M: Display> Input<M> {
 				self.w_cancel();
 				if let Some(cancel) = self.cancel.as_deref() {
 					cancel();
+				} else {
+					outro!();
 				}
 
 				Err(ClackError::Cancelled)
@@ -385,6 +388,8 @@ impl<M: Display> Input<M> {
 				self.w_cancel();
 				if let Some(cancel) = self.cancel.as_deref() {
 					cancel();
+				} else {
+					outro!();
 				}
 
 				Err(ClackError::Cancelled)
@@ -420,6 +425,8 @@ impl<M: Display> Input<M> {
 				self.w_cancel();
 				if let Some(cancel) = self.cancel.as_deref() {
 					cancel();
+				} else {
+					outro!();
 				}
 
 				Err(ClackError::Cancelled)
@@ -471,6 +478,8 @@ impl<M: Display> Input<M> {
 				self.w_cancel();
 				if let Some(cancel) = self.cancel.as_deref() {
 					cancel();
+				} else {
+					outro!();
 				}
 
 				Err(ClackError::Cancelled)
