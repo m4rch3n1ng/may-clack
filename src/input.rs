@@ -6,7 +6,10 @@ use crate::{
 };
 use crossterm::{cursor, QueueableCommand};
 use owo_colors::OwoColorize;
-use rustyline::{highlight::Highlighter, Completer, Editor, Helper, Hinter, Validator};
+use rustyline::{
+	highlight::{CmdKind, Highlighter},
+	Completer, Editor, Helper, Hinter, Validator,
+};
 use std::{
 	borrow::{Borrow, Cow},
 	error::Error,
@@ -43,7 +46,7 @@ impl Highlighter for PlaceholderHighlighter<'_> {
 		}
 	}
 
-	fn highlight_char(&self, _line: &str, _pos: usize, _forced: bool) -> bool {
+	fn highlight_char(&self, _line: &str, _pos: usize, _kind: CmdKind) -> bool {
 		true
 	}
 

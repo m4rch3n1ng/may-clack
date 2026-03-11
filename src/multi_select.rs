@@ -603,7 +603,7 @@ impl<M: Display, T: Clone, O: Display + Clone> MultiSelect<M, T, O> {
 								cancel();
 							}
 
-							panic!();
+							return Err(ClackError::Cancelled);
 						}
 						_ => {}
 					}
