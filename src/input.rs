@@ -4,17 +4,17 @@ use crate::{
 	error::ClackError,
 	style::{ansi, chars},
 };
-use crossterm::{cursor, QueueableCommand};
+use crossterm::{QueueableCommand, cursor};
 use owo_colors::OwoColorize;
 use rustyline::{
-	highlight::{CmdKind, Highlighter},
 	Completer, Editor, Helper, Hinter, Validator,
+	highlight::{CmdKind, Highlighter},
 };
 use std::{
 	borrow::{Borrow, Cow},
 	error::Error,
 	fmt::Display,
-	io::{stdout, Write},
+	io::{Write, stdout},
 	str::FromStr,
 };
 

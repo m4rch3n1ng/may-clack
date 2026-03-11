@@ -2,7 +2,7 @@
 name = "may-clack"
 version = "0.6.2"
 authors = ["may"]
-edition = "2021"
+edition = "2024"
 description = "stylish, interactive command line prompts"
 readme = "readme.md"
 repository = "https://github.com/m4rch3n1ng/may-clack"

@@ -6,11 +6,7 @@ use std::sync::LazyLock;
 pub(crate) static IS_UNICODE: LazyLock<bool> = LazyLock::new(is_unicode_supported);
 
 fn is_unicode(unicode: &'static str, non_unicode: &'static str) -> &'static str {
-	if *IS_UNICODE {
-		unicode
-	} else {
-		non_unicode
-	}
+	if *IS_UNICODE { unicode } else { non_unicode }
 }
 
 /// Clack prompt chars.

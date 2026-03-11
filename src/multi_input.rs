@@ -5,14 +5,14 @@ use crate::{
 	error::ClackError,
 	style::{ansi, chars},
 };
-use crossterm::{cursor, QueueableCommand};
+use crossterm::{QueueableCommand, cursor};
 use owo_colors::OwoColorize;
 use rustyline::Editor;
 use std::{
 	borrow::Cow,
 	error::Error,
 	fmt::Display,
-	io::{stdout, Write},
+	io::{Write, stdout},
 	str::FromStr,
 };
 
