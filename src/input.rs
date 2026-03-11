@@ -74,7 +74,7 @@ pub(super) type ValidateFn = dyn Fn(&str) -> Result<(), Cow<'static, str>>;
 /// # Examples
 ///
 /// ```no_run
-/// use may_clack::{cancel, input};
+/// use may_clack::input;
 /// # use std::borrow::Cow;
 ///
 /// # fn main() -> Result<(), may_clack::error::ClackError> {
@@ -87,16 +87,10 @@ pub(super) type ValidateFn = dyn Fn(&str) -> Result<(), Cow<'static, str>>;
 ///             Ok(())
 ///         }
 ///     })
-///     .cancel(do_cancel)
 ///     .interact()?;
 /// println!("answer {:?}", answer);
 /// # Ok(())
 /// # }
-///
-/// fn do_cancel() {
-///     cancel!("operation cancelled");
-///     std::process::exit(1);
-/// }
 /// ````
 pub struct Input<M: Display> {
 	message: M,
@@ -442,7 +436,7 @@ impl<M: Display> Input<M> {
 	/// # Examples
 	///
 	/// ```no_run
-	/// use may_clack::{cancel, input};
+	/// use may_clack::input;
 	/// # use std::borrow::Cow;
 	///
 	/// # fn main() -> Result<(), may_clack::error::ClackError> {
@@ -453,16 +447,10 @@ impl<M: Display> Input<M> {
 	///             .map(|_| ())
 	///             .map_err(|_| Cow::Borrowed("invalid u32"))
 	///     })
-	///     .cancel(do_cancel)
 	///     .interact()?;
 	/// println!("answer {:?}", answer);
 	/// # Ok(())
 	/// # }
-	///
-	/// fn do_cancel() {
-	///     cancel!("operation cancelled");
-	///     std::process::exit(1);
-	/// }
 	/// ```
 	pub fn interact(&self) -> Result<Option<String>, ClackError> {
 		self.w_init();

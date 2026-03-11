@@ -1,4 +1,4 @@
-use may_clack::{cancel, error::ClackError, input, intro, outro};
+use may_clack::{error::ClackError, input, intro, outro};
 use owo_colors::OwoColorize;
 
 fn main() -> Result<(), ClackError> {
@@ -8,18 +8,9 @@ fn main() -> Result<(), ClackError> {
 	let opt = Some("test");
 
 	#[allow(clippy::needless_borrows_for_generic_args)]
-	let ref_opt = input("message")
-		.maybe_initial(&opt)
-		.cancel(do_cancel)
-		.required()?;
-	let opt = input("message")
-		.maybe_initial(opt)
-		.cancel(do_cancel)
-		.required()?;
-	let none = input("message")
-		.maybe_initial(None::<&str>)
-		.cancel(do_cancel)
-		.required()?;
+	let ref_opt = input("message").maybe_initial(&opt).required()?;
+	let opt = input("message").maybe_initial(opt).required()?;
+	let none = input("message").maybe_initial(None::<&str>).required()?;
 
 	outro!();
 
@@ -28,9 +19,4 @@ fn main() -> Result<(), ClackError> {
 	println!("none {none:?}");
 
 	Ok(())
-}
-
-fn do_cancel() {
-	cancel!("demo cancelled");
-	panic!("demo cancelled");
 }

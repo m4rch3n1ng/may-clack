@@ -1,4 +1,4 @@
-use may_clack::{cancel, error::ClackError, intro, multi_select, outro, select};
+use may_clack::{error::ClackError, intro, multi_select, outro, select};
 use owo_colors::OwoColorize;
 
 /// Activating "less" mode activates a pager.
@@ -16,7 +16,6 @@ fn main() -> Result<(), ClackError> {
 		.option("val 4", "value 4")
 		.option("val 5", "value 5")
 		.less_amt(3)
-		.cancel(do_cancel)
 		.interact()?;
 
 	let multi_less_noop = multi_select("less")
@@ -24,7 +23,6 @@ fn main() -> Result<(), ClackError> {
 		.option("val 2", "value 2")
 		.option_hint("val 3", "value 3", "hint")
 		.less_amt(5)
-		.cancel(do_cancel)
 		.interact()?;
 
 	let multi_less = multi_select("less")
@@ -34,12 +32,10 @@ fn main() -> Result<(), ClackError> {
 		.option("val 4", "value 4")
 		.option("val 5", "value 5")
 		.less()
-		.cancel(do_cancel)
 		.interact()?;
 
 	let mut page_up_down = select("page up / down");
 	page_up_down.less_max(25);
-	page_up_down.cancel(do_cancel);
 
 	for i in 0..100 {
 		page_up_down.option(i, i);
@@ -55,9 +51,4 @@ fn main() -> Result<(), ClackError> {
 	println!("multi_less {multi_less:?}");
 
 	Ok(())
-}
-
-fn do_cancel() {
-	cancel!("demo cancelled");
-	panic!("demo cancelled");
 }

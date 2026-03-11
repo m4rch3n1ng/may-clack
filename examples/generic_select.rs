@@ -1,4 +1,4 @@
-use may_clack::{cancel, error::ClackError, intro, multi_select, outro, select};
+use may_clack::{error::ClackError, intro, multi_select, outro, select};
 use owo_colors::OwoColorize;
 use std::fmt::Display;
 
@@ -27,14 +27,12 @@ fn main() -> Result<(), ClackError> {
 		.option(SelectEnum::One, SelectEnum::One)
 		.option(SelectEnum::Two, SelectEnum::Two)
 		.option(SelectEnum::Three, SelectEnum::Three)
-		.cancel(do_cancel)
 		.interact()?;
 
 	let multi_enum = multi_select("multi_select enum")
 		.option(SelectEnum::One, "one")
 		.option(SelectEnum::Two, "two")
 		.option(SelectEnum::Three, "three")
-		.cancel(do_cancel)
 		.interact()?;
 
 	outro!();
@@ -43,9 +41,4 @@ fn main() -> Result<(), ClackError> {
 	println!("multi select enum, label string {multi_enum:?}");
 
 	Ok(())
-}
-
-fn do_cancel() {
-	cancel!("demo cancelled");
-	panic!("demo cancelled");
 }

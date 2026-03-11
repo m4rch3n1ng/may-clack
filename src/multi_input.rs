@@ -22,7 +22,7 @@ use std::{
 /// # Examples
 ///
 /// ```no_run
-/// use may_clack::{cancel, multi_input};
+/// use may_clack::multi_input;
 /// # use std::borrow::Cow;
 ///
 /// # fn main() -> Result<(), may_clack::error::ClackError> {
@@ -34,16 +34,10 @@ use std::{
 ///             Err(Cow::Borrowed("only use ascii characters"))
 ///         }
 ///     })
-///     .cancel(do_cancel)
 ///     .interact()?;
 /// println!("answers {:?}", answers);
 /// # Ok(())
 /// # }
-///
-/// fn do_cancel() {
-///     cancel!("operation cancelled");
-///     std::process::exit(1);
-/// }
 /// ```
 pub struct MultiInput<M: Display> {
 	message: M,
@@ -356,7 +350,7 @@ impl<M: Display> MultiInput<M> {
 	/// # Examples
 	///
 	/// ```no_run
-	/// use may_clack::{cancel, multi_input};
+	/// use may_clack::multi_input;
 	/// # use std::borrow::Cow;
 	///
 	/// # fn main() -> Result<(), may_clack::error::ClackError> {
@@ -368,16 +362,10 @@ impl<M: Display> MultiInput<M> {
 	///             Ok(())
 	///         }
 	///     })
-	///     .cancel(do_cancel)
 	///     .interact()?;
 	/// println!("answers {:?}", answers);
 	/// # Ok(())
 	/// # }
-	///
-	/// fn do_cancel() {
-	///     cancel!("operation cancelled");
-	///     std::process::exit(1);
-	/// }
 	/// ```
 	pub fn interact(&self) -> Result<Vec<String>, ClackError> {
 		self.w_init();
