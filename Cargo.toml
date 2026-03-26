@@ -1,6 +1,6 @@
 [package]
 name = "may-clack"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["may"]
 edition = "2024"
 description = "stylish, interactive command line prompts"
