@@ -1,9 +1,9 @@
 //! Style utility
 
-use is_unicode_supported::is_unicode_supported;
 use std::sync::LazyLock;
+use supports_unicode::supports_unicode;
 
-pub(crate) static IS_UNICODE: LazyLock<bool> = LazyLock::new(is_unicode_supported);
+pub(crate) static IS_UNICODE: LazyLock<bool> = LazyLock::new(supports_unicode);
 
 fn is_unicode(unicode: &'static str, non_unicode: &'static str) -> &'static str {
 	if *IS_UNICODE { unicode } else { non_unicode }

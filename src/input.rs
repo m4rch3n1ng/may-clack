@@ -8,8 +8,11 @@ use crate::{
 use crossterm::{QueueableCommand, cursor};
 use owo_colors::OwoColorize;
 use rustyline::{
-	Completer, Editor, Helper, Hinter, Validator,
+	Editor, Helper,
+	completion::Completer,
 	highlight::{CmdKind, Highlighter},
+	hint::Hinter,
+	validate::Validator,
 };
 use std::{
 	borrow::{Borrow, Cow},
@@ -19,11 +22,21 @@ use std::{
 	str::FromStr,
 };
 
-#[derive(Completer, Helper, Hinter, Validator)]
 pub(super) struct PlaceholderHighlighter<'a> {
 	placeholder: Option<&'a str>,
 	pub is_val: bool,
 }
+
+impl Completer for PlaceholderHighlighter<'_> {
+	type Candidate = String;
+}
+
+impl Hinter for PlaceholderHighlighter<'_> {
+	type Hint = String;
+}
+
+impl Helper for PlaceholderHighlighter<'_> {}
+impl Validator for PlaceholderHighlighter<'_> {}
 
 impl<'a> PlaceholderHighlighter<'a> {
 	pub fn new(placeholder: Option<&'a str>) -> Self {

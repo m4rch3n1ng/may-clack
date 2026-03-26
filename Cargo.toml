@@ -11,9 +11,8 @@ keywords = ["clack", "cli", "input", "prompt", "prompts"]
 categories = ["command-line-interface", "command-line-utilities"]
 
 [dependencies]
-crossterm = "0.29.0"
-is-unicode-supported = "0.1.0"
+crossterm = { version = "0.29.0", default-features = false, features = ["events", "windows"] }
 owo-colors = "4.3.0"
-rustyline = { version = "17.0.2", features = ["derive"] }
-thiserror = "2.0.18"
+rustyline = { version = "17.0.2", default-features = false }
+supports-unicode = "3.0.0"
 unicode-truncate = "2.0.1"
