@@ -128,6 +128,7 @@ pub struct Select<M: Display, T: Clone, O: Display> {
 	less_amt: Option<u16>,
 	less_max: Option<u16>,
 	cancel: Option<Box<dyn Fn()>>,
+	initial: Option<usize>,
 	options: Vec<Opt<T, O>>,
 }
 
@@ -155,6 +156,7 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 			less_amt: None,
 			less_max: None,
 			cancel: None,
+			initial: None,
 			options: vec![],
 		}
 	}
@@ -225,6 +227,39 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 	/// ```
 	pub fn options(&mut self, options: Vec<Opt<T, O>>) -> &mut Self {
 		self.options = options;
+		self
+	}
+
+	/// Set the initial value of the selection.
+	///
+	/// This has to be called after the option has already been given to the [`Select`].
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::select;
+	///
+	/// #[derive(Debug, Clone, PartialEq, Eq)]
+	/// enum Status {
+	///     Ongoing,
+	///     Completed,
+	/// }
+	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let status = select("what is the status?")
+	///     .option(Status::Ongoing, "ongoing")
+	///     .option(Status::Completed, "completed")
+	///     .initial_value(Status::Completed)
+	///     .interact()?;
+	/// println!("status: {status:?}");
+	/// # Ok(())
+	/// # }
+	/// ```
+	pub fn initial_value<Y: PartialEq<T>>(&mut self, initial: Y) -> &mut Self {
+		if let Some(initial) = self.options.iter().position(|x| initial == x.value) {
+			self.initial = Some(initial);
+		}
+
 		self
 	}
 
@@ -411,6 +446,13 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 			self.w_init();
 		}
 
+		if let Some(initial) = self.initial {
+			let initial = initial.min(max - 1);
+			for _ in 0..initial {
+				self.move_down(&mut idx, &mut less_idx, is_less);
+			}
+		}
+
 		terminal::enable_raw_mode()?;
 
 		loop {
@@ -447,34 +489,7 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 						}
 					}
 					(KeyCode::Down | KeyCode::Right, _) => {
-						if let Some(less) = is_less {
-							let prev_less = less_idx;
-
-							if idx < max - 1 {
-								idx += 1;
-								if less_idx < less - 1 {
-									less_idx += 1;
-								}
-							} else {
-								idx = 0;
-								less_idx = 0;
-							}
-
-							self.draw_less(less, idx, less_idx, prev_less);
-						} else {
-							self.draw_unfocus(idx);
-							let mut stdout = stdout();
-
-							if idx < max - 1 {
-								idx += 1;
-								let _ = execute!(stdout, cursor::MoveDown(1));
-							} else if idx > 0 {
-								idx = 0;
-								let _ = execute!(stdout, cursor::MoveUp(max as u16 - 1));
-							}
-
-							self.draw_focus(idx);
-						}
+						self.move_down(&mut idx, &mut less_idx, is_less);
 					}
 					(KeyCode::PageDown, _) => {
 						if let Some(less) = is_less {
@@ -583,6 +598,41 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 					_ => {}
 				}
 			}
+		}
+	}
+}
+
+impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
+	fn move_down(&self, idx: &mut usize, less_idx: &mut u16, is_less: Option<u16>) {
+		let max = self.options.len();
+
+		if let Some(less) = is_less {
+			let prev_less = *less_idx;
+
+			if *idx < max - 1 {
+				*idx += 1;
+				if *less_idx < less - 1 {
+					*less_idx += 1;
+				}
+			} else {
+				*idx = 0;
+				*less_idx = 0;
+			}
+
+			self.draw_less(less, *idx, *less_idx, prev_less);
+		} else {
+			self.draw_unfocus(*idx);
+			let mut stdout = stdout();
+
+			if *idx < max - 1 {
+				*idx += 1;
+				let _ = execute!(stdout, cursor::MoveDown(1));
+			} else if *idx > 0 {
+				*idx = 0;
+				let _ = execute!(stdout, cursor::MoveUp(max as u16 - 1));
+			}
+
+			self.draw_focus(*idx);
 		}
 	}
 }
