@@ -11,7 +11,6 @@ use owo_colors::OwoColorize;
 use rustyline::Editor;
 use std::{
 	borrow::Cow,
-	error::Error,
 	fmt::Display,
 	io::{Write, stdout},
 	str::FromStr,
@@ -224,7 +223,7 @@ impl<M: Display> MultiInput<M> {
 		amt: u16,
 	) -> Result<Option<T>, ClackError>
 	where
-		T::Err: Error,
+		T::Err: Display,
 	{
 		let prompt = format!("{}  ", *chars::BAR);
 		let mut editor = Editor::new()?;
@@ -300,7 +299,7 @@ impl<M: Display> MultiInput<M> {
 	/// ```
 	pub fn parse<T: FromStr + Display>(&self) -> Result<Vec<T>, ClackError>
 	where
-		T::Err: Error,
+		T::Err: Display,
 	{
 		self.w_init();
 

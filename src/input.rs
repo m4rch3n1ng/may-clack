@@ -16,7 +16,6 @@ use rustyline::{
 };
 use std::{
 	borrow::{Borrow, Cow},
-	error::Error,
 	fmt::Display,
 	io::{Write, stdout},
 	str::FromStr,
@@ -262,7 +261,7 @@ impl<M: Display> Input<M> {
 
 	fn interact_once<T: FromStr>(&self, enforce_non_empty: bool) -> Result<Option<T>, ClackError>
 	where
-		T::Err: Error,
+		T::Err: Display,
 	{
 		let prompt = format!("{}  ", *chars::BAR);
 
@@ -337,7 +336,7 @@ impl<M: Display> Input<M> {
 	/// ```
 	pub fn parse<T: FromStr + Display>(&self) -> Result<T, ClackError>
 	where
-		T::Err: Error,
+		T::Err: Display,
 	{
 		self.w_init();
 
@@ -376,7 +375,7 @@ impl<M: Display> Input<M> {
 	/// ```
 	pub fn maybe_parse<T: FromStr + Display>(&self) -> Result<Option<T>, ClackError>
 	where
-		T::Err: Error,
+		T::Err: Display,
 	{
 		self.w_init();
 
