@@ -263,6 +263,44 @@ impl<M: Display, T: Clone, O: Display> Select<M, T, O> {
 		self
 	}
 
+	/// Mabe set the initial value of the selection.
+	///
+	/// This does the same [`initial_value`](Select::initial_value), except for
+	/// allowing an optional value to be passed into it. Pass [`None`] to clear
+	/// the initial value.
+	///
+	/// This has to be called after the option has already been given to the [`Select`].
+	///
+	/// # Examples
+	///
+	/// ```no_run
+	/// use may_clack::select;
+	///
+	/// #[derive(Debug, Clone, PartialEq, Eq)]
+	/// enum Status {
+	///     Ongoing,
+	///     Completed,
+	/// }
+	///
+	/// # fn main() -> Result<(), may_clack::error::ClackError> {
+	/// let status = select("what is the status?")
+	///     .option(Status::Ongoing, "ongoing")
+	///     .option(Status::Completed, "completed")
+	///     .maybe_initial(Some(Status::Completed))
+	///     .interact()?;
+	/// println!("status: {status:?}");
+	/// # Ok(())
+	/// # }
+	/// ```
+	pub fn maybe_initial<Y: PartialEq<T>>(&mut self, initial: Option<Y>) -> &mut Self {
+		if let Some(initial) = initial {
+			self.initial_value(initial)
+		} else {
+			self.initial = None;
+			self
+		}
+	}
+
 	/// Enable paging with the amount of terminal rows.
 	///
 	/// # Examples
