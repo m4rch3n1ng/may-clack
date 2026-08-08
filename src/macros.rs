@@ -163,25 +163,25 @@ macro_rules! warn {
 /// # Examples
 ///
 /// ```
-/// use may_clack::{err, intro, outro};
+/// use may_clack::{error, intro, outro};
 ///
 /// intro!("intro");
 /// // do stuff
-/// err!("err");
+/// error!("err");
 /// // do stuff
 /// outro!();
 /// ```
 ///
 /// ```
-/// use may_clack::err;
+/// use may_clack::error;
 ///
 /// // empty
-/// err!();
+/// error!();
 /// // fmt string
-/// err!("fmt {:?}", "string");
+/// error!("fmt {:?}", "string");
 /// ```
 #[macro_export]
-macro_rules! err {
+macro_rules! error {
 	() => {{
 		println!("{}", *$crate::style::chars::BAR);
 		println!("{}", $crate::owo_colors::OwoColorize::red(&*$crate::style::chars::STEP_CANCEL));

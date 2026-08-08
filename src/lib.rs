@@ -41,10 +41,10 @@
 //!
 //! ## Info
 //!
-//! If you want to write a message in a prompting session you can use the [`info!`], [`warn!`] or [`err!`] utility.
+//! If you want to write a message in a prompting session you can use the [`info!`], [`warn!`] or [`error!`] utility.
 //!
 //! ```
-//! use may_clack::{err, info, intro, outro, warn};
+//! use may_clack::{error, info, intro, outro, warn};
 //!
 //! intro!("intro");
 //! // do stuff
@@ -52,7 +52,7 @@
 //! // do stuff
 //! warn!("warn");
 //! // do stuff
-//! err!("err");
+//! error!("err");
 //! // do stuff
 //! outro!("outro");
 //! ```
