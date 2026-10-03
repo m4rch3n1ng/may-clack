@@ -12,7 +12,7 @@ categories = ["command-line-interface", "command-line-utilities"]
 
 [dependencies]
 crossterm = { version = "0.29.0", default-features = false, features = ["events", "windows"] }
-owo-colors = "4.3.0"
-rustyline = { version = "17.0.2", default-features = false }
+owo-colors = "4.4.0"
+rustyline = { version = "18.0.1", default-features = false }
 supports-unicode = "3.0.0"
-unicode-truncate = "2.0.1"
+unicode-truncate = "3.0.0"
